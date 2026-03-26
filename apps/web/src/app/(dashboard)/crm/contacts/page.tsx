@@ -130,7 +130,7 @@ export default function ContactsPage() {
                           </a>
                         )}
                         {contact.phone && (
-                          <div className="text-gray-600">{contact.phone}</div>
+                          <div className="text-gray-600">{contact.phone.value}</div>
                         )}
                       </div>
                     </div>
