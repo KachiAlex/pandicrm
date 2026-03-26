@@ -1,9 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useDeals } from "../../../../hooks/useApi";
-
-const WORKSPACE_ID = "ws-demo";
+import { useAuth } from "../../../../hooks/useAuth";
+import { api, type Deal } from "../../../../lib/api";
 
 const stageColors = {
   prospecting: "bg-gray-100 text-gray-800",
@@ -26,145 +26,171 @@ function getProbabilityColor(probability: number): string {
   return probabilityColors.low;
 }
 
-export default function DealsPageClient() {
-  const { data, loading, error } = useDeals(WORKSPACE_ID);
+function formatCurrency(amount: number, currency: string = "USD") {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount);
+}
 
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-base-900">Deals</h1>
-            <p className="mt-2 text-base text-base-600">
-              Track your sales pipeline and manage deal progression.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/crm/deals/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
-          >
-            + New Deal
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)] p-8">
-          <div className="text-center text-base-600">Loading deals...</div>
-        </div>
-      </div>
-    );
+export default function DealsPage() {
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { user, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadDeals();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadDeals = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.getDeals("default-workspace");
+      setDeals(response.deals || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load deals");
+      setDeals([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (dealId: string) => {
+    if (!confirm("Are you sure you want to delete this deal?")) return;
+    
+    try {
+      await api.deleteDeal(dealId);
+      await loadDeals(); // Refresh deals
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete deal");
+    }
+  };
+
+  if (!isAuthenticated || !user) {
+    return <div>Please sign in to view deals.</div>;
   }
-
-  if (error) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-base-900">Deals</h1>
-            <p className="mt-2 text-base text-base-600">
-              Track your sales pipeline and manage deal progression.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/crm/deals/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
-          >
-            + New Deal
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)] p-8">
-          <div className="text-center text-red-600">Error: {error}</div>
-        </div>
-      </div>
-    );
-  }
-
-  const deals = data?.deals || [];
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl text-base-900">Deals</h1>
-          <p className="mt-2 text-base text-base-600">
-            Track your sales pipeline and manage deal progression.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Deals</h1>
+          <p className="text-gray-600 mt-2">Track your sales pipeline and manage deal progression.</p>
         </div>
         <Link
           href="/dashboard/crm/deals/new"
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           + New Deal
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)]">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-border/50 bg-white/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Deal
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Account
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Stage
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Amount
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Probability
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Close Date
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Owner
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Last Activity
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
-              {deals.map((deal: { id: { value: string }; name: string; accountId: { value: string }; stage: string; amount?: number; currency?: string; probability?: number; closeDate?: string; ownerId?: { value: string }; updatedAt: string }) => (
-                <tr key={deal.id.value} className="hover:bg-white/50">
-                  <td className="px-6 py-4">
-                    <Link
-                      href={`/dashboard/crm/deals/${deal.id.value}`}
-                      className="font-medium text-base-900 hover:text-primary"
-                    >
-                      {deal.name}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link
-                      href={`/dashboard/crm/accounts/${deal.accountId.value}`}
-                      className="text-sm font-medium text-base-900 hover:text-primary"
-                    >
-                      Account {deal.accountId.value}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${stageColors[deal.stage as keyof typeof stageColors]}`}>
-                      {deal.stage.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-base-900">
-                    {deal.amount && deal.currency
-                      ? new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: deal.currency,
-                        }).format(deal.amount)
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {deal.probability ? (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${getProbabilityColor(deal.probability).replace("text-", "bg-")}`}
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="text-red-800">{error}</div>
+          <button
+            onClick={loadDeals}
+            className="mt-2 text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && !error && (
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <div className="text-center text-gray-500">Loading deals...</div>
+        </div>
+      )}
+
+      {/* Deals List */}
+      {!isLoading && !error && (
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              All Deals ({deals.length})
+            </h2>
+          </div>
+          
+          {deals.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-500 mb-4">No deals found</div>
+              <Link
+                href="/dashboard/crm/deals/new"
+                className="inline-block text-blue-600 hover:text-blue-700"
+              >
+                Create your first deal →
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {deals.map((deal) => (
+                <div key={deal.id.value} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{deal.name}</h3>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${stageColors[deal.stage]}`}>
+                          {deal.stage.replace("_", " ").charAt(0).toUpperCase() + deal.stage.replace("_", " ").slice(1)}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ${getProbabilityColor(deal.probability)}`}>
+                          {deal.probability}% probability
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-6 text-sm text-gray-500 mb-3">
+                        <span className="text-lg font-semibold text-gray-900">
+                          {formatCurrency(deal.value)}
+                        </span>
+                        <span>Expected close: {new Date(deal.expectedCloseDate).toLocaleDateString()}</span>
+                        <span>Created: {new Date(deal.createdAt).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Account Info */}
+                      {deal.accountId && (
+                        <div className="mb-3">
+                          <div className="text-sm text-gray-500 mb-1">Account</div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600">
+                              AC
+                            </div>
+                            <span className="text-sm text-gray-700">Acme Corporation</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Contact Info */}
+                      {deal.contactId && (
+                        <div className="mb-3">
+                          <div className="text-sm text-gray-500 mb-1">Contact</div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-medium text-white">
+                              JD
+                            </div>
+                            <span className="text-sm text-gray-700">John Doe</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Progress Bar */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                          <span>Deal Progress</span>
+                          <span>{deal.probability}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${deal.probability}%` }}
                           />
                         </div>

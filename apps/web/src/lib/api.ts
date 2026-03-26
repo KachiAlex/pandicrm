@@ -14,7 +14,20 @@ export interface ApiResponse<T> {
   stats?: any;
   users?: any[];
   user?: any;
+  notes?: Note[];
+  note?: Note;
+  transcription?: TranscriptionResult;
+  rituals?: Ritual[];
+  ritual?: Ritual;
+  completions?: RitualCompletion[];
+  completion?: RitualCompletion;
+  ritualStats?: RitualStats;
   message?: string;
+  total?: number;
+  filter?: NoteFilter | RitualFilter;
+  query?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export interface Account {
@@ -63,6 +76,196 @@ export interface Contact {
   customFields?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Note {
+  id: { value: string };
+  userId: { value: string };
+  workspaceId: { value: string };
+  title: string;
+  content: { value: string };
+  type: "manual" | "meeting" | "call" | "email" | "document" | "voice_memo";
+  metadata: NoteMetadata;
+  tags: string[];
+  isShared: boolean;
+  sharedWith?: { value: string }[];
+  createdAt: string;
+  updatedAt: string;
+  lastAccessedAt?: string;
+}
+
+export interface NoteMetadata {
+  duration?: number;
+  participantCount?: number;
+  recordingUrl?: string;
+  originalFile?: string;
+  aiTranscribed: boolean;
+  transcriptionConfidence?: number;
+  language?: string;
+  summary?: string;
+  keyPoints?: string[];
+  actionItems?: string[];
+  relatedTaskIds?: { value: string }[];
+  relatedContactIds?: string[];
+}
+
+export interface CreateNoteInput {
+  userId: { value: string };
+  workspaceId: { value: string };
+  title: string;
+  content: { value: string };
+  type: "manual" | "meeting" | "call" | "email" | "document" | "voice_memo";
+  tags?: string[];
+  metadata?: Partial<NoteMetadata>;
+  isShared?: boolean;
+  sharedWith?: { value: string }[];
+}
+
+export interface UpdateNoteInput {
+  title?: string;
+  content?: { value: string };
+  tags?: string[];
+  isShared?: boolean;
+  sharedWith?: { value: string }[];
+  metadata?: Partial<NoteMetadata>;
+}
+
+export interface TranscriptionResult {
+  transcript: { value: string };
+  confidence: number;
+  language: string;
+  summary: string;
+  keyPoints: string[];
+  actionItems: string[];
+  processingTime: number;
+}
+
+export interface ShareNoteInput {
+  noteId: { value: string };
+  shareWith: { value: string }[];
+  permissions: {
+    canEdit: boolean;
+    canComment: boolean;
+    canShare: boolean;
+    expiresAt?: string;
+  };
+}
+
+export interface NoteFilter {
+  userId?: { value: string };
+  workspaceId?: { value: string };
+  type?: "manual" | "meeting" | "call" | "email" | "document" | "voice_memo";
+  tags?: string[];
+  isShared?: boolean;
+  sharedWithUserId?: { value: string };
+  dateFrom?: string;
+  dateTo?: string;
+  searchQuery?: string;
+  hasTranscript?: boolean;
+  hasActionItems?: boolean;
+}
+
+export interface Ritual {
+  id: { value: string };
+  userId: { value: string };
+  workspaceId: { value: string };
+  name: { value: string };
+  description?: string;
+  category: "health" | "mindfulness" | "productivity" | "business" | "learning" | "social" | "creativity" | "personal";
+  frequency: "daily" | "weekly" | "monthly" | "custom";
+  targetTime: string;
+  duration: number;
+  isActive: boolean;
+  color: string;
+  icon: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RitualCompletion {
+  id: string;
+  ritualId: { value: string };
+  userId: { value: string };
+  completedAt: string;
+  duration: number;
+  quality: "excellent" | "good" | "fair" | "poor";
+  notes?: string;
+  mood?: 1 | 2 | 3 | 4 | 5;
+  energy?: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface CreateRitualInput {
+  userId: { value: string };
+  workspaceId: { value: string };
+  name: { value: string };
+  description?: string;
+  category: "health" | "mindfulness" | "productivity" | "business" | "learning" | "social" | "creativity" | "personal";
+  frequency: "daily" | "weekly" | "monthly" | "custom";
+  targetTime: string;
+  duration: number;
+  color?: string;
+  icon?: string;
+}
+
+export interface UpdateRitualInput {
+  name?: { value: string };
+  description?: string;
+  category?: "health" | "mindfulness" | "productivity" | "business" | "learning" | "social" | "creativity" | "personal";
+  frequency?: "daily" | "weekly" | "monthly" | "custom";
+  targetTime?: string;
+  duration?: number;
+  isActive?: boolean;
+  color?: string;
+  icon?: string;
+}
+
+export interface CompleteRitualInput {
+  ritualId: { value: string };
+  duration: number;
+  quality: "excellent" | "good" | "fair" | "poor";
+  notes?: string;
+  mood?: 1 | 2 | 3 | 4 | 5;
+  energy?: 1 | 2 | 3 | 4 | 5;
+}
+
+export interface RitualFilter {
+  userId?: { value: string };
+  workspaceId?: { value: string };
+  category?: "health" | "mindfulness" | "productivity" | "business" | "learning" | "social" | "creativity" | "personal";
+  frequency?: "daily" | "weekly" | "monthly" | "custom";
+  isActive?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface RitualStats {
+  totalRituals: number;
+  activeRituals: number;
+  totalCompletions: number;
+  currentStreak: number;
+  longestStreak: number;
+  completionRate: number;
+  averageQuality: number;
+  totalDuration: number;
+  categoryStats: Array<{
+    category: "health" | "mindfulness" | "productivity" | "business" | "learning" | "social" | "creativity" | "personal";
+    completions: number;
+    streak: number;
+    averageQuality: number;
+    totalDuration: number;
+  }>;
+  weeklyProgress: Array<{
+    week: string;
+    completions: number;
+    targetCompletions: number;
+    rate: number;
+  }>;
+  monthlyProgress: Array<{
+    month: string;
+    completions: number;
+    targetCompletions: number;
+    rate: number;
+  }>;
 }
 
 export interface User {
@@ -463,6 +666,191 @@ class ApiClient {
     return this.request<{ message: string }>(`/api/users/${id}`, {
       method: "DELETE",
     });
+  }
+
+  // Notes API
+  async getNotes(filter?: NoteFilter) {
+    const params = new URLSearchParams();
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            params.append(key, value.join(","));
+          } else if (typeof value === "object" && value.value) {
+            params.append(key, value.value);
+          } else {
+            params.append(key, String(value));
+          }
+        }
+      });
+    }
+    
+    return this.request<{ notes: Note[]; total: number; filter: NoteFilter }>(
+      `/api/notes${params.toString() ? `?${params.toString()}` : ""}`
+    );
+  }
+
+  async getNote(id: string) {
+    return this.request<{ note: Note }>(`/api/notes/${id}`);
+  }
+
+  async createNote(input: CreateNoteInput) {
+    return this.request<{ message: string; note: Note }>("/api/notes", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: input.userId.value,
+        workspaceId: input.workspaceId.value,
+        title: input.title,
+        content: input.content.value,
+        type: input.type,
+        tags: input.tags,
+        metadata: input.metadata,
+        isShared: input.isShared,
+        sharedWith: input.sharedWith?.map(id => id.value),
+      }),
+    });
+  }
+
+  async updateNote(id: string, input: UpdateNoteInput) {
+    return this.request<{ message: string; note: Note }>(`/api/notes/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        ...input,
+        content: input.content?.value,
+        sharedWith: input.sharedWith?.map(id => id.value),
+      }),
+    });
+  }
+
+  async deleteNote(id: string) {
+    return this.request<{ message: string }>(`/api/notes/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async transcribeNote(id: string, forceRetranscribe?: boolean) {
+    return this.request<{ message: string; transcription: TranscriptionResult }>(`/api/notes/${id}/transcribe`, {
+      method: "POST",
+      body: JSON.stringify({ forceRetranscribe }),
+    });
+  }
+
+  async shareNote(id: string, shareWith: { value: string }[], permissions: ShareNoteInput["permissions"]) {
+    return this.request<{ message: string; note: Note }>(`/api/notes/${id}/share`, {
+      method: "POST",
+      body: JSON.stringify({
+        shareWith: shareWith.map(id => id.value),
+        permissions,
+      }),
+    });
+  }
+
+  async unshareNote(id: string, userId: string) {
+    return this.request<{ message: string }>(`/api/notes/${id}/share?userId=${userId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async searchNotes(query: string, userId: string, workspaceId: string) {
+    return this.request<{ notes: Note[]; query: string; total: number }>(
+      `/api/notes/search?q=${encodeURIComponent(query)}&userId=${userId}&workspaceId=${workspaceId}`
+    );
+  }
+
+  // Rituals API
+  async getRituals(filter?: RitualFilter) {
+    const params = new URLSearchParams();
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            params.append(key, value.join(","));
+          } else if (typeof value === "object" && value.value) {
+            params.append(key, value.value);
+          } else {
+            params.append(key, String(value));
+          }
+        }
+      });
+    }
+    
+    return this.request<{ rituals: Ritual[]; total: number; filter: RitualFilter }>(
+      `/api/rituals${params.toString() ? `?${params.toString()}` : ""}`
+    );
+  }
+
+  async getRitual(id: string) {
+    return this.request<{ ritual: Ritual }>(`/api/rituals/${id}`);
+  }
+
+  async createRitual(input: CreateRitualInput) {
+    return this.request<{ message: string; ritual: Ritual }>("/api/rituals", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: input.userId.value,
+        workspaceId: input.workspaceId.value,
+        name: input.name.value,
+        description: input.description,
+        category: input.category,
+        frequency: input.frequency,
+        targetTime: input.targetTime,
+        duration: input.duration,
+        color: input.color,
+        icon: input.icon,
+      }),
+    });
+  }
+
+  async updateRitual(id: string, input: UpdateRitualInput) {
+    return this.request<{ message: string; ritual: Ritual }>(`/api/rituals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        ...input,
+        name: input.name?.value,
+      }),
+    });
+  }
+
+  async deleteRitual(id: string) {
+    return this.request<{ message: string }>(`/api/rituals/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async completeRitual(id: string, input: CompleteRitualInput) {
+    return this.request<{ message: string; completion: RitualCompletion }>(`/api/rituals/${id}/complete`, {
+      method: "POST",
+      body: JSON.stringify({
+        ritualId: input.ritualId,
+        duration: input.duration,
+        quality: input.quality,
+        notes: input.notes,
+        mood: input.mood,
+        energy: input.energy,
+      }),
+    });
+  }
+
+  async getRitualCompletions(id: string, dateFrom?: string, dateTo?: string) {
+    const params = new URLSearchParams();
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+    
+    return this.request<{ completions: RitualCompletion[]; total: number; dateFrom?: string; dateTo?: string }>(
+      `/api/rituals/${id}/completions${params.toString() ? `?${params.toString()}` : ""}`
+    );
+  }
+
+  async getRitualStats(userId: string, workspaceId: string, dateFrom?: string, dateTo?: string) {
+    const params = new URLSearchParams();
+    params.append("userId", userId);
+    params.append("workspaceId", workspaceId);
+    if (dateFrom) params.append("dateFrom", dateFrom);
+    if (dateTo) params.append("dateTo", dateTo);
+    
+    return this.request<{ ritualStats: RitualStats; userId: string; workspaceId: string; dateFrom?: string; dateTo?: string }>(
+      `/api/rituals/stats?${params.toString()}`
+    );
   }
 }
 

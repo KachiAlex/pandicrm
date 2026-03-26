@@ -1,134 +1,234 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAccounts } from "../../../../hooks/useApi";
+import { useAuth } from "../../../../hooks/useAuth";
+import { api, type Account } from "../../../../lib/api";
 
-const WORKSPACE_ID = "ws-demo";
+export default function AccountsPage() {
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { user, isAuthenticated } = useAuth();
 
-export default function AccountsPageClient() {
-  const { data, loading, error } = useAccounts(WORKSPACE_ID);
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadAccounts();
+    }
+  }, [isAuthenticated, user]);
 
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-base-900">Accounts</h1>
-            <p className="mt-2 text-base text-base-600">
-              Manage your customer accounts and track their relationships.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/crm/accounts/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
-          >
-            + New Account
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)] p-8">
-          <div className="text-center text-base-600">Loading accounts...</div>
-        </div>
-      </div>
-    );
+  const loadAccounts = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.getAccounts("default-workspace");
+      setAccounts(response.accounts || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load accounts");
+      setAccounts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (accountId: string) => {
+    if (!confirm("Are you sure you want to delete this account?")) return;
+    
+    try {
+      await api.deleteAccount(accountId);
+      await loadAccounts(); // Refresh accounts
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete account");
+    }
+  };
+
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(amount);
+  };
+
+  const getSizeLabel = (size: string) => {
+    const sizeMap = {
+      "1-10": "Startup",
+      "11-50": "Small", 
+      "51-200": "Medium",
+      "201-500": "Large",
+      "500+": "Enterprise",
+    };
+    return sizeMap[size as keyof typeof sizeMap] || size;
+  };
+
+  if (!isAuthenticated || !user) {
+    return <div>Please sign in to view accounts.</div>;
   }
-
-  if (error) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-3xl text-base-900">Accounts</h1>
-            <p className="mt-2 text-base text-base-600">
-              Manage your customer accounts and track their relationships.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/crm/accounts/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
-          >
-            + New Account
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)] p-8">
-          <div className="text-center text-red-600">Error: {error}</div>
-        </div>
-      </div>
-    );
-  }
-
-  const accounts = data?.accounts || [];
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl text-base-900">Accounts</h1>
-          <p className="mt-2 text-base text-base-600">
-            Manage your customer accounts and track their relationships.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
+          <p className="text-gray-600 mt-2">Manage your customer accounts and track their relationships.</p>
         </div>
         <Link
           href="/dashboard/crm/accounts/new"
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           + New Account
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-white/80 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)]">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="border-b border-border/50 bg-white/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Account
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Industry
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Size
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Deals
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Pipeline
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-[0.22em] text-muted">
-                  Last Activity
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="text-red-800">{error}</div>
+          <button
+            onClick={loadAccounts}
+            className="mt-2 text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoading && !error && (
+        <div className="bg-white rounded-lg border border-gray-200 p-8">
+          <div className="text-center text-gray-500">Loading accounts...</div>
+        </div>
+      )}
+
+      {/* Accounts List */}
+      {!isLoading && !error && (
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              All Accounts ({accounts.length})
+            </h2>
+          </div>
+          
+          {accounts.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="text-gray-500 mb-4">No accounts found</div>
+              <Link
+                href="/dashboard/crm/accounts/new"
+                className="inline-block text-blue-600 hover:text-blue-700"
+              >
+                Create your first account →
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
               {accounts.map((account) => (
-                <tr key={account.id.value} className="hover:bg-white/50">
-                  <td className="px-6 py-4">
-                    <div>
+                <div key={account.id.value} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">{account.name}</h3>
+                        {account.industry && (
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                            {account.industry}
+                          </span>
+                        )}
+                        {account.size && (
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                            {getSizeLabel(account.size)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {account.description && (
+                        <p className="text-gray-600 mb-3">{account.description}</p>
+                      )}
+
+                      <div className="flex items-center gap-6 text-sm text-gray-500">
+                        {account.website && (
+                          <a
+                            href={account.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {account.website}
+                          </a>
+                        )}
+                        {account.domain && (
+                          <span>Domain: {account.domain}</span>
+                        )}
+                        <span>Created: {new Date(account.createdAt).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Contacts Preview */}
+                      <div className="mt-4">
+                        <div className="text-sm text-gray-500 mb-2">Contacts</div>
+                        <div className="flex -space-x-2">
+                          {/* Placeholder for contact avatars */}
+                          <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                            JD
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                            AS
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                            MK
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-500">
+                            +3
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deals Preview */}
+                      <div className="mt-4">
+                        <div className="text-sm text-gray-500 mb-2">Recent Deals</div>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-700">Q3 Contract Renewal</span>
+                            <span className="text-green-600 font-medium">$25,000</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-700">Enterprise License</span>
+                            <span className="text-blue-600 font-medium">$150,000</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 ml-4">
                       <Link
                         href={`/dashboard/crm/accounts/${account.id.value}`}
-                        className="font-medium text-base-900 hover:text-primary"
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="View account"
                       >
-                        {account.name}
+                        👁️
                       </Link>
-                      {account.domain && (
-                        <p className="text-sm text-base-600">{account.domain}</p>
-                      )}
+                      <Link
+                        href={`/dashboard/crm/accounts/${account.id.value}/edit`}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Edit account"
+                      >
+                        ✏️
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(account.id.value)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete account"
+                      >
+                        🗑️
+                      </button>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-base-600">{account.industry || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-base-600">{account.size || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-base-600">-</td>
-                  <td className="px-6 py-4 text-sm font-medium text-base-900">-</td>
-                  <td className="px-6 py-4 text-sm text-base-600">
-                    {new Date(account.updatedAt).toLocaleDateString()}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

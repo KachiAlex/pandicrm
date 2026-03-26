@@ -1,4 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "../../hooks/useAuth";
+import { api, type Note, type NoteFilter } from "../../lib/api";
 
 const stats = [
   {
@@ -27,186 +32,315 @@ const stats = [
   },
 ];
 
-const recentNotes = [
-  {
-    title: "Meeting with Acme Corp - Product Requirements",
-    type: "meeting",
-    duration: "45 min",
-    date: "2 hours ago",
-    aiTranscribed: true,
-  },
-  {
-    title: "Customer Feedback Session - Global Industries",
-    type: "call",
-    duration: "30 min",
-    date: "4 hours ago",
-    aiTranscribed: true,
-  },
-  {
-    title: "Project Planning Notes",
-    type: "manual",
-    date: "1 day ago",
-    aiTranscribed: false,
-  },
-  {
-    title: "Sales Strategy Discussion",
-    type: "meeting",
-    duration: "60 min",
-    date: "2 days ago",
-    aiTranscribed: true,
-  },
-];
-
 export default function NotesPage() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<NoteFilter>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const { user, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadNotes();
+    }
+  }, [isAuthenticated, user, filter]);
+
+  const loadNotes = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await api.getNotes({
+        userId: user.id,
+        workspaceId: { value: "default-workspace" }, // TODO: Get from context
+        ...filter,
+      });
+      setNotes(response.notes || []);
+    } catch (error) {
+      console.error("Failed to load notes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!user || !searchQuery.trim()) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await api.searchNotes(searchQuery, user.id.value, "default-workspace");
+      setNotes(response.notes || []);
+    } catch (error) {
+      console.error("Failed to search notes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTranscribe = async (noteId: string) => {
+    try {
+      await api.transcribeNote(noteId);
+      await loadNotes(); // Refresh notes
+    } catch (error) {
+      console.error("Failed to transcribe note:", error);
+    }
+  };
+
+  const handleShare = async (noteId: string) => {
+    try {
+      // TODO: Show share dialog with user selection
+      await api.shareNote(noteId, [], { canEdit: false, canComment: true, canShare: false });
+      await loadNotes(); // Refresh notes
+    } catch (error) {
+      console.error("Failed to share note:", error);
+    }
+  };
+
+  const getNoteIcon = (type: string) => {
+    switch (type) {
+      case "meeting":
+        return "👥";
+      case "call":
+        return "📞";
+      case "email":
+        return "📧";
+      case "voice_memo":
+        return "🎙️";
+      case "document":
+        return "📄";
+      default:
+        return "📝";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return date.toLocaleDateString();
+  };
+
+  if (!isAuthenticated || !user) {
+    return <div>Please sign in to view notes.</div>;
+  }
+
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display text-3xl text-base-900">Notes</h1>
-          <p className="mt-2 text-base text-base-600">
-            Capture and organize your thoughts with AI-powered transcription.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Notes</h1>
+          <p className="text-gray-600 mt-2">Capture ideas, meetings, and conversations with AI transcription</p>
         </div>
         <div className="flex gap-3">
           <Link
             href="/dashboard/notes/new"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-primary/90"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             + New Note
           </Link>
-          <button className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-base-900 shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-base-50">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-            Start Recording
-          </button>
         </div>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-2xl border border-border/60 bg-white/80 p-6 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)]"
-          >
-            <p className="text-sm font-medium uppercase tracking-[0.22em] text-muted">
-              {stat.label}
-            </p>
-            <p className="mt-2 text-3xl font-semibold text-base-900">{stat.value}</p>
-            <p
-              className={`mt-2 text-sm ${
-                stat.trend === "up" ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {stat.change} from last week
-            </p>
+          <div key={stat.label} className="bg-white p-6 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{stat.label}</p>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+              <div className={`text-sm ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
+                {stat.change}
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border/60 bg-white/80 p-6 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)]">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl text-base-900">Recent Notes</h2>
-            <Link
-              href="/dashboard/notes/all"
-              className="text-sm font-medium text-primary hover:text-secondary"
+      {/* Filters and Search */}
+      <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={filter.type || ""}
+              onChange={(e) => setFilter({ ...filter, type: e.target.value as any || undefined })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              View all
+              <option value="">All Types</option>
+              <option value="manual">Manual</option>
+              <option value="meeting">Meeting</option>
+              <option value="call">Call</option>
+              <option value="email">Email</option>
+              <option value="voice_memo">Voice Memo</option>
+              <option value="document">Document</option>
+            </select>
+            <select
+              value={filter.hasTranscript !== undefined ? filter.hasTranscript.toString() : ""}
+              onChange={(e) => setFilter({ 
+                ...filter, 
+                hasTranscript: e.target.value === "" ? undefined : e.target.value === "true" 
+              })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Notes</option>
+              <option value="true">Transcribed</option>
+              <option value="false">Not Transcribed</option>
+            </select>
+            <select
+              value={filter.isShared !== undefined ? filter.isShared.toString() : ""}
+              onChange={(e) => setFilter({ 
+                ...filter, 
+                isShared: e.target.value === "" ? undefined : e.target.value === "true" 
+              })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Notes</option>
+              <option value="true">Shared</option>
+              <option value="false">Private</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Notes List */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="text-gray-500">Loading notes...</div>
+          </div>
+        ) : notes.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="text-gray-500">No notes found</div>
+            <Link
+              href="/dashboard/notes/new"
+              className="inline-block mt-4 text-blue-600 hover:text-blue-700"
+            >
+              Create your first note →
             </Link>
           </div>
-          <div className="mt-6 space-y-4">
-            {recentNotes.map((note, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 rounded-lg border border-border/40 bg-white/50 hover:bg-white transition">
-                <div
-                  className={`mt-1 size-2 rounded-full ${
-                    note.type === "meeting"
-                      ? "bg-purple-500"
-                      : note.type === "call"
-                      ? "bg-blue-500"
-                      : "bg-gray-500"
-                  }`}
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/dashboard/notes/${index + 1}`}
-                      className="font-medium text-base-900 hover:text-primary"
-                    >
-                      {note.title}
-                    </Link>
-                    {note.aiTranscribed && (
-                      <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                        AI Transcribed
-                      </span>
+        ) : (
+          <div className="divide-y divide-gray-200">
+            {notes.map((note) => (
+              <div key={note.id.value} className="p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xl">{getNoteIcon(note.type)}</span>
+                      <h3 className="text-lg font-semibold text-gray-900">{note.title}</h3>
+                      {note.isShared && (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                          Shared
+                        </span>
+                      )}
+                      {note.metadata.aiTranscribed && (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                          AI Transcribed
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-3 line-clamp-2">{note.content.value}</p>
+                    
+                    {note.metadata.summary && (
+                      <div className="bg-blue-50 p-3 rounded-lg mb-3">
+                        <p className="text-sm text-blue-800 font-medium mb-1">AI Summary</p>
+                        <p className="text-sm text-blue-700">{note.metadata.summary}</p>
+                      </div>
                     )}
+
+                    {note.metadata.keyPoints && note.metadata.keyPoints.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-500 font-medium mb-1">Key Points</p>
+                        <ul className="list-disc list-inside text-sm text-gray-600">
+                          {note.metadata.keyPoints.map((point, index) => (
+                            <li key={index}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {note.metadata.actionItems && note.metadata.actionItems.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-500 font-medium mb-1">Action Items</p>
+                        <ul className="list-disc list-inside text-sm text-gray-600">
+                          {note.metadata.actionItems.map((item, index) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>{formatDate(note.createdAt)}</span>
+                        {note.metadata.duration && (
+                          <span>• {note.metadata.duration} min</span>
+                        )}
+                        {note.metadata.participantCount && (
+                          <span>• {note.metadata.participantCount} participants</span>
+                        )}
+                        {note.tags.length > 0 && (
+                          <div className="flex gap-1">
+                            {note.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-4 text-sm text-base-600">
-                    <span className="capitalize">{note.type}</span>
-                    {note.duration && <span>{note.duration}</span>}
-                    <span>{note.date}</span>
+
+                  <div className="flex items-center gap-2 ml-4">
+                    {!note.metadata.aiTranscribed && (note.type === "voice_memo" || note.type === "meeting" || note.type === "call") && (
+                      <button
+                        onClick={() => handleTranscribe(note.id.value)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Transcribe with AI"
+                      >
+                        🎙️
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleShare(note.id.value)}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Share note"
+                    >
+                      📤
+                    </button>
+                    <Link
+                      href={`/dashboard/notes/${note.id.value}`}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Edit note"
+                    >
+                      ✏️
+                    </Link>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/60 bg-white/80 p-6 shadow-[0_20px_60px_-44px_rgba(11,13,42,0.6)]">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl text-base-900">Quick Actions</h2>
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <button className="rounded-xl border border-border/60 bg-white/50 p-4 text-center transition hover:bg-white hover:shadow-[0_10px_30px_-15px_rgba(11,13,42,0.3)]">
-              <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-              </div>
-              <p className="font-medium text-base-900">Voice Recording</p>
-              <p className="text-sm text-base-600">Start audio capture</p>
-            </button>
-
-            <Link
-              href="/dashboard/notes/new"
-              className="rounded-xl border border-border/60 bg-white/50 p-4 text-center transition hover:bg-white hover:shadow-[0_10px_30px_-15px_rgba(11,13,42,0.3)]"
-            >
-              <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <p className="font-medium text-base-900">Write Note</p>
-              <p className="text-sm text-base-600">Create manual note</p>
-            </Link>
-
-            <Link
-              href="/dashboard/notes/upload"
-              className="rounded-xl border border-border/60 bg-white/50 p-4 text-center transition hover:bg-white hover:shadow-[0_10px_30px_-15px_rgba(11,13,42,0.3)]"
-            >
-              <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-              </div>
-              <p className="font-medium text-base-900">Upload Audio</p>
-              <p className="text-sm text-base-600">Import audio file</p>
-            </Link>
-
-            <Link
-              href="/dashboard/notes/search"
-              className="rounded-xl border border-border/60 bg-white/50 p-4 text-center transition hover:bg-white hover:shadow-[0_10px_30px_-15px_rgba(11,13,42,0.3)]"
-            >
-              <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <p className="font-medium text-base-900">Search Notes</p>
-              <p className="text-sm text-base-600">Find content quickly</p>
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
