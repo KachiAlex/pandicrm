@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, ReactElement } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, ReactElement, createElement } from "react";
 import { api, type User, type LoginInput, type CreateUserInput } from "../lib/api";
 
 interface AuthContextType {
@@ -13,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }): ReactElement {
+export function AuthProvider(props: { children: ReactNode }): ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
     refreshUser();
   }, []);
 
-  const refreshUser = async () => {
+  async function refreshUser() {
     try {
       setIsLoading(true);
       const response = await api.getCurrentUser();
@@ -33,27 +33,27 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
-  const login = async (input: LoginInput) => {
+  async function login(input: LoginInput) {
     const response = await api.login(input);
     if (response.user) setUser(response.user);
-  };
+  }
 
-  const register = async (input: CreateUserInput) => {
+  async function register(input: CreateUserInput) {
     const response = await api.register(input);
     if (response.user) setUser(response.user);
-  };
+  }
 
-  const logout = async () => {
+  async function logout() {
     try {
       await api.logout();
     } finally {
       setUser(null);
     }
-  };
+  }
 
-  const contextValue: AuthContextType = {
+  const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated,
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }): ReactElemen
     refreshUser,
   };
 
-  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
+  return createElement(AuthContext.Provider, { value }, props.children);
 }
 
 export function useAuth() {
