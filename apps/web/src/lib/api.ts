@@ -37,6 +37,7 @@ export interface Account {
   id: { value: string };
   workspaceId: { value: string };
   name: string;
+  description?: string;
   domain?: string;
   industry?: string;
   size?: "1-10" | "11-50" | "51-200" | "201-500" | "500+";
