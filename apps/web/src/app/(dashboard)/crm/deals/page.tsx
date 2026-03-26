@@ -130,11 +130,13 @@ export default function DealsPage() {
                         <span className="text-gray-600">{deal.probability}% probability</span>
                       </div>
                       <div className="mt-2 text-lg font-semibold text-gray-900">
-                        {formatCurrency(deal.amount)}
+                        {formatCurrency(deal.amount ?? 0)}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        Expected close: {new Date(deal.closeDate).toLocaleDateString()}
-                      </div>
+                      {deal.closeDate && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          Expected close: {new Date(deal.closeDate).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2">
