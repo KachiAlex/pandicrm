@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, ReactElement } from "react";
 import { api, type User, type LoginInput, type CreateUserInput } from "../lib/api";
 
 interface AuthContextType {
@@ -13,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }): ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,12 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       const response = await api.getCurrentUser();
-      if (response.user) {
-        setUser(response.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
+      setUser(response.user || null);
+    } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -40,51 +36,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (input: LoginInput) => {
-    try {
-      const response = await api.login(input);
-      if (response.user) {
-        setUser(response.user);
-      }
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.login(input);
+    if (response.user) setUser(response.user);
   };
 
   const register = async (input: CreateUserInput) => {
-    try {
-      const response = await api.register(input);
-      if (response.user) {
-        setUser(response.user);
-      }
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.register(input);
+    if (response.user) setUser(response.user);
   };
 
   const logout = async () => {
     try {
       await api.logout();
-      setUser(null);
-    } catch (error) {
+    } finally {
       setUser(null);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated,
-        login,
-        register,
-        logout,
-        refreshUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const contextValue: AuthContextType = {
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    register,
+    logout,
+    refreshUser,
+  };
+
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -4,6 +4,8 @@ import type {
   TaskId,
   CompleteTaskInput
 } from "@pandi/core-domain";
+import { wsManager } from "../../../../lib/websocket";
+import { notificationManager } from "../../../../lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -32,17 +34,48 @@ export async function POST(
     
     const completeInput: CompleteTaskInput = {
       completedBy: { value: body.completedBy },
-      notes: body.notes,
-      actualHours: body.actualHours,
+      completionNotes: body.completionNotes,
+      verificationRequired: body.verificationRequired,
     };
 
+    // Basic validation
+    if (!completeInput.completedBy.value) {
+      return NextResponse.json(
+        { error: "completedBy is required" },
+        { status: 400 }
+      );
+    }
+
     const task = await taskRepository.completeTask(taskId, completeInput);
-    return NextResponse.json({ task });
+    
+    // Broadcast real-time update
+    wsManager.broadcastTaskUpdate(task.workspaceId.value, task, "completed");
+    
+    // Send notification to task creator if different from completer
+    if (task.createdBy.value !== completeInput.completedBy.value) {
+      await notificationManager.notifyTaskCompleted(
+        task.createdBy.value,
+        task.workspaceId.value,
+        task
+      );
+    }
+    
+    return NextResponse.json({ 
+      message: "Task completed successfully",
+      task,
+    });
   } catch (error) {
     if (error instanceof Error && error.message.includes("not found")) {
       return NextResponse.json(
         { error: "Task not found" },
         { status: 404 }
+      );
+    }
+
+    if (error instanceof Error && error.message.includes("already completed")) {
+      return NextResponse.json(
+        { error: "Task is already completed" },
+        { status: 400 }
       );
     }
 

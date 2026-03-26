@@ -3,6 +3,8 @@ export const metadata = {
 };
 
 import { AuthProvider } from "../../hooks/useAuth";
+import { NotificationCenter } from "../../components/Notifications/NotificationCenter";
+import { NotificationToastContainer } from "../../components/Notifications/NotificationToast";
 
 export default function DashboardLayout({
   children,
@@ -36,10 +38,13 @@ export default function DashboardLayout({
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <button className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90">
-                  + New
-                </button>
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-secondary" />
+                <NotificationCenter />
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm">
+                    JD
+                  </div>
+                  <span className="text-sm font-medium text-base-900">John Doe</span>
+                </div>
               </div>
             </div>
           </div>
@@ -48,6 +53,7 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      <NotificationToastContainer />
     </AuthProvider>
   );
 }

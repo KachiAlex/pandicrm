@@ -22,6 +22,9 @@ export interface ApiResponse<T> {
   completions?: RitualCompletion[];
   completion?: RitualCompletion;
   ritualStats?: RitualStats;
+  notifications?: Notification[];
+  notification?: Notification;
+  notificationStats?: NotificationStats;
   message?: string;
   total?: number;
   filter?: NoteFilter | RitualFilter;
@@ -266,6 +269,27 @@ export interface RitualStats {
     targetCompletions: number;
     rate: number;
   }>;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  type: "task_assigned" | "task_completed" | "task_overdue" | "note_shared" | "note_transcribed" | "ritual_completed" | "ritual_missed" | "account_created" | "contact_created" | "deal_created" | "deal_won" | "deal_lost" | "system_update" | "mention" | "reminder";
+  title: string;
+  message: string;
+  data?: any;
+  isRead: boolean;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+export interface NotificationStats {
+  total: number;
+  unread: number;
+  byType: Record<string, number>;
+  recentCount: number;
+  unreadCount: number;
 }
 
 export interface User {
@@ -851,6 +875,65 @@ class ApiClient {
     return this.request<{ ritualStats: RitualStats; userId: string; workspaceId: string; dateFrom?: string; dateTo?: string }>(
       `/api/rituals/stats?${params.toString()}`
     );
+  }
+
+  // Notifications API
+  async getNotifications(userId: string, workspaceId: string, limit?: number, offset?: number, includeRead?: boolean) {
+    const params = new URLSearchParams();
+    params.append("userId", userId);
+    params.append("workspaceId", workspaceId);
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    if (includeRead !== undefined) params.append("includeRead", includeRead.toString());
+    
+    return this.request<{ notifications: Notification[]; total: number; limit: number; offset: number }>(
+      `/api/notifications?${params.toString()}`
+    );
+  }
+
+  async createNotification(notification: {
+    userId: string;
+    workspaceId: string;
+    type: string;
+    title: string;
+    message: string;
+    data?: any;
+    expiresAt?: string;
+  }) {
+    return this.request<{ message: string; notification: Notification }>("/api/notifications", {
+      method: "POST",
+      body: JSON.stringify(notification),
+    });
+  }
+
+  async markNotificationAsRead(notificationId: string, userId: string) {
+    return this.request<{ message: string; notification: Notification }>(`/api/notifications/${notificationId}`, {
+      method: "PUT",
+      body: JSON.stringify({ userId }),
+    });
+  }
+
+  async deleteNotification(notificationId: string, userId: string) {
+    return this.request<{ message: string }>(`/api/notifications/${notificationId}?userId=${userId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getNotificationStats(userId: string, workspaceId: string) {
+    const params = new URLSearchParams();
+    params.append("userId", userId);
+    params.append("workspaceId", workspaceId);
+    
+    return this.request<{ stats: NotificationStats; userId: string; workspaceId: string }>(
+      `/api/notifications/stats?${params.toString()}`
+    );
+  }
+
+  async markAllNotificationsAsRead(userId: string, workspaceId: string) {
+    return this.request<{ message: string; markedCount: number; userId: string; workspaceId: string }>("/api/notifications/read-all", {
+      method: "POST",
+      body: JSON.stringify({ userId, workspaceId }),
+    });
   }
 }
 

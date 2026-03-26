@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createInMemoryRitualRepository } from "@pandi/data-access";
 import type { RitualId, CompleteRitualInput } from "@pandi/core-domain";
+import { wsManager } from "../../../../lib/websocket";
+import { notificationManager } from "../../../../lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -34,6 +36,24 @@ export async function POST(
     }
 
     const completion = await ritualRepository.completeRitual(completeInput);
+    const ritual = await ritualRepository.findById(ritualId);
+    
+    if (!ritual) {
+      return NextResponse.json(
+        { error: "Ritual not found" },
+        { status: 404 }
+      );
+    }
+    
+    // Broadcast real-time update
+    wsManager.broadcastRitualUpdate(ritual.workspaceId.value, ritual, "completed");
+    
+    // Send celebration notification
+    await notificationManager.notifyRitualCompleted(
+      ritual.userId.value,
+      ritual.workspaceId.value,
+      ritual
+    );
     
     return NextResponse.json({ 
       message: "Ritual completed successfully",

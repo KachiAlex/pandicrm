@@ -136,20 +136,53 @@ function parseTaskFilter(url: URL): TaskFilter {
 
 // GET /api/tasks - List tasks with optional filtering
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const workspaceId = parseWorkspaceId(url);
+  try {
+    const { searchParams } = new URL(request.url);
+    
+    // Parse query parameters
+    const filter: TaskFilter = {};
+    
+    if (searchParams.get("userId")) {
+      filter.assignedTo = { value: searchParams.get("userId")! };
+    }
+    
+    if (searchParams.get("workspaceId")) {
+      filter.workspaceId = { value: searchParams.get("workspaceId")! };
+    }
+    
+    if (searchParams.get("status")) {
+      filter.status = searchParams.get("status") as any;
+    }
+    
+    if (searchParams.get("priority")) {
+      filter.priority = searchParams.get("priority") as any;
+    }
+    
+    if (searchParams.get("category")) {
+      filter.category = searchParams.get("category") as any;
+    }
+    
+    if (searchParams.get("dateFrom")) {
+      filter.dateFrom = searchParams.get("dateFrom")!;
+    }
+    
+    if (searchParams.get("dateTo")) {
+      filter.dateTo = searchParams.get("dateTo")!;
+    }
 
-  if (!workspaceId) {
+    const tasks = await taskRepository.list(filter);
+    
+    return NextResponse.json({ 
+      tasks,
+      total: tasks.length,
+      filter,
+    });
+  } catch (error) {
     return NextResponse.json(
-      { error: "workspaceId query parameter is required" },
-      { status: 400 }
+      { error: error instanceof Error ? error.message : "Failed to fetch tasks" },
+      { status: 500 }
     );
   }
-
-  const filter = parseTaskFilter(url);
-  const tasks = await taskRepository.listByWorkspace(workspaceId, filter);
-  
-  return NextResponse.json({ tasks });
 }
 
 // POST /api/tasks - Create a new task
@@ -157,21 +190,46 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    const taskInput: CreateTaskInput = {
+    const createInput: CreateTaskInput = {
       workspaceId: { value: body.workspaceId },
       title: body.title,
       description: body.description,
+      assignedTo: { value: body.assignedTo },
+      createdBy: { value: body.createdBy },
       priority: body.priority,
       category: body.category,
+      dueDate: body.dueDate,
       timePeriod: body.timePeriod,
-      dueAt: body.dueAt,
-      assigneeId: body.assigneeId ? { value: body.assigneeId } : undefined,
-      estimatedHours: body.estimatedHours,
+      estimatedDuration: body.estimatedDuration,
       tags: body.tags,
     };
 
-    const task = await taskRepository.create(taskInput);
-    return NextResponse.json({ task }, { status: 201 });
+    // Basic validation
+    if (!createInput.workspaceId.value || !createInput.title || !createInput.assignedTo.value || !createInput.createdBy.value) {
+      return NextResponse.json(
+        { error: "workspaceId, title, assignedTo, and createdBy are required" },
+        { status: 400 }
+      );
+    }
+
+    const task = await taskRepository.create(createInput);
+    
+    // Broadcast real-time update
+    wsManager.broadcastTaskUpdate(createInput.workspaceId.value, task, "created");
+    
+    // Send notification to assigned user if different from creator
+    if (createInput.assignedTo.value !== createInput.createdBy.value) {
+      await notificationManager.notifyTaskAssigned(
+        createInput.assignedTo.value,
+        createInput.workspaceId.value,
+        task
+      );
+    }
+    
+    return NextResponse.json({ 
+      message: "Task created successfully",
+      task,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create task" },

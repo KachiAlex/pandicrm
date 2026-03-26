@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "../../hooks/useAuth";
-import { api, type Ritual, type RitualFilter, type RitualStats } from "../../lib/api";
+import { useAuth } from "../../../hooks/useAuth";
+import { api, type Ritual, type RitualFilter, type RitualStats } from "../../../lib/api";
 
 export default function RitualsPage() {
   const [rituals, setRituals] = useState<Ritual[]>([]);
