@@ -1,295 +1,395 @@
+"use client";
+
+import { motion } from "motion/react";
+import {
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Calendar,
+  CheckCircle2,
+  FileText,
+  Quote,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Users,
+  Zap,
+} from "lucide-react";
+
+const featureCards = [
+  {
+    title: "Smart CRM",
+    description: "Manage your customer relationships with AI insights and automation.",
+    icon: Users,
+    gradient: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))",
+  },
+  {
+    title: "AI Note-Taking",
+    description: "Capture ideas instantly with intelligent organization and summaries.",
+    icon: Brain,
+    gradient: "linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary))",
+  },
+  {
+    title: "Task Management",
+    description: "Stay on top of your work with intuitive task tracking and automation.",
+    icon: CheckCircle2,
+    gradient: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))",
+  },
+  {
+    title: "Analytics Dashboard",
+    description: "Gain insights with beautiful visualizations and real-time reports.",
+    icon: BarChart3,
+    gradient: "linear-gradient(135deg, var(--accent-secondary), var(--accent-primary))",
+  },
+  {
+    title: "Project Timeline",
+    description: "Visualize your projects and deadlines with interactive timelines.",
+    icon: Calendar,
+    gradient: "linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary))",
+  },
+  {
+    title: "Automation",
+    description: "Automate repetitive tasks and focus on what matters most.",
+    icon: Zap,
+    gradient: "linear-gradient(135deg, var(--accent-tertiary), var(--accent-secondary))",
+  },
+];
+
+const dashboardStats = [
+  { label: "Active Clients", value: "1,234", change: "+12%" },
+  { label: "Notes Created", value: "5,678", change: "+8%" },
+  { label: "Tasks Done", value: "890", change: "+23%" },
+  { label: "Productivity", value: "94%", change: "+5%" },
+];
+
+const recentActivity = [
+  { title: "Client meeting notes updated", time: "2 minutes ago" },
+  { title: "New task assigned to Marketing Team", time: "15 minutes ago" },
+  { title: "Project milestone completed", time: "1 hour ago" },
+  { title: "AI summary generated for Q1 report", time: "2 hours ago" },
+];
+
+const testimonials = [
+  {
+    name: "Sarah Johnson",
+    role: "CEO, TechStart",
+    content:
+      "This platform transformed how we manage our customer relationships. The AI features are incredibly intuitive!",
+    initials: "SJ",
+  },
+  {
+    name: "Michael Chen",
+    role: "Product Manager",
+    content:
+      "The note-taking AI is a game-changer. It understands context and helps me organize thoughts effortlessly.",
+    initials: "MC",
+  },
+  {
+    name: "Emily Rodriguez",
+    role: "Freelance Designer",
+    content:
+      "I've tried many project management tools, but this one actually helps me stay productive without overwhelming me.",
+    initials: "ER",
+  },
+];
+
+const heroStats = [
+  { label: "Active Users", value: "50K+" },
+  { label: "Tasks Completed", value: "1M+" },
+  { label: "Uptime", value: "99.9%" },
+];
+
+const ctaHighlights = [
+  "No credit card required",
+  "14 day free trial",
+  "Cancel anytime",
+];
+
 export default function Home() {
   return (
-    <div className="relative isolate flex flex-col min-h-[100svh] bg-surface">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{animationDelay: '4s'}}></div>
+    <div className="relative min-h-screen bg-gradient-to-b from-white via-purple-50/60 to-white text-base-900">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <motion.div
+          className="absolute top-20 left-16 w-72 h-72 rounded-full mix-blend-multiply filter blur-xl opacity-70"
+          style={{ background: "radial-gradient(circle, rgba(147,51,234,0.55), transparent 70%)" }}
+          animate={{ x: [0, 80, 0], y: [0, 60, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-40 right-10 w-72 h-72 rounded-full mix-blend-multiply filter blur-xl opacity-70"
+          style={{ background: "radial-gradient(circle, rgba(236,72,153,0.55), transparent 70%)" }}
+          animate={{ x: [0, -80, 0], y: [0, 80, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -bottom-12 left-1/2 w-80 h-80 rounded-full mix-blend-multiply filter blur-xl opacity-70"
+          style={{ background: "radial-gradient(circle, rgba(168,85,247,0.55), transparent 70%)" }}
+          animate={{ x: [0, 60, 0], y: [0, -60, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+        />
       </div>
-      
-      <header className="relative z-10 px-6 py-8 sm:px-10">
-        <nav className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-2xl border border-border/60 bg-white/70 p-4 shadow-[0_20px_60px_-30px_rgba(147,51,234,0.35)] backdrop-blur">
+
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-white/80 backdrop-blur px-6 py-6">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-[0_18px_45px_-20px_rgba(147,51,234,0.65)]">
-              <span className="font-semibold">PC</span>
+              <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
             </div>
             <div className="leading-tight">
-              <span className="text-sm font-medium uppercase tracking-[0.18em] text-muted">Pandi CRM</span>
-              <p className="font-display text-lg font-semibold text-base-900">Intelligent Revenue Rituals</p>
+              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">WorkFlow</span>
+              <p className="font-display text-lg font-semibold">Intelligent Revenue Rituals</p>
             </div>
           </div>
-          <div className="hidden items-center gap-8 text-sm font-medium text-muted sm:flex">
-            <a className="hover:text-base-900" href="#features">
+
+          <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-base-600">
+            <a className="transition-colors hover:text-base-900" href="#features">
               Features
             </a>
-            <a className="hover:text-base-900" href="#dashboard">
+            <a className="transition-colors hover:text-base-900" href="#dashboard">
               Dashboard
             </a>
-            <a className="hover:text-base-900" href="#testimonials">
+            <a className="transition-colors hover:text-base-900" href="#testimonials">
               Testimonials
             </a>
-            <a className="hover:text-base-900" href="#pricing">
+            <a className="transition-colors hover:text-base-900" href="#pricing">
               Pricing
             </a>
           </div>
-          <div className="flex items-center gap-3 text-sm font-medium">
-            <a className="rounded-full border border-border px-5 py-2.5 text-muted transition hover:border-transparent hover:text-base-900 hover:shadow-[0_12px_32px_-18px_rgba(147,51,234,0.35)]" href="/signin">
-              Sign in
+
+          <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
+            <a
+              className="rounded-full border border-border px-5 py-2.5 text-base-600 transition hover:border-primary hover:text-base-900 hover:shadow-[0_12px_32px_-18px_rgba(147,51,234,0.35)]"
+              href="/signin"
+            >
+              Sign In
             </a>
-            <a className="rounded-full bg-gradient-to-r from-primary via-secondary to-tertiary px-5 py-2.5 text-white shadow-[0_16px_35px_-18px_rgba(147,51,234,0.65)] transition hover:shadow-[0_24px_45px_-22px_rgba(147,51,234,0.6)]" href="/signup">
-              Start free trial
+            <a
+              className="rounded-full bg-gradient-to-r from-primary via-secondary to-tertiary px-5 py-2.5 text-white shadow-[0_16px_35px_-18px_rgba(147,51,234,0.65)] transition hover:shadow-[0_24px_45px_-22px_rgba(147,51,234,0.6)]"
+              href="/signup"
+            >
+              Get Started
             </a>
           </div>
-        </nav>
+        </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 flex-col">
-        <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-16 sm:px-10 lg:pt-24">
+      <main className="relative z-10 flex flex-col">
+        <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-24">
           <div className="text-center">
-            {/* AI Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full mb-8 border border-purple-200">
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
-              <span className="text-sm text-primary font-semibold">AI-Powered Workspace</span>
-            </div>
-            
-            {/* Hero Title */}
-            <h1 className="font-display text-6xl leading-[1.08] text-base-900 sm:text-7xl lg:text-8xl mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white/80 px-5 py-2 text-sm font-medium text-primary shadow-[0_12px_32px_-18px_rgba(147,51,234,0.35)] backdrop-blur"
+            >
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              AI-Powered Workspace
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="mt-8 font-display text-6xl leading-tight text-base-900 sm:text-7xl"
+            >
               <span className="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">
-                Your All-in-One Workspace
+                Your All-in-One Workspace for Success
               </span>
-              <br />
-              for Success
-            </h1>
-            
-            {/* Hero Description */}
-            <p className="max-w-2xl mx-auto text-xl leading-[1.6] text-base-700 mb-12">
-              Streamline your workflow with intelligent CRM, AI-powered note-taking, and seamless project management. All in one beautiful platform.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
-              <a className="group inline-flex items-center gap-3 rounded-full bg-base-900 px-8 py-4 text-lg font-semibold text-white shadow-2xl transition-all hover:bg-base-800 hover:shadow-3xl hover:-translate-y-0.5" href="/signup">
-                <span>Get Started Free</span>
-                <span className="transition-transform group-hover:translate-x-1">→</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-base-600"
+            >
+              Streamline your workflow with intelligent CRM, AI-powered note-taking, and seamless project management.
+              All in one beautiful platform.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mx-auto mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
+            >
+              <a
+                className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-4 text-lg font-semibold text-white shadow-2xl transition hover:shadow-3xl hover:-translate-y-0.5"
+                href="/signup"
+              >
+                Get Started Free
+                <ArrowRight
+                  className="transition-transform group-hover:translate-x-1"
+                  style={{ width: "1.25rem", height: "1.25rem" }}
+                />
               </a>
-              <a className="inline-flex items-center gap-3 rounded-full border-2 border-border bg-white/80 px-8 py-4 text-lg font-semibold text-base-900 shadow-lg backdrop-blur transition-all hover:border-primary hover:bg-white hover:-translate-y-0.5" href="#tour">
-                <span>Watch Demo</span>
+              <a
+                className="inline-flex items-center gap-3 rounded-full border-2 border-border bg-white/80 px-8 py-4 text-lg font-semibold text-base-900 shadow-lg transition hover:border-primary hover:bg-white hover:-translate-y-0.5"
+                href="#demo"
+              >
+                Watch Demo
               </a>
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-              {[
-                { value: "50K+", label: "Active Users" },
-                { value: "1M+", label: "Tasks Completed" },
-                { value: "99.9%", label: "Uptime" },
-              ].map((stat, index) => (
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mt-20 grid grid-cols-1 gap-6 sm:grid-cols-3"
+            >
+              {heroStats.map((stat) => (
                 <div
-                  key={index}
-                  className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-purple-100"
+                  key={stat.label}
+                  className="rounded-2xl border border-border/40 bg-white/80 p-6 text-center shadow-lg backdrop-blur"
                 >
-                  <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-display text-3xl font-bold">
+                  <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-3xl font-display font-semibold text-transparent">
                     {stat.value}
                   </div>
-                  <div className="text-base-600">{stat.label}</div>
+                  <p className="mt-2 text-base-600">{stat.label}</p>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
-        <section id="features" className="py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-display text-4xl font-bold">
+        <section id="features" className="bg-white py-24">
+          <div className="mx-auto w-full max-w-7xl px-6">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
+                Platform Features
+              </span>
+              <h2 className="mt-6 font-display text-4xl font-bold text-base-900">
                 Everything You Need to Succeed
               </h2>
-              <p className="text-base-600 max-w-2xl mx-auto text-lg">
-                Powerful features designed to help you work smarter, not harder.
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-base-600">
+                Powerful tools designed to help you work smarter, not harder.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: "👥",
-                  title: "Smart CRM",
-                  description: "Manage your customer relationships with AI-powered insights and automation.",
-                  color: "from-primary to-primary/70"
-                },
-                {
-                  icon: "🧠",
-                  title: "AI Note-Taking",
-                  description: "Capture ideas instantly with intelligent organization and smart suggestions.",
-                  color: "from-secondary to-secondary/70"
-                },
-                {
-                  icon: "✓",
-                  title: "Task Management",
-                  description: "Stay on top of your work with intuitive task tracking and prioritization.",
-                  color: "from-primary to-secondary"
-                },
-                {
-                  icon: "📊",
-                  title: "Analytics Dashboard",
-                  description: "Gain insights with beautiful visualizations and real-time reports.",
-                  color: "from-secondary to-primary"
-                },
-                {
-                  icon: "📅",
-                  title: "Project Timeline",
-                  description: "Visualize your projects and deadlines with interactive timelines.",
-                  color: "from-primary to-tertiary"
-                },
-                {
-                  icon: "⚡",
-                  title: "Automation",
-                  description: "Automate repetitive tasks and focus on what matters most.",
-                  color: "from-tertiary to-secondary"
-                }
-              ].map((feature, index) => (
+            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {featureCards.map((feature) => (
                 <div
-                  key={index}
-                  className="group relative bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 hover:shadow-2xl hover:shadow-purple-200/50 transition-all duration-300 border border-purple-100 hover:-translate-y-2"
+                  key={feature.title}
+                  className="rounded-3xl border border-border/30 bg-white p-8 shadow-xl transition hover:-translate-y-2 hover:shadow-2xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, rgba(147,51,234,0.05), rgba(236,72,153,0.08))" }}
                 >
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform duration-300`}>
-                    {feature.icon}
+                  <div
+                    className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl"
+                    style={{ background: feature.gradient }}
+                  >
+                    <feature.icon style={{ width: "1.5rem", height: "1.5rem", color: "white" }} />
                   </div>
-                  <h3 className="mb-3 text-base-900 font-semibold text-lg">{feature.title}</h3>
-                  <p className="text-base-600">{feature.description}</p>
-
-                  {/* Hover effect gradient */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-600/0 to-pink-600/0 group-hover:from-purple-600/5 group-hover:to-pink-600/5 transition-all duration-300" />
+                  <h3 className="font-display text-xl font-semibold text-base-900">{feature.title}</h3>
+                  <p className="mt-3 text-base-600">{feature.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
-        <section id="dashboard" className="py-24 bg-gradient-to-br from-purple-100 via-pink-50 to-purple-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-display text-4xl font-bold">
+
+        <section id="dashboard" className="bg-gradient-to-br from-purple-100 via-pink-50 to-purple-50 py-24">
+          <div className="mx-auto w-full max-w-7xl px-6">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
+                Productivity Dashboard
+              </span>
+              <h2 className="mt-6 font-display text-4xl font-bold text-base-900">
                 Track Your Progress at a Glance
               </h2>
-              <p className="text-base-600 max-w-2xl mx-auto text-lg">
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-base-600">
                 Get real-time insights into your productivity and business growth.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {[
-                { icon: "👥", label: "Active Clients", value: "1,234", change: "+12%", color: "purple" },
-                { icon: "📝", label: "Notes Created", value: "5,678", change: "+8%", color: "pink" },
-                { icon: "✓", label: "Tasks Done", value: "890", change: "+23%", color: "purple" },
-                { icon: "📈", label: "Productivity", value: "94%", change: "+5%", color: "pink" },
-              ].map((stat, index) => (
+            <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {dashboardStats.map((stat) => (
                 <div
-                  key={index}
-                  className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-shadow duration-300"
+                  key={stat.label}
+                  className="rounded-3xl border border-border/30 bg-white p-6 shadow-xl transition hover:shadow-2xl"
                 >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                    stat.color === 'purple' ? 'from-primary to-primary/70' : 'from-secondary to-secondary/70'
-                  } flex items-center justify-center mb-4 text-2xl`}>
-                    {stat.icon}
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-xl"
+                      style={{ background: "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))" }}
+                    >
+                      <TrendingUp style={{ width: "1.25rem", height: "1.25rem", color: "white" }} />
+                    </div>
+                    <span className="text-sm font-semibold text-green-600">{stat.change}</span>
                   </div>
-                  <div className="text-base-500 mb-1">{stat.label}</div>
-                  <div className="flex items-end justify-between">
-                    <span className="text-base-900 font-semibold text-lg">{stat.value}</span>
-                    <span className="text-sm text-green-600">{stat.change}</span>
-                  </div>
+                  <p className="mt-8 text-sm text-base-500">{stat.label}</p>
+                  <p className="mt-1 text-2xl font-semibold">{stat.value}</p>
                 </div>
               ))}
             </div>
 
-            {/* Dashboard Preview */}
-            <div className="relative">
-              <div className="bg-white rounded-3xl shadow-2xl p-8 border border-purple-100">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-base-900 font-semibold text-lg">Recent Activity</h3>
-                  <button className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg text-sm hover:shadow-lg transition-shadow">
-                    View All
-                  </button>
+            <div className="mt-16 rounded-3xl border border-border/30 bg-white p-8 shadow-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-xl font-semibold text-base-900">Recent Activity</h3>
+                  <p className="text-sm text-base-500">Stay on top of your team's progress.</p>
                 </div>
+                <a
+                  href="#dashboard"
+                  className="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
+                >
+                  View All
+                </a>
+              </div>
 
-                <div className="space-y-4">
-                  {[
-                    { title: "Client meeting notes updated", time: "2 minutes ago", color: "purple" },
-                    { title: "New task assigned to Marketing Team", time: "15 minutes ago", color: "pink" },
-                    { title: "Project milestone completed", time: "1 hour ago", color: "purple" },
-                    { title: "AI generated summary for Q1 report", time: "2 hours ago", color: "pink" },
-                  ].map((activity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-purple-50 transition-colors cursor-pointer"
-                    >
-                      <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${
-                        activity.color === 'purple' ? 'from-primary to-primary/70' : 'from-secondary to-secondary/70'
-                      }`} />
-                      <div className="flex-1">
-                        <div className="text-base-900">{activity.title}</div>
-                        <div className="text-sm text-base-500">{activity.time}</div>
-                      </div>
+              <div className="mt-8 space-y-4">
+                {recentActivity.map((item) => (
+                  <div
+                    key={item.title}
+                    className="flex items-center gap-4 rounded-2xl border border-border/20 bg-white/80 px-4 py-4 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
+                  >
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white">
+                      <FileText style={{ width: "1.25rem", height: "1.25rem" }} />
                     </div>
-                  ))}
-                </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-base-900">{item.title}</p>
+                      <p className="text-sm text-base-500">{item.time}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        <section id="testimonials" className="py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent font-display text-4xl font-bold">
+        <section id="testimonials" className="bg-white py-24">
+          <div className="mx-auto w-full max-w-7xl px-6">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
+                Testimonials
+              </span>
+              <h2 className="mt-6 font-display text-4xl font-bold text-base-900">
                 Loved by Teams Worldwide
               </h2>
-              <p className="text-base-600 max-w-2xl mx-auto text-lg">
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-base-600">
                 See what our users have to say about their experience.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  name: "Sarah Johnson",
-                  role: "CEO, TechStart",
-                  content: "This platform transformed how we manage our customer relationships. The AI features are incredibly intuitive!",
-                  avatar: "SJ",
-                  rating: 5,
-                },
-                {
-                  name: "Michael Chen",
-                  role: "Product Manager",
-                  content: "The note-taking AI is a game-changer. It understands context and helps me organize thoughts effortlessly.",
-                  avatar: "MC",
-                  rating: 5,
-                },
-                {
-                  name: "Emily Rodriguez",
-                  role: "Freelance Designer",
-                  content: "I've tried many project management tools, but this one actually helps me stay productive without overwhelming me.",
-                  avatar: "ER",
-                  rating: 5,
-                },
-              ].map((testimonial, index) => (
+            <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+              {testimonials.map((testimonial) => (
                 <div
-                  key={index}
-                  className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border border-purple-100 hover:shadow-2xl hover:shadow-purple-200/50 transition-all duration-300 hover:-translate-y-2"
+                  key={testimonial.name}
+                  className="rounded-3xl border border-border/30 bg-gradient-to-b from-white via-purple-50 to-white p-8 shadow-xl transition hover:-translate-y-2 hover:shadow-2xl"
                 >
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-xl">★</span>
+                  <div className="flex items-center gap-2 text-yellow-400">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star key={index} fill="currentColor" strokeWidth={0} style={{ width: "1rem", height: "1rem" }} />
                     ))}
                   </div>
-                  <p className="text-base-700 mb-6 italic">"{testimonial.content}"</p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
-                      {testimonial.avatar}
+                  <Quote className="mt-6" style={{ width: "2rem", height: "2rem", color: "var(--accent-primary)" }} />
+                  <p className="mt-4 text-base-700">“{testimonial.content}”</p>
+                  <div className="mt-8 flex items-center gap-4">
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white font-semibold">
+                      {testimonial.initials}
                     </div>
                     <div>
-                      <div className="text-base-900 font-semibold">{testimonial.name}</div>
-                      <div className="text-sm text-base-500">{testimonial.role}</div>
+                      <p className="font-semibold text-base-900">{testimonial.name}</p>
+                      <p className="text-sm text-base-500">{testimonial.role}</p>
                     </div>
                   </div>
                 </div>
@@ -298,81 +398,87 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="cta" className="py-24 bg-gradient-to-br from-primary via-secondary to-primary relative overflow-hidden">
-          {/* Animated background elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-20 w-64 h-64 bg-white/10 rounded-full filter blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-20 right-20 w-64 h-64 bg-white/10 rounded-full filter blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <section id="cta" className="relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-primary py-24">
+          <div className="absolute inset-0">
+            <motion.div
+              className="absolute -left-12 top-10 h-64 w-64 rounded-full blur-3xl"
+              style={{ background: "rgba(255,255,255,0.15)" }}
+              animate={{ opacity: [0.5, 0.9, 0.5] }}
+              transition={{ duration: 6, repeat: Infinity }}
+            />
+            <motion.div
+              className="absolute -right-12 bottom-16 h-64 w-64 rounded-full blur-3xl"
+              style={{ background: "rgba(255,255,255,0.18)" }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 7, repeat: Infinity }}
+            />
           </div>
 
-          <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-8">
-              <div className="h-2 w-2 rounded-full bg-white animate-pulse"></div>
-              <span className="text-sm text-white font-semibold">Start Your Free Trial Today</span>
-            </div>
-
-            <h2 className="mb-6 text-white font-display text-4xl font-bold">
-              Ready to Transform Your Workflow?
-            </h2>
-
-            <p className="mb-10 text-white/90 max-w-2xl mx-auto text-lg">
+          <div className="relative z-10 mx-auto max-w-4xl px-6 text-center text-white">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em]">
+              Start Your Free Trial Today
+            </span>
+            <h2 className="mt-6 font-display text-4xl font-bold">Ready to Transform Your Workflow?</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-white/85">
               Join thousands of teams who are already working smarter with our AI-powered platform. No credit card required.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-              <a className="group inline-flex items-center gap-3 rounded-full bg-white text-primary px-8 py-4 text-lg font-semibold shadow-2xl transition-all hover:shadow-3xl hover:-translate-y-0.5" href="/signup">
-                <span>Get Started Free</span>
-                <span className="transition-transform group-hover:translate-x-1">→</span>
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <a
+                className="group inline-flex items-center gap-3 rounded-full bg-white px-8 py-4 text-lg font-semibold text-primary shadow-2xl transition hover:shadow-3xl hover:-translate-y-0.5"
+                href="/signup"
+              >
+                Get Started Free
+                <ArrowRight className="transition-transform group-hover:translate-x-1" style={{ width: "1.25rem", height: "1.25rem" }} />
               </a>
-              <a className="inline-flex items-center gap-3 rounded-full bg-white/20 backdrop-blur-sm text-white px-8 py-4 text-lg font-semibold border border-white/30 transition-all hover:bg-white/30" href="#demo">
-                <span>Schedule a Demo</span>
+              <a
+                className="inline-flex items-center gap-3 rounded-full border border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                href="#demo"
+              >
+                Schedule a Demo
               </a>
             </div>
 
-            <div className="flex items-center justify-center gap-8 text-white/80 text-sm">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                No credit card required
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                14-day free trial
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Cancel anytime
-              </div>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-white/80">
+              {ctaHighlights.map((item) => (
+                <div key={item} className="flex items-center gap-2">
+                  <CheckCircle2 style={{ width: "1.1rem", height: "1.1rem" }} />
+                  {item}
+                </div>
+              ))}
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border/40 bg-white/70 py-10 text-sm text-muted">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+      <footer className="border-t border-border/30 bg-base-900 py-12 text-sm text-white/70">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid size-10 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white font-semibold shadow-[0_20px_45px_-24px_rgba(91,75,255,0.55)]">
-              PC
-            </span>
-            <p className="font-display text-base text-base-900">Pandi CRM</p>
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white">
+              <Sparkles style={{ width: "1.1rem", height: "1.1rem" }} />
+            </div>
+            <div>
+              <p className="font-display text-base font-semibold text-white">WorkFlow</p>
+              <p className="text-white/60">Your all-in-one workspace for CRM, notes, and project management.</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <a className="hover:text-base-900" href="mailto:hello@pandicrm.com">
-              hello@pandicrm.com
+
+          <div className="flex flex-wrap gap-6 text-white/60">
+            <a className="transition hover:text-white" href="#features">
+              Features
             </a>
-            <a className="hover:text-base-900" href="/privacy">
+            <a className="transition hover:text-white" href="#pricing">
+              Pricing
+            </a>
+            <a className="transition hover:text-white" href="/privacy">
               Privacy
             </a>
-            <a className="hover:text-base-900" href="/terms">
+            <a className="transition hover:text-white" href="/terms">
               Terms
             </a>
           </div>
-          <p>© {new Date().getFullYear()} Pandi CRM Inc. All rights reserved.</p>
+
+          <p>© {new Date().getFullYear()} WorkFlow. All rights reserved.</p>
         </div>
       </footer>
     </div>
