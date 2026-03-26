@@ -149,16 +149,16 @@ export default function AccountsPage() {
                       <div className="flex items-center gap-6 text-sm text-gray-500">
                         {account.website && (
                           <a
-                            href={account.website}
+                            href={account.website.value}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"
                           >
-                            {account.website}
+                            {account.website.value}
                           </a>
                         )}
                         {account.domain && (
-                          <span>Domain: {account.domain}</span>
+                          <span>Domain: {account.domain.value}</span>
                         )}
                         <span>Created: {new Date(account.createdAt).toLocaleDateString()}</span>
                       </div>

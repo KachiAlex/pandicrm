@@ -38,11 +38,11 @@ export interface Account {
   workspaceId: { value: string };
   name: string;
   description?: string;
-  domain?: string;
+  domain?: { value: string };
   industry?: string;
   size?: "1-10" | "11-50" | "51-200" | "201-500" | "500+";
-  website?: string;
-  phone?: string;
+  website?: { value: string };
+  phone?: { value: string };
   billingAddress?: {
     street1: string;
     street2?: string;
@@ -70,11 +70,11 @@ export interface Contact {
   accountId: { value: string };
   firstName: string;
   lastName: string;
-  email?: string;
-  phone?: string;
+  email?: { value: string };
+  phone?: { value: string };
   title?: string;
   department?: string;
-  linkedin?: string;
+  linkedin?: { value: string };
   avatar?: string;
   isPrimary?: boolean;
   customFields?: Record<string, unknown>;
