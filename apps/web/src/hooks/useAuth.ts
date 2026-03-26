@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, createContext, useContext, ReactNode, ReactElement, createElement } from "react";
 import { api, type User, type LoginInput, type CreateUserInput } from "../lib/api";
 

@@ -1,9 +1,11 @@
 "use client";
 
+"use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "../../../hooks/useAuth";
-import { api, type Deal } from "../../../lib/api";
+import { useAuth } from "../../../../hooks/useAuth";
+import { api, type Deal } from "../../../../lib/api";
 
 const stageColors: Record<string, string> = {
   prospecting: "bg-gray-100 text-gray-800",

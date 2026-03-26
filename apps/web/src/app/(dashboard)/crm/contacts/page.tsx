@@ -1,9 +1,11 @@
 "use client";
 
+"use client";
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth } from "../../../hooks/useAuth";
-import { api, type Contact } from "../../../lib/api";
+import { useAuth } from "../../../../hooks/useAuth";
+import { api, type Contact } from "../../../../lib/api";
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
