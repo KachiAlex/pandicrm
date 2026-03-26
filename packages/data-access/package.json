@@ -5,7 +5,11 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
-    "@pandi/core-domain": "workspace:*"
+    "@pandi/core-domain": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3"
   },
   "exports": {
     ".": {

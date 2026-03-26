@@ -11,15 +11,80 @@ export type TaskCategory =
   | "other";
 export type TimePeriod = "daily" | "weekly" | "monthly" | "annual" | "adhoc";
 
-export interface TaskId {
-  value: string;
+export type UserId = { value: string };
+export type Email = { value: string };
+export type PasswordHash = { value: string };
+
+export interface User {
+  id: UserId;
+  email: Email;
+  name: string;
+  avatar?: string;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+  isActive: boolean;
+  preferences?: UserPreferences;
+}
+
+export type UserRole = "admin" | "user" | "viewer";
+
+export interface UserPreferences {
+  theme: "light" | "dark" | "system";
+  language: string;
+  timezone: string;
+  notifications: NotificationPreferences;
+}
+
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  taskReminders: boolean;
+  taskAssignments: boolean;
+  teamUpdates: boolean;
+}
+
+export interface CreateUserInput {
+  email: Email;
+  name: string;
+  password: string;
+  role?: UserRole;
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  avatar?: string;
+  role?: UserRole;
+  isActive?: boolean;
+  preferences?: UserPreferences;
+}
+
+export interface AuthenticateInput {
+  email: Email;
+  password: string;
+}
+
+export interface AuthenticationResult {
+  user: User;
+  token: string;
+  expiresAt: string;
+}
+
+export interface Session {
+  id: string;
+  userId: UserId;
+  token: string;
+  expiresAt: string;
+  createdAt: string;
+  isActive: boolean;
 }
 
 export interface WorkspaceId {
   value: string;
 }
 
-export interface UserId {
+export interface TaskId {
   value: string;
 }
 
@@ -102,6 +167,25 @@ export interface TaskFilter {
   completedBefore?: string;
   completedAfter?: string;
   tags?: string[];
+}
+
+// Repository Interfaces
+export interface UserRepository {
+  create(input: CreateUserInput): Promise<User>;
+  findById(id: UserId): Promise<User | null>;
+  findByEmail(email: Email): Promise<User | null>;
+  update(id: UserId, input: UpdateUserInput): Promise<User>;
+  delete(id: UserId): Promise<void>;
+  list(): Promise<User[]>;
+}
+
+export interface AuthenticationRepository {
+  authenticate(input: AuthenticateInput): Promise<AuthenticationResult>;
+  validateToken(token: string): Promise<User | null>;
+  createSession(userId: UserId): Promise<Session>;
+  invalidateSession(sessionId: string): Promise<void>;
+  invalidateAllUserSessions(userId: UserId): Promise<void>;
+  findActiveSession(userId: UserId): Promise<Session | null>;
 }
 
 export interface TaskRepository {

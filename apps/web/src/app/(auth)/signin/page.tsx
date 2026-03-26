@@ -1,4 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../../hooks/useAuth";
 
 const benefits = [
   "Summaries automatically routed to Slack and email",
@@ -7,6 +12,29 @@ const benefits = [
 ];
 
 export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const router = useRouter();
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await login({ email, password });
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Failed to sign in");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex min-h-[100svh] flex-col bg-base-50 text-base-900">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top,_rgba(91,75,255,0.25),transparent_65%)]" />
@@ -25,7 +53,12 @@ export default function SignInPage() {
               </p>
             </div>
             <div className="rounded-[28px] border border-border/60 bg-white/80 p-8 shadow-[0_24px_80px_-45px_rgba(11,13,40,0.6)]">
-              <form className="space-y-6">
+              {error && (
+                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
@@ -38,6 +71,8 @@ export default function SignInPage() {
                     type="email"
                     required
                     autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-base text-base-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
                     placeholder="you@company.com"
                   />
@@ -57,6 +92,8 @@ export default function SignInPage() {
                     type="password"
                     required
                     autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-base text-base-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
                     placeholder="Enter your password"
                   />
@@ -75,16 +112,17 @@ export default function SignInPage() {
                 </div>
                 <button
                   type="submit"
-                  className="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-base-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-base-800"
+                  disabled={isLoading}
+                  className="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-base-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-base-800 disabled:opacity-50"
                 >
                   <span className="inline-flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-semibold text-white shadow-[0_18px_32px_-18px_rgba(91,75,255,0.65)]">
-                    →
+                    {isLoading ? "..." : "→"}
                   </span>
-                  Enter workspace
+                  {isLoading ? "Signing in..." : "Enter workspace"}
                 </button>
               </form>
               <p className="mt-6 text-sm text-muted">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link
                   href="/signup"
                   className="font-medium text-primary transition hover:text-secondary"

@@ -12,6 +12,9 @@ export interface ApiResponse<T> {
   tasks?: any[];
   task?: any;
   stats?: any;
+  users?: any[];
+  user?: any;
+  message?: string;
 }
 
 export interface Account {
@@ -60,6 +63,52 @@ export interface Contact {
   customFields?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface User {
+  id: { value: string };
+  email: { value: string };
+  name: string;
+  avatar?: string;
+  role: "admin" | "user" | "viewer";
+  isActive: boolean;
+  preferences?: UserPreferences;
+  createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface UserPreferences {
+  theme: "light" | "dark" | "system";
+  language: string;
+  timezone: string;
+  notifications: NotificationPreferences;
+}
+
+export interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  taskReminders: boolean;
+  taskAssignments: boolean;
+  teamUpdates: boolean;
+}
+
+export interface CreateUserInput {
+  email: { value: string };
+  name: string;
+  password: string;
+  role?: "admin" | "user" | "viewer";
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  message: string;
+  user: User;
+  expiresAt?: string;
 }
 
 export interface Deal {
@@ -350,6 +399,70 @@ class ApiClient {
     if (userId) params.append("userId", userId);
     
     return this.request<{ stats: any }>(`/api/tasks/stats?${params}`);
+  }
+
+  // Authentication API
+  async register(input: CreateUserInput) {
+    return this.request<{ message: string; user: User }>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email: input.email.value,
+        name: input.name,
+        password: input.password,
+        role: input.role,
+      }),
+    });
+  }
+
+  async login(input: LoginInput) {
+    return this.request<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async logout() {
+    return this.request<{ message: string }>("/api/auth/logout", {
+      method: "POST",
+    });
+  }
+
+  async getCurrentUser() {
+    return this.request<{ user: User }>("/api/auth/me");
+  }
+
+  // Users API
+  async getUsers() {
+    return this.request<{ users: User[] }>("/api/users");
+  }
+
+  async getUser(id: string) {
+    return this.request<{ user: User }>(`/api/users/${id}`);
+  }
+
+  async createUser(input: CreateUserInput) {
+    return this.request<{ message: string; user: User }>("/api/users", {
+      method: "POST",
+      body: JSON.stringify({
+        email: input.email.value,
+        name: input.name,
+        password: input.password,
+        role: input.role,
+      }),
+    });
+  }
+
+  async updateUser(id: string, input: Partial<User>) {
+    return this.request<{ message: string; user: User }>(`/api/users/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request<{ message: string }>(`/api/users/${id}`, {
+      method: "DELETE",
+    });
   }
 }
 

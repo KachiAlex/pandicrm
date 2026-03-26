@@ -13,6 +13,8 @@ const config: Config = {
         "base-900": "var(--base-900)",
         "base-800": "var(--base-800)",
         "base-700": "var(--base-700)",
+        "base-600": "var(--base-600)",
+        "base-500": "var(--base-500)",
         "base-400": "var(--base-400)",
         "base-50": "var(--base-50)",
         surface: "var(--surface)",
