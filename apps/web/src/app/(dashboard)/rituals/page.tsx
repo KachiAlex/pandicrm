@@ -42,7 +42,7 @@ export default function RitualsPage() {
       ]);
       
       setRituals(ritualsResponse.rituals || []);
-      setStats(statsResponse.ritualStats);
+      setStats(statsResponse.ritualStats ?? null);
     } catch (error) {
       console.error("Failed to load rituals:", error);
     } finally {
