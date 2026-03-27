@@ -174,80 +174,159 @@ export default function Home() {
       </header>
 
       <main className="relative z-10 flex flex-col">
-        <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-24">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white/80 px-5 py-2 text-sm font-medium text-primary shadow-[0_12px_32px_-18px_rgba(147,51,234,0.35)] backdrop-blur"
-            >
-              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              AI-Powered Workspace
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-8 font-display text-6xl leading-tight text-base-900 sm:text-7xl"
-            >
-              <span className="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">
-                Your All-in-One Workspace for Success
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-base-600"
-            >
-              Streamline your workflow with intelligent CRM, AI-powered note-taking, and seamless project management.
-              All in one beautiful platform.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mx-auto mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
-            >
-              <a
-                className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-4 text-lg font-semibold text-white shadow-2xl transition hover:shadow-3xl hover:-translate-y-0.5"
-                href="/signup"
+        <section className="mx-auto w-full max-w-7xl px-6 pb-28 pt-20 sm:pt-24">
+          <div className="grid items-center gap-14 lg:grid-cols-[1.12fr_0.88fr]">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55 }}
+                className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/75 px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary shadow-[0_14px_35px_-20px_rgba(147,51,234,0.45)] backdrop-blur"
               >
-                Get Started Free
-                <ArrowRight
-                  className="transition-transform group-hover:translate-x-1"
-                  style={{ width: "1.25rem", height: "1.25rem" }}
-                />
-              </a>
-              <a
-                className="inline-flex items-center gap-3 rounded-full border-2 border-border bg-white/80 px-8 py-4 text-lg font-semibold text-base-900 shadow-lg transition hover:border-primary hover:bg-white hover:-translate-y-0.5"
-                href="#demo"
-              >
-                Watch Demo
-              </a>
-            </motion.div>
+                <span className="h-2 w-2 animate-pulse rounded-full bg-secondary" />
+                Revenue Ritual Engine
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-20 grid grid-cols-1 gap-6 sm:grid-cols-3"
-            >
-              {heroStats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-border/40 bg-white/80 p-6 text-center shadow-lg backdrop-blur"
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.08 }}
+                className="mt-7 font-display text-5xl leading-[0.95] text-base-900 sm:text-6xl lg:text-7xl"
+              >
+                Turn
+                <span className="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent"> daily hustle </span>
+                into predictable growth.
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.16 }}
+                className="mt-7 max-w-2xl text-lg leading-relaxed text-base-600"
+              >
+                PandiCRM blends CRM, notes, tasks, and rituals into one sharp execution layer so your team can move
+                faster, close smarter, and stay aligned without the chaos.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.24 }}
+                className="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center"
+              >
+                <a
+                  className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary via-secondary to-tertiary px-8 py-4 text-lg font-semibold text-white shadow-[0_22px_45px_-22px_rgba(147,51,234,0.75)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_55px_-24px_rgba(147,51,234,0.78)]"
+                  href="/signup"
                 >
-                  <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-3xl font-display font-semibold text-transparent">
-                    {stat.value}
-                  </div>
-                  <p className="mt-2 text-base-600">{stat.label}</p>
+                  Start Free Trial
+                  <ArrowRight
+                    className="transition-transform group-hover:translate-x-1"
+                    style={{ width: "1.2rem", height: "1.2rem" }}
+                  />
+                </a>
+
+                <a
+                  className="inline-flex items-center gap-3 rounded-full border border-border/70 bg-white/85 px-8 py-4 text-lg font-semibold text-base-900 shadow-[0_16px_36px_-20px_rgba(12,14,40,0.35)] transition hover:border-primary hover:bg-white"
+                  href="#dashboard"
+                >
+                  Explore Dashboard
+                </a>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.32 }}
+                className="mt-10 flex flex-wrap items-center gap-4 text-sm text-base-600"
+              >
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/45 bg-white/70 px-4 py-2">
+                  <CheckCircle2 style={{ width: "1rem", height: "1rem", color: "var(--accent-primary)" }} />
+                  14-day free trial
                 </div>
-              ))}
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/45 bg-white/70 px-4 py-2">
+                  <Star style={{ width: "1rem", height: "1rem", color: "var(--accent-secondary)" }} />
+                  No credit card required
+                </div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/45 bg-white/70 px-4 py-2">
+                  <TrendingUp style={{ width: "1rem", height: "1rem", color: "var(--accent-tertiary)" }} />
+                  Setup in 5 minutes
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="mt-12 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3"
+              >
+                {heroStats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-border/45 bg-white/80 p-4 text-center shadow-[0_18px_36px_-24px_rgba(12,14,40,0.4)] backdrop-blur"
+                  >
+                    <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-2xl font-display font-semibold text-transparent">
+                      {stat.value}
+                    </div>
+                    <p className="mt-1 text-sm text-base-600">{stat.label}</p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 26 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.18 }}
+              className="relative"
+            >
+              <div className="absolute -inset-4 rounded-[2rem] bg-gradient-to-br from-primary/20 via-secondary/20 to-tertiary/20 blur-2xl" />
+
+              <div className="relative overflow-hidden rounded-[1.75rem] border border-border/45 bg-white/78 p-6 shadow-[0_38px_85px_-40px_rgba(17,19,46,0.62)] backdrop-blur-xl sm:p-7">
+                <div className="flex items-center justify-between border-b border-border/35 pb-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Control Panel</p>
+                    <h3 className="mt-2 font-display text-2xl text-base-900">Today at a Glance</h3>
+                  </div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                    Live
+                  </span>
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  {dashboardStats.map((stat, index) => (
+                    <motion.div
+                      key={stat.label}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.45, delay: 0.24 + index * 0.08 }}
+                      className="rounded-2xl border border-border/35 bg-white/80 p-4"
+                    >
+                      <p className="text-xs uppercase tracking-[0.16em] text-base-500">{stat.label}</p>
+                      <p className="mt-2 font-display text-2xl font-semibold text-base-900">{stat.value}</p>
+                      <p className="mt-1 text-sm font-medium text-green-600">{stat.change} this week</p>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-border/35 bg-gradient-to-br from-white to-purple-50/50 p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-base-900">Recent Activity</p>
+                    <FileText style={{ width: "1rem", height: "1rem", color: "var(--accent-primary)" }} />
+                  </div>
+                  <div className="mt-3 space-y-3">
+                    {recentActivity.slice(0, 3).map((activity) => (
+                      <div key={activity.title} className="flex items-start gap-3 text-sm">
+                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary/70" />
+                        <div>
+                          <p className="text-base-700">{activity.title}</p>
+                          <p className="text-xs text-base-500">{activity.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </section>
