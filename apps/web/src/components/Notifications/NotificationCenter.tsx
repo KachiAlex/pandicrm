@@ -42,7 +42,7 @@ const notificationColors = {
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState<"all" | "unread">>("all");
+  const [filter, setFilter] = useState<"all" | "unread">("all");
   
   const {
     notifications,

@@ -32,28 +32,28 @@ const recentTasks = [
     title: "Follow up with Acme Corp on proposal",
     priority: "high",
     dueDate: "Today",
-    status: "in-progress",
+    status: "in_progress",
     assignee: "You",
   },
   {
     title: "Prepare Q2 sales presentation",
     priority: "medium",
     dueDate: "Tomorrow",
-    status: "todo",
+    status: "pending",
     assignee: "You",
   },
   {
     title: "Review contract with Global Industries",
     priority: "high",
     dueDate: "Mar 28",
-    status: "todo",
+    status: "pending",
     assignee: "Sarah J.",
   },
   {
     title: "Update CRM documentation",
     priority: "low",
     dueDate: "Mar 30",
-    status: "in-progress",
+    status: "in_progress",
     assignee: "You",
   },
 ];
@@ -65,8 +65,8 @@ const priorityColors = {
 };
 
 const statusColors = {
-  todo: "bg-gray-100 text-gray-800",
-  "in-progress": "bg-blue-100 text-blue-800",
+  pending: "bg-gray-100 text-gray-800",
+  in_progress: "bg-blue-100 text-blue-800",
   completed: "bg-green-100 text-green-800",
 };
 
@@ -141,7 +141,7 @@ export default function TasksPage() {
                       {task.priority}
                     </span>
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusColors[task.status as keyof typeof statusColors]}`}>
-                      {task.status.replace("-", " ")}
+                      {task.status.replace("_", " ")}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-4 text-sm text-base-600">

@@ -6,14 +6,14 @@ import { api, type Task } from "../../../../lib/api";
 
 const WORKSPACE_ID = "ws-demo";
 
-const priorityColors = {
+const priorityColors: Record<Task["priority"], string> = {
   low: "bg-green-100 text-green-800 border-green-200",
   medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
   high: "bg-orange-100 text-orange-800 border-orange-200",
   urgent: "bg-red-100 text-red-800 border-red-200",
 };
 
-const categoryColors = {
+const categoryColors: Record<Task["category"], string> = {
   sales: "bg-blue-50 text-blue-700",
   marketing: "bg-purple-50 text-purple-700",
   development: "bg-indigo-50 text-indigo-700",
@@ -24,7 +24,7 @@ const categoryColors = {
   other: "bg-slate-50 text-slate-700",
 };
 
-const columns = [
+const columns: Array<{ id: Task["status"]; title: string; color: string }> = [
   { id: "pending", title: "To Do", color: "bg-gray-100" },
   { id: "in_progress", title: "In Progress", color: "bg-blue-100" },
   { id: "completed", title: "Completed", color: "bg-green-100" },
@@ -58,10 +58,10 @@ export default function TaskKanbanPage() {
     }
   };
 
-  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+  const updateTaskStatus = async (taskId: string, newStatus: Task["status"]) => {
     try {
       const response = await api.updateTask(taskId, {
-        status: newStatus as any,
+        status: newStatus,
       });
       
       if (response.error) {
