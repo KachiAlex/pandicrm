@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../hooks/useAuth";
+
+const APP_HOME_PATH = "/crm";
 
 const benefits = [
   "Summaries automatically routed to Slack and email",
@@ -14,26 +16,55 @@ const benefits = [
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [redirectPath, setRedirectPath] = useState(APP_HOME_PATH);
   
   const router = useRouter();
-  const { login } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, login } = useAuth();
+  const signupHref = redirectPath === APP_HOME_PATH
+    ? "/signup"
+    : `/signup?next=${encodeURIComponent(redirectPath)}`;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nextParam = params.get("next");
+
+    if (nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+      setRedirectPath(nextParam);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace(redirectPath);
+    }
+  }, [isAuthLoading, isAuthenticated, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
-      await login({ email, password });
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in");
+      await login({ email: normalizedEmail, password });
+      router.replace(redirectPath);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign in");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const isSubmitDisabled = isLoading || isAuthLoading || !email.trim() || !password;
 
   return (
     <div className="relative flex min-h-[100svh] flex-col bg-base-50 text-base-900">
@@ -54,7 +85,7 @@ export default function SignInPage() {
             </div>
             <div className="rounded-[28px] border border-border/60 bg-white/80 p-8 shadow-[0_24px_80px_-45px_rgba(11,13,40,0.6)]">
               {error && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                <div aria-live="polite" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
                   {error}
                 </div>
               )}
@@ -71,8 +102,12 @@ export default function SignInPage() {
                     type="email"
                     required
                     autoComplete="email"
+                    inputMode="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (error) setError("");
+                    }}
                     className="w-full rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-base text-base-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
                     placeholder="you@company.com"
                   />
@@ -80,23 +115,30 @@ export default function SignInPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm font-medium uppercase tracking-[0.22em] text-muted">
                     <label htmlFor="password">Password</label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-primary transition hover:text-secondary"
-                    >
-                      Forgot?
-                    </Link>
+                    <a href="mailto:support@pandicrm.com" className="text-primary transition hover:text-secondary">
+                      Need help?
+                    </a>
                   </div>
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     autoComplete="current-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError("");
+                    }}
                     className="w-full rounded-2xl border border-border/70 bg-white/70 px-4 py-3 text-base text-base-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
                     placeholder="Enter your password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="text-xs font-medium text-primary transition hover:text-secondary"
+                  >
+                    {showPassword ? "Hide password" : "Show password"}
+                  </button>
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="inline-flex items-center gap-3 text-xs font-medium uppercase tracking-[0.22em] text-muted">
@@ -112,7 +154,7 @@ export default function SignInPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSubmitDisabled}
                   className="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-base-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.26em] text-white shadow-[0_30px_70px_-40px_rgba(9,11,32,0.75)] transition hover:bg-base-800 disabled:opacity-50"
                 >
                   <span className="inline-flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-xs font-semibold text-white shadow-[0_18px_32px_-18px_rgba(91,75,255,0.65)]">
@@ -121,10 +163,13 @@ export default function SignInPage() {
                   {isLoading ? "Signing in..." : "Enter workspace"}
                 </button>
               </form>
+              <p className="mt-4 text-xs text-muted">
+                You will land in your live CRM workspace immediately after sign in.
+              </p>
               <p className="mt-6 text-sm text-muted">
                 Don't have an account?{" "}
                 <Link
-                  href="/signup"
+                  href={signupHref}
                   className="font-medium text-primary transition hover:text-secondary"
                 >
                   Start your 14-day trial

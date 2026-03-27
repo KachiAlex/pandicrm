@@ -15,6 +15,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function requireData<T>(response: { data?: T; error?: string }, fallbackMessage: string): T {
+  if (response.error) {
+    throw new Error(response.error);
+  }
+
+  if (!response.data) {
+    throw new Error(fallbackMessage);
+  }
+
+  return response.data;
+}
+
 export function AuthProvider(props: { children: ReactNode }): ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +41,8 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
     try {
       setIsLoading(true);
       const response = await api.getCurrentUser();
-      setUser(response.user || null);
+      const data = requireData(response, "Failed to load user session");
+      setUser(data.user || null);
     } catch {
       setUser(null);
     } finally {
@@ -39,17 +52,28 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
 
   async function login(input: LoginInput) {
     const response = await api.login(input);
-    if (response.user) setUser(response.user);
+    const data = requireData(response, "Failed to sign in");
+    setUser(data.user);
   }
 
   async function register(input: CreateUserInput) {
     const response = await api.register(input);
-    if (response.user) setUser(response.user);
+    requireData(response, "Failed to create account");
+
+    const loginResponse = await api.login({
+      email: input.email.value,
+      password: input.password,
+    });
+    const loginData = requireData(loginResponse, "Account created, but sign in failed");
+    setUser(loginData.user);
   }
 
   async function logout() {
     try {
-      await api.logout();
+      const response = await api.logout();
+      if (response.error) {
+        throw new Error(response.error);
+      }
     } finally {
       setUser(null);
     }

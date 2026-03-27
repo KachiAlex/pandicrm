@@ -20,19 +20,19 @@ export default function DashboardLayout({
               <div className="flex items-center gap-8">
                 <h1 className="font-display text-2xl text-base-900">Pandi</h1>
                 <div className="hidden sm:flex sm:gap-6">
-                  <a href="/dashboard" className="text-sm font-medium text-primary">
+                  <a href="/crm" className="text-sm font-medium text-primary">
                     Dashboard
                   </a>
-                  <a href="/dashboard/crm" className="text-sm font-medium text-base-600 hover:text-base-900">
+                  <a href="/crm" className="text-sm font-medium text-base-600 hover:text-base-900">
                     CRM
                   </a>
-                  <a href="/dashboard/notes" className="text-sm font-medium text-base-600 hover:text-base-900">
+                  <a href="/notes" className="text-sm font-medium text-base-600 hover:text-base-900">
                     Notes
                   </a>
-                  <a href="/dashboard/tasks" className="text-sm font-medium text-base-600 hover:text-base-900">
+                  <a href="/tasks" className="text-sm font-medium text-base-600 hover:text-base-900">
                     Tasks
                   </a>
-                  <a href="/dashboard/rituals" className="text-sm font-medium text-base-600 hover:text-base-900">
+                  <a href="/rituals" className="text-sm font-medium text-base-600 hover:text-base-900">
                     Rituals
                   </a>
                 </div>
