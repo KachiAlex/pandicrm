@@ -1,4 +1,17 @@
-import type { WebSocketMessage } from "@pandi/api/lib/websocket";
+export interface WebSocketMessage {
+  type:
+    | "connection_established"
+    | "join_room"
+    | "leave_room"
+    | "room_joined"
+    | "room_left"
+    | "notification"
+    | "heartbeat";
+  data: any;
+  userId?: string;
+  workspaceId?: string;
+  timestamp: string;
+}
 
 export interface WebSocketClientOptions {
   url: string;
