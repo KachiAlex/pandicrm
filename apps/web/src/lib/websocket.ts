@@ -1,12 +1,5 @@
 export interface WebSocketMessage {
-  type:
-    | "connection_established"
-    | "join_room"
-    | "leave_room"
-    | "room_joined"
-    | "room_left"
-    | "notification"
-    | "heartbeat";
+  type: string;
   data: any;
   userId?: string;
   workspaceId?: string;
