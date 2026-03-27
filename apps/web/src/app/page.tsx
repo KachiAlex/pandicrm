@@ -235,7 +235,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-20 grid grid-cols-1 gap-6 sm:grid-cols-3"
+              className="mt-20 grid grid-cols-3 gap-6"
             >
               {heroStats.map((stat) => (
                 <div
