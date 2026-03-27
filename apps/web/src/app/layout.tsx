@@ -16,7 +16,7 @@ const sans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "PandiCRM — Intelligent Productivity Workspace",
+  title: "Pandi CRM — Intelligent Productivity Workspace",
   description:
     "Orchestrate customer journeys, AI meeting notes, and revenue rituals in one fluid workspace.",
 };

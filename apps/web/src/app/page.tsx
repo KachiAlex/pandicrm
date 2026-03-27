@@ -1,6 +1,6 @@
 "use client";
 
-import { MotionConfig, motion } from "motion/react";
+import { motion } from "motion/react";
 import {
   ArrowRight,
   BarChart3,
@@ -99,14 +99,6 @@ const heroStats = [
   { label: "Uptime", value: "99.9%" },
 ];
 
-const trustedBy = ["Northstar Capital", "Apex Health", "Brightlane", "Nova Retail", "OrbitLabs"];
-
-const outcomeStats = [
-  { label: "Faster Follow-Ups", value: "23%" },
-  { label: "More Deals Closed", value: "31%" },
-  { label: "Admin Time Saved", value: "11 hrs/week" },
-];
-
 const ctaHighlights = [
   "No credit card required",
   "14 day free trial",
@@ -115,8 +107,7 @@ const ctaHighlights = [
 
 export default function Home() {
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="relative min-h-screen bg-gradient-to-b from-white via-purple-50/60 to-white text-base-900">
+    <div className="relative min-h-screen bg-gradient-to-b from-white via-purple-50/60 to-white text-base-900">
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <motion.div
           className="absolute top-20 left-16 w-72 h-72 rounded-full mix-blend-multiply filter blur-xl opacity-70"
@@ -145,7 +136,7 @@ export default function Home() {
               <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
             </div>
             <div className="leading-tight">
-              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">PandiCRM</span>
+              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">WorkFlow</span>
               <p className="font-display text-lg font-semibold">Intelligent Revenue Rituals</p>
             </div>
           </div>
@@ -160,8 +151,8 @@ export default function Home() {
             <a className="transition-colors hover:text-base-900" href="#testimonials">
               Testimonials
             </a>
-            <a className="transition-colors hover:text-base-900" href="#cta">
-              Get Started
+            <a className="transition-colors hover:text-base-900" href="#pricing">
+              Pricing
             </a>
           </div>
 
@@ -340,35 +331,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border-y border-border/30 bg-white/85 py-10">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-7 px-6">
-            <p className="text-center text-xs font-semibold uppercase tracking-[0.24em] text-base-500">
-              Trusted by scaling teams
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3 lg:grid-cols-5">
-              {trustedBy.map((name) => (
-                <div
-                  key={name}
-                  className="rounded-xl border border-border/30 bg-base-50 px-3 py-3 text-sm font-semibold text-base-700"
-                >
-                  {name}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 text-center sm:grid-cols-3">
-              {outcomeStats.map((item) => (
-                <div key={item.label} className="rounded-2xl border border-border/30 bg-white px-5 py-5 shadow-sm">
-                  <p className="font-display text-3xl font-semibold text-base-900">{item.value}</p>
-                  <p className="mt-1 text-sm text-base-600">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="bg-base-50 py-24">
+        <section id="features" className="bg-white py-24">
           <div className="mx-auto w-full max-w-7xl px-6">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
@@ -386,7 +349,8 @@ export default function Home() {
               {featureCards.map((feature) => (
                 <div
                   key={feature.title}
-                  className="rounded-3xl border border-border/25 bg-white p-8 shadow-[0_22px_44px_-34px_rgba(12,14,40,0.45)] transition hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_26px_55px_-34px_rgba(12,14,40,0.5)]"
+                  className="rounded-3xl border border-border/30 bg-white p-8 shadow-xl transition hover:-translate-y-2 hover:shadow-2xl"
+                  style={{ backgroundImage: "linear-gradient(180deg, rgba(147,51,234,0.05), rgba(236,72,153,0.08))" }}
                 >
                   <div
                     className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl"
@@ -402,7 +366,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="dashboard" className="bg-white py-24">
+        <section id="dashboard" className="bg-gradient-to-br from-purple-100 via-pink-50 to-purple-50 py-24">
           <div className="mx-auto w-full max-w-7xl px-6">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
@@ -420,7 +384,7 @@ export default function Home() {
               {dashboardStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-3xl border border-border/25 bg-base-50 p-6 shadow-[0_22px_45px_-34px_rgba(12,14,40,0.45)] transition hover:shadow-[0_26px_58px_-36px_rgba(12,14,40,0.5)]"
+                  className="rounded-3xl border border-border/30 bg-white p-6 shadow-xl transition hover:shadow-2xl"
                 >
                   <div className="flex items-center justify-between">
                     <div
@@ -437,14 +401,14 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-16 rounded-3xl border border-border/30 bg-base-50 p-8 shadow-[0_35px_75px_-50px_rgba(12,14,40,0.58)]">
+            <div className="mt-16 rounded-3xl border border-border/30 bg-white p-8 shadow-2xl">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h3 className="font-display text-xl font-semibold text-base-900">Recent Activity</h3>
                   <p className="text-sm text-base-500">Stay on top of your team's progress.</p>
                 </div>
                 <a
-                  href="#cta"
+                  href="#dashboard"
                   className="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
                 >
                   View All
@@ -471,7 +435,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="testimonials" className="bg-base-50 py-24">
+        <section id="testimonials" className="bg-white py-24">
           <div className="mx-auto w-full max-w-7xl px-6">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
@@ -489,7 +453,7 @@ export default function Home() {
               {testimonials.map((testimonial) => (
                 <div
                   key={testimonial.name}
-                  className="rounded-3xl border border-border/30 bg-white p-8 shadow-[0_24px_52px_-36px_rgba(12,14,40,0.48)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-36px_rgba(12,14,40,0.55)]"
+                  className="rounded-3xl border border-border/30 bg-gradient-to-b from-white via-purple-50 to-white p-8 shadow-xl transition hover:-translate-y-2 hover:shadow-2xl"
                 >
                   <div className="flex items-center gap-2 text-yellow-400">
                     {Array.from({ length: 5 }).map((_, index) => (
@@ -573,8 +537,8 @@ export default function Home() {
               <Sparkles style={{ width: "1.1rem", height: "1.1rem" }} />
             </div>
             <div>
-              <p className="font-display text-base font-semibold text-white">PandiCRM</p>
-              <p className="text-white/60">Unified CRM, notes, tasks, and rituals for high-performing revenue teams.</p>
+              <p className="font-display text-base font-semibold text-white">WorkFlow</p>
+              <p className="text-white/60">Your all-in-one workspace for CRM, notes, and project management.</p>
             </div>
           </div>
 
@@ -597,6 +561,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-    </MotionConfig>
   );
 }
