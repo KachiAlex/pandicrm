@@ -8,10 +8,13 @@ import {
   Calendar,
   CheckCircle2,
   FileText,
+  Instagram,
+  Linkedin,
   Quote,
   Sparkles,
   Star,
   TrendingUp,
+  Twitter,
   Users,
   Zap,
 } from "lucide-react";
@@ -73,22 +76,28 @@ const testimonials = [
   {
     name: "Sarah Johnson",
     role: "CEO, TechStart",
+    rating: 5,
     content:
-      "This platform transformed how we manage our customer relationships. The AI features are incredibly intuitive!",
+      "We replaced three disconnected tools in one week and reduced missed follow-ups by 37%. The pipeline clarity alone paid for itself.",
+    result: "37% fewer missed follow-ups",
     initials: "SJ",
   },
   {
     name: "Michael Chen",
     role: "Product Manager",
+    rating: 5,
     content:
-      "The note-taking AI is a game-changer. It understands context and helps me organize thoughts effortlessly.",
+      "The meeting-note workflow is excellent. Action items now become tasks automatically, and weekly execution reviews take half the time.",
+    result: "2x faster weekly planning",
     initials: "MC",
   },
   {
     name: "Emily Rodriguez",
     role: "Freelance Designer",
+    rating: 4,
     content:
-      "I've tried many project management tools, but this one actually helps me stay productive without overwhelming me.",
+      "I finally have one place for clients, notes, and tasks. It keeps me focused and gives me a professional process for every project.",
+    result: "11 hours saved per week",
     initials: "ER",
   },
 ];
@@ -103,6 +112,30 @@ const ctaHighlights = [
   "No credit card required",
   "14 day free trial",
   "Cancel anytime",
+];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Capture",
+    description: "Import contacts, opportunities, and notes from your current tools in minutes.",
+  },
+  {
+    step: "02",
+    title: "Orchestrate",
+    description: "Convert conversations into tasks and rituals so execution happens automatically.",
+  },
+  {
+    step: "03",
+    title: "Scale",
+    description: "Track progress, close faster, and keep the whole team aligned around outcomes.",
+  },
+];
+
+const socialLinks = [
+  { label: "LinkedIn", href: "https://www.linkedin.com", icon: Linkedin },
+  { label: "X", href: "https://x.com", icon: Twitter },
+  { label: "Instagram", href: "https://www.instagram.com", icon: Instagram },
 ];
 
 export default function Home() {
@@ -136,7 +169,7 @@ export default function Home() {
               <Sparkles style={{ width: "1.25rem", height: "1.25rem" }} />
             </div>
             <div className="leading-tight">
-              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">WorkFlow</span>
+              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">PandiCRM</span>
               <p className="font-display text-lg font-semibold">Intelligent Revenue Rituals</p>
             </div>
           </div>
@@ -151,8 +184,8 @@ export default function Home() {
             <a className="transition-colors hover:text-base-900" href="#testimonials">
               Testimonials
             </a>
-            <a className="transition-colors hover:text-base-900" href="#pricing">
-              Pricing
+            <a className="transition-colors hover:text-base-900" href="#how-it-works">
+              How It Works
             </a>
           </div>
 
@@ -175,12 +208,20 @@ export default function Home() {
 
       <main className="relative z-10 flex flex-col">
         <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-24">
-          <div className="text-center">
+          <div className="relative overflow-hidden rounded-[2.25rem] border border-primary/25 bg-white/85 p-8 shadow-[0_42px_95px_-56px_rgba(76,29,149,0.55)] sm:p-12">
+            <div
+              className="absolute inset-0 bg-center opacity-35"
+              style={{ backgroundImage: "url('/hero-grid.svg')", backgroundSize: "cover" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-white/70 to-secondary/12" />
+
+            <div className="relative grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="text-center lg:text-left">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white/80 px-5 py-2 text-sm font-medium text-primary shadow-[0_12px_32px_-18px_rgba(147,51,234,0.35)] backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/80 px-5 py-2 text-sm font-medium text-primary shadow-[0_12px_32px_-18px_rgba(76,29,149,0.35)] backdrop-blur"
             >
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               AI-Powered Workspace
@@ -190,10 +231,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mt-8 font-display text-6xl leading-tight text-base-900 sm:text-7xl"
+              className="mt-8 font-display text-5xl leading-tight text-base-900 sm:text-6xl"
             >
               <span className="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">
-                Your All-in-One Workspace for Success
+                Close More Deals With Less Chaos
               </span>
             </motion.h1>
 
@@ -201,17 +242,17 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="mx-auto mt-6 max-w-3xl text-lg leading-relaxed text-base-600"
+              className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-base-600 lg:mx-0"
             >
-              Streamline your workflow with intelligent CRM, AI-powered note-taking, and seamless project management.
-              All in one beautiful platform.
+              PandiCRM brings CRM, notes, tasks, and rituals together so your team follows through faster and grows
+              predictable revenue.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="mx-auto mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row"
+              className="mx-auto mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row lg:mx-0 lg:justify-start"
             >
               <a
                 className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-4 text-lg font-semibold text-white shadow-2xl transition hover:shadow-3xl hover:-translate-y-0.5"
@@ -225,9 +266,9 @@ export default function Home() {
               </a>
               <a
                 className="inline-flex items-center gap-3 rounded-full border-2 border-border bg-white/80 px-8 py-4 text-lg font-semibold text-base-900 shadow-lg transition hover:border-primary hover:bg-white hover:-translate-y-0.5"
-                href="#demo"
+                href="/signup"
               >
-                Watch Demo
+                Schedule a Demo
               </a>
             </motion.div>
 
@@ -235,20 +276,86 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-20 grid grid-cols-3 gap-6"
+              className="mt-14 grid grid-cols-3 gap-4"
             >
               {heroStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl border border-border/40 bg-white/80 p-6 text-center shadow-lg backdrop-blur"
+                  className="rounded-2xl border border-primary/20 bg-white/82 p-5 text-center shadow-lg backdrop-blur"
                 >
-                  <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-3xl font-display font-semibold text-transparent">
+                  <div className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-2xl font-display font-semibold text-transparent sm:text-3xl">
                     {stat.value}
                   </div>
-                  <p className="mt-2 text-base-600">{stat.label}</p>
+                  <p className="mt-1 text-sm text-base-600 sm:text-base">{stat.label}</p>
                 </div>
               ))}
             </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 25 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="rounded-3xl border border-primary/20 bg-white/90 p-6 shadow-[0_28px_70px_-40px_rgba(76,29,149,0.6)]"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Pipeline Snapshot</p>
+                  <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">Live</span>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  {dashboardStats.map((item) => (
+                    <div key={item.label} className="rounded-xl border border-border/30 bg-base-50 p-3">
+                      <p className="text-xs text-base-500">{item.label}</p>
+                      <p className="mt-1 text-lg font-semibold text-base-900">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 rounded-2xl border border-border/30 bg-white p-4">
+                  <p className="text-sm font-semibold text-base-900">Team Activity</p>
+                  <div className="mt-3 space-y-3">
+                    {recentActivity.slice(0, 3).map((item) => (
+                      <div key={item.title} className="flex items-start gap-3">
+                        <span className="mt-1.5 h-2 w-2 rounded-full bg-primary" />
+                        <div>
+                          <p className="text-sm text-base-800">{item.title}</p>
+                          <p className="text-xs text-base-500">{item.time}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section id="how-it-works" className="bg-base-50 py-24">
+          <div className="mx-auto w-full max-w-7xl px-6">
+            <div className="text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/40 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
+                How It Works
+              </span>
+              <h2 className="mt-6 font-display text-4xl font-bold text-base-900">A Simple 3-Step Growth Workflow</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-lg text-base-600">
+                Onboard your team quickly, standardize execution, and scale performance with repeatable rituals.
+              </p>
+            </div>
+
+            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+              {workflowSteps.map((item) => (
+                <div
+                  key={item.step}
+                  className="rounded-3xl border border-border/30 bg-white p-7 shadow-[0_24px_55px_-40px_rgba(12,14,40,0.45)]"
+                >
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-primary to-secondary font-display text-sm font-semibold text-white">
+                    {item.step}
+                  </span>
+                  <h3 className="mt-5 font-display text-2xl font-semibold text-base-900">{item.title}</h3>
+                  <p className="mt-3 text-base-600">{item.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -287,7 +394,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="dashboard" className="bg-gradient-to-br from-purple-100 via-pink-50 to-purple-50 py-24">
+        <section id="dashboard" className="bg-base-50 py-24">
           <div className="mx-auto w-full max-w-7xl px-6">
             <div className="text-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.26em] text-primary">
@@ -305,7 +412,7 @@ export default function Home() {
               {dashboardStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-3xl border border-border/30 bg-white p-6 shadow-xl transition hover:shadow-2xl"
+                  className="rounded-3xl border border-border/30 bg-white p-6 shadow-[0_24px_52px_-38px_rgba(12,14,40,0.45)] transition hover:shadow-[0_28px_62px_-40px_rgba(12,14,40,0.5)]"
                 >
                   <div className="flex items-center justify-between">
                     <div
@@ -322,14 +429,14 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="mt-16 rounded-3xl border border-border/30 bg-white p-8 shadow-2xl">
+            <div className="mt-16 rounded-3xl border border-border/30 bg-white p-8 shadow-[0_35px_80px_-54px_rgba(12,14,40,0.55)]">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h3 className="font-display text-xl font-semibold text-base-900">Recent Activity</h3>
                   <p className="text-sm text-base-500">Stay on top of your team's progress.</p>
                 </div>
                 <a
-                  href="#dashboard"
+                  href="/signin"
                   className="rounded-full bg-gradient-to-r from-primary to-secondary px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl"
                 >
                   View All
@@ -378,11 +485,19 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-2 text-yellow-400">
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} fill="currentColor" strokeWidth={0} style={{ width: "1rem", height: "1rem" }} />
+                      <Star
+                        key={index}
+                        fill={index < testimonial.rating ? "currentColor" : "none"}
+                        strokeWidth={index < testimonial.rating ? 0 : 1.8}
+                        style={{ width: "1rem", height: "1rem" }}
+                      />
                     ))}
                   </div>
                   <Quote className="mt-6" style={{ width: "2rem", height: "2rem", color: "var(--accent-primary)" }} />
                   <p className="mt-4 text-base-700">“{testimonial.content}”</p>
+                  <p className="mt-4 inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    {testimonial.result}
+                  </p>
                   <div className="mt-8 flex items-center gap-4">
                     <div className="grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white font-semibold">
                       {testimonial.initials}
@@ -433,7 +548,7 @@ export default function Home() {
               </a>
               <a
                 className="inline-flex items-center gap-3 rounded-full border border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                href="#demo"
+                href="/signup"
               >
                 Schedule a Demo
               </a>
@@ -458,17 +573,17 @@ export default function Home() {
               <Sparkles style={{ width: "1.1rem", height: "1.1rem" }} />
             </div>
             <div>
-              <p className="font-display text-base font-semibold text-white">WorkFlow</p>
+              <p className="font-display text-base font-semibold text-white">PandiCRM</p>
               <p className="text-white/60">Your all-in-one workspace for CRM, notes, and project management.</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-6 text-white/60">
+          <div className="flex flex-wrap items-center gap-6 text-white/60">
             <a className="transition hover:text-white" href="#features">
               Features
             </a>
-            <a className="transition hover:text-white" href="#pricing">
-              Pricing
+            <a className="transition hover:text-white" href="#how-it-works">
+              How It Works
             </a>
             <a className="transition hover:text-white" href="/privacy">
               Privacy
@@ -476,9 +591,26 @@ export default function Home() {
             <a className="transition hover:text-white" href="/terms">
               Terms
             </a>
+
+            <div className="mx-2 h-5 w-px bg-white/20" />
+
+            <div className="flex items-center gap-3">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={item.label}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-white/20 text-white/80 transition hover:border-white/40 hover:text-white"
+                >
+                  <item.icon style={{ width: "1rem", height: "1rem" }} />
+                </a>
+              ))}
+            </div>
           </div>
 
-          <p>© {new Date().getFullYear()} WorkFlow. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} PandiCRM. All rights reserved.</p>
         </div>
       </footer>
     </div>

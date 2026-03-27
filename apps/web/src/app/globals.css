@@ -13,11 +13,11 @@
   --base-400: #6b6b8a;
   --base-50: #f6f7ff;
   --surface: #ffffff;
-  --accent-primary: #9333ea;
+  --accent-primary: #4c1d95;
   --accent-secondary: #ec4899;
-  --accent-tertiary: #a855f7;
+  --accent-tertiary: #7e22ce;
   --muted: rgba(12, 14, 40, 0.55);
-  --border: rgba(147, 51, 234, 0.24);
+  --border: rgba(76, 29, 149, 0.24);
 }
 
 body {
