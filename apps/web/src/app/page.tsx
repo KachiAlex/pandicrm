@@ -3,22 +3,21 @@
 import { motion } from "motion/react";
 import {
   ArrowRight,
+  AtSign,
   BarChart3,
   Brain,
   Calendar,
   CheckCircle2,
   FileText,
-  Instagram,
-  Linkedin,
+  Globe,
+  MessageCircle,
   Quote,
   Sparkles,
   Star,
   TrendingUp,
-  Twitter,
   Users,
   Zap,
 } from "lucide-react";
-
 const featureCards = [
   {
     title: "Smart CRM",
@@ -133,9 +132,9 @@ const workflowSteps = [
 ];
 
 const socialLinks = [
-  { label: "LinkedIn", href: "https://www.linkedin.com", icon: Linkedin },
-  { label: "X", href: "https://x.com", icon: Twitter },
-  { label: "Instagram", href: "https://www.instagram.com", icon: Instagram },
+  { label: "LinkedIn", href: "https://www.linkedin.com", icon: Globe },
+  { label: "X", href: "https://x.com", icon: AtSign },
+  { label: "Instagram", href: "https://www.instagram.com", icon: MessageCircle },
 ];
 
 export default function Home() {
@@ -207,7 +206,7 @@ export default function Home() {
       </header>
 
       <main className="relative z-10 flex flex-col">
-        <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-24">
+        <section className="mx-auto w-full max-w-7xl px-6 pb-32 pt-16">
           <div className="relative overflow-hidden rounded-[2.25rem] border border-primary/25 bg-white/85 p-8 shadow-[0_42px_95px_-56px_rgba(76,29,149,0.55)] sm:p-12">
             <div
               className="absolute inset-0 bg-center opacity-35"
@@ -221,7 +220,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/80 px-5 py-2 text-sm font-medium text-primary shadow-[0_12px_32px_-18px_rgba(76,29,149,0.35)] backdrop-blur"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/80 px-5 py-2 text-xs font-medium text-primary shadow-[0_12px_32px_-18px_rgba(76,29,149,0.35)] backdrop-blur"
             >
               <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               AI-Powered Workspace
@@ -234,7 +233,7 @@ export default function Home() {
               className="mt-8 font-display text-5xl leading-tight text-base-900 sm:text-6xl"
             >
               <span className="bg-gradient-to-r from-primary via-secondary to-tertiary bg-clip-text text-transparent">
-                Close More Deals With Less Chaos
+                Turn Follow-Ups Into Revenue Rituals
               </span>
             </motion.h1>
 
@@ -258,7 +257,7 @@ export default function Home() {
                 className="group inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-primary to-secondary px-8 py-4 text-lg font-semibold text-white shadow-2xl transition hover:shadow-3xl hover:-translate-y-0.5"
                 href="/signup"
               >
-                Get Started Free
+                Start Free - No Card Needed
                 <ArrowRight
                   className="transition-transform group-hover:translate-x-1"
                   style={{ width: "1.25rem", height: "1.25rem" }}
@@ -268,9 +267,11 @@ export default function Home() {
                 className="inline-flex items-center gap-3 rounded-full border-2 border-border bg-white/80 px-8 py-4 text-lg font-semibold text-base-900 shadow-lg transition hover:border-primary hover:bg-white hover:-translate-y-0.5"
                 href="/signup"
               >
-                Schedule a Demo
+                Book a Live Demo
               </a>
             </motion.div>
+
+            <p className="mt-4 text-sm font-medium text-base-600">Trusted by 50,000+ revenue teams</p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -290,6 +291,8 @@ export default function Home() {
                 </div>
               ))}
             </motion.div>
+
+              </div>
 
               <motion.div
                 initial={{ opacity: 0, x: 25 }}
