@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+  (process.env.NODE_ENV === "development" ? "http://localhost:3001" : "");
 
 export interface ApiResponse<T> {
   data?: T;
@@ -450,16 +452,28 @@ class ApiClient {
         ...options,
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const data = contentType.includes("application/json")
+        ? await response.json()
+        : { error: await response.text() };
 
       if (!response.ok) {
-        return { error: data.error || `HTTP ${response.status}` };
+        const errorMessage =
+          typeof data === "object" && data && "error" in data && typeof data.error === "string"
+            ? data.error
+            : `HTTP ${response.status}`;
+        return { error: errorMessage };
       }
 
       return { data: data as T };
     } catch (error) {
       return {
-        error: error instanceof Error ? error.message : "Network error",
+        error:
+          error instanceof Error && /failed to fetch|networkerror|load failed/i.test(error.message)
+            ? "Unable to reach the API. Configure NEXT_PUBLIC_API_URL for deployed web clients."
+            : error instanceof Error
+              ? error.message
+              : "Network error",
       };
     }
   }

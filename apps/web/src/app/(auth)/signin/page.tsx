@@ -70,7 +70,7 @@ export default function SignInPage() {
     <div className="relative flex min-h-[100svh] flex-col bg-base-50 text-base-900">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(circle_at_top,_rgba(91,75,255,0.25),transparent_65%)]" />
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-12 sm:px-12">
-        <div className="grid gap-12 rounded-[32px] border border-border/50 bg-white/80 p-10 shadow-[0_32px_80px_-40px_rgba(10,11,40,0.55)] backdrop-blur lg:grid-cols-[minmax(0,_1fr)_420px]">
+        <div className="grid gap-12 rounded-[32px] border border-border/50 bg-white/80 p-10 shadow-[0_32px_80px_-40px_rgba(10,11,40,0.55)] backdrop-blur lg:grid-cols-2">
           <div className="space-y-10">
             <div className="space-y-4">
               <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-muted">
