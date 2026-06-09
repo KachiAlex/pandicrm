@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pandicrm | Customer Relations has never been this easy</title>
+    <meta name="description" content="pandicrm is the AI-powered CRM for sales teams and customer success. AI note taker, task manager, pipeline tracking, and reporting in one beautiful platform." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="pandicrm" />
+    <meta property="og:title" content="pandicrm | Customer Relations has never been this easy" />
+    <meta property="og:description" content="The AI-powered CRM built for modern sales and customer success teams." />
+    <meta property="og:url" content="https://pandicrm.com/" />
+    <meta name="twitter:title" content="pandicrm | Customer Relations has never been this easy" />
+    <meta name="twitter:description" content="AI note taker, task manager, pipeline tracking, and reporting — pandicrm." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter','sans-serif'] },
+            colors: {
+              pk: {
+                50:'#fff0f7', 100:'#ffd6ec', 200:'#ffadd9',
+                300:'#ff80c4', 400:'#ff4dae', 500:'#ff1a97',
+                600:'#e6006b', 700:'#b80055', 800:'#8a003f', 900:'#5c002a'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box}
+      html{scroll-behavior:smooth}
+      body{font-family:'Inter',sans-serif;background:#fff;color:#0d0d12;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+      .reveal{opacity:0;transform:translateY(24px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1)}
+      .reveal.active{opacity:1;transform:translateY(0)}
+      .rd1{transition-delay:.1s}.rd2{transition-delay:.18s}.rd3{transition-delay:.28s}.rd4{transition-delay:.38s}
+      /* Orbs */
+      .orb{position:absolute;border-radius:50%;pointer-events:none;z-index:0}
+      .orb-a{background:radial-gradient(circle,rgba(255,26,151,0.32) 0%,transparent 68%);filter:blur(80px)}
+      .orb-b{background:radial-gradient(circle,rgba(230,0,107,0.22) 0%,transparent 70%);filter:blur(100px)}
+      .orb-c{background:radial-gradient(circle,rgba(255,77,174,0.18) 0%,transparent 72%);filter:blur(90px)}
+      /* Glass */
+      .glass{background:rgba(255,255,255,0.68);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,0.85);box-shadow:0 8px 32px rgba(0,0,0,0.07),inset 0 0 0 1px rgba(255,255,255,0.5);border-radius:18px}
+      /* Surface */
+      .surf{background:#fff;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.03),0 12px 40px rgba(0,0,0,0.055),inset 0 0 0 1px rgba(0,0,0,0.048)}
+      /* Glossy pink button */
+      .btn-p{background:linear-gradient(135deg,#ff1a97 0%,#b80055 100%);color:#fff;border-radius:999px;font-weight:600;letter-spacing:-.01em;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .18s ease;box-shadow:0 4px 18px rgba(184,0,85,0.32),inset 0 1px 0 rgba(255,255,255,0.18)}
+      .btn-p:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(184,0,85,0.42),inset 0 1px 0 rgba(255,255,255,0.22)}
+      /* Ghost button */
+      .btn-g{background:transparent;color:#0d0d12;border-radius:999px;font-weight:500;letter-spacing:-.01em;border:1.5px solid rgba(13,13,18,0.14);cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .18s ease}
+      .btn-g:hover{border-color:rgba(184,0,85,0.38);color:#b80055}
+      /* Navbar */
+      #navbar{transition:all .3s ease}
+      #navbar.scrolled{background:rgba(255,255,255,0.9)!important;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(0,0,0,0.055)}
+      #nav-logo{transition:opacity .3s ease}
+      #navbar[data-scroll-effect]:not(.scrolled) #nav-logo{opacity:0;pointer-events:none}
+      #navbar[data-scroll-effect].scrolled #nav-logo{opacity:1;pointer-events:auto}
+      /* Pill badge */
+      .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:999px;background:linear-gradient(135deg,rgba(255,26,151,0.09),rgba(184,0,85,0.05));border:1px solid rgba(184,0,85,0.18);font-size:11.5px;font-weight:600;color:#b80055;letter-spacing:.025em;text-transform:uppercase}
+      .pldot{width:6px;height:6px;border-radius:50%;background:#ff1a97;box-shadow:0 0 0 2.5px rgba(255,26,151,0.28);animation:pdot 2s ease-in-out infinite}
+      @keyframes pdot{0%,100%{box-shadow:0 0 0 2.5px rgba(255,26,151,0.28)}50%{box-shadow:0 0 0 5px rgba(255,26,151,0.1)}}
+      /* Floating */
+      @keyframes fla{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-11px) rotate(.7deg)}}
+      @keyframes flb{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+      @keyframes flc{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6px) rotate(-.5deg)}}
+      .fla{animation:fla 4.5s ease-in-out infinite}
+      .flb{animation:flb 3.7s ease-in-out infinite}
+      .flc{animation:flc 5.1s ease-in-out infinite}
+      /* Gradient text */
+      .tg{background:linear-gradient(135deg,#ff1a97 0%,#b80055 55%,#6e0033 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      .tgw{background:linear-gradient(135deg,#ff66b3 0%,#ff1a97 45%,#e6006b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+      /* Dark sidebar */
+      .dash-sb{background:linear-gradient(180deg,#0d0d12 0%,#180814 100%);border-right:1px solid rgba(255,26,151,0.1)}
+      .dni{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:10px;font-size:12.5px;font-weight:500;color:rgba(255,255,255,0.45);cursor:pointer;transition:all .14s ease}
+      .dni:hover{background:rgba(255,255,255,0.055);color:rgba(255,255,255,0.8)}
+      .dni.on{background:linear-gradient(135deg,rgba(255,26,151,0.18),rgba(184,0,85,0.09));color:#ff66b3}
+      /* Feature icon */
+      .fi{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,rgba(255,26,151,0.11),rgba(184,0,85,0.055));border:1px solid rgba(184,0,85,0.14);display:flex;align-items:center;justify-content:center;color:#b80055;flex-shrink:0}
+      /* Pricing */
+      .pc{background:#fff;border-radius:22px;padding:30px;box-shadow:0 2px 6px rgba(0,0,0,0.03),0 14px 44px rgba(0,0,0,0.055),inset 0 0 0 1px rgba(0,0,0,0.048);position:relative;overflow:hidden}
+      .pc.feat{background:linear-gradient(145deg,#0d0d12 0%,#180814 100%);box-shadow:0 8px 36px rgba(184,0,85,0.28),inset 0 0 0 1px rgba(255,26,151,0.18)}
+      .pc.feat::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,26,151,0.28) 0%,transparent 70%);filter:blur(36px)}
+      /* Pipeline card */
+      .pkc{background:#fff;border-radius:11px;border:1px solid rgba(0,0,0,0.06);padding:10px 12px;margin-bottom:7px;box-shadow:0 2px 7px rgba(0,0,0,0.04);font-size:12px}
+      /* Timeline dot */
+      .tld{width:9px;height:9px;border-radius:50%;background:#ff1a97;flex-shrink:0;box-shadow:0 0 0 3px rgba(255,26,151,0.14)}
+      /* Stats */
+      .sup{color:#15803d;background:#f0fdf4;border-radius:5px;padding:2px 6px;font-size:10.5px;font-weight:600}
+      .sdn{color:#dc2626;background:#fef2f2;border-radius:5px;padding:2px 6px;font-size:10.5px;font-weight:600}
+      /* Dash tab */
+      .dtab{padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .14s ease;color:#6b7280;border:1px solid transparent;white-space:nowrap}
+      .dtab.on{background:#fff;color:#b80055;border-color:rgba(184,0,85,0.14);box-shadow:0 2px 8px rgba(0,0,0,0.055)}
+      .dtab:hover:not(.on){color:#374151}
+      /* Scrollbar hide */
+      .noscroll::-webkit-scrollbar{display:none}
+      .noscroll{-ms-overflow-style:none;scrollbar-width:none}
+      /* Sidebar section label */
+      .sb-label{font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);text-transform:uppercase;letter-spacing:.1em;padding:4px 12px 2px;pointer-events:none;}
+      /* Sidebar badge (e.g. "New") */
+      .sb-badge{margin-left:auto;font-size:8.5px;font-weight:700;color:#ff66b3;background:rgba(255,26,151,0.15);border:1px solid rgba(255,26,151,0.22);border-radius:999px;padding:1px 7px;flex-shrink:0;}
+      /* Sidebar count chip */
+      .sb-count{margin-left:auto;font-size:9px;font-weight:700;color:rgba(255,255,255,0.45);background:rgba(255,255,255,0.08);border-radius:999px;padding:1px 7px;flex-shrink:0;min-width:20px;text-align:center;}
+      footer{background:#0d0d12}
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav id="navbar" data-scroll-effect class="fixed top-0 left-0 right-0 z-50 bg-transparent transition-all duration-300">
+      <div class="max-w-[1200px] mx-auto px-6 h-[66px] flex items-center justify-between">
+        <a href="/" id="nav-logo" onclick="handleNav(event,'/')" class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff1a97,#b80055);box-shadow:0 4px 14px rgba(184,0,85,0.35);">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white"/></svg>
+          </div>
+          <span class="font-black text-base tracking-tight" style="color:#0d0d12;">pandi<span style="color:#b80055;">crm</span></span>
+        </a>
+        <div class="hidden md:flex items-center gap-1">
+          <a href="/" onclick="handleNav(event,'/')" data-nav class="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">Home</a>
+          <a href="/#features" onclick="handleNav(event,'/#features')" class="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+          <a href="/dashboard" onclick="handleNav(event,'/dashboard')" data-nav class="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">Dashboard</a>
+          <a href="/login" onclick="handleNav(event,'/login')" data-nav class="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">Log in</a>
+          <a href="/login" onclick="handleNav(event,'/login')" class="btn-p text-sm px-5 py-2.5 ml-2">Get started <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+        </div>
+        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-xl text-gray-700" aria-label="Menu"><i data-lucide="menu" class="w-5 h-5"></i></button>
+      </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div id="mobile-menu" class="fixed inset-0 z-[60] bg-white transform translate-x-full transition-transform duration-300 flex flex-col">
+      <div class="h-[66px] flex items-center justify-between px-6 border-b border-gray-100">
+        <span class="font-black text-gray-900 text-base tracking-tight">pandi<span style="color:#b80055;">crm</span></span>
+        <button id="close-mobile-menu" aria-label="Close menu" class="p-2 text-gray-700"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div class="flex-1 flex flex-col justify-center items-center gap-6 p-6">
+        <a href="/" onclick="handleNav(event,'/')" class="text-2xl font-bold text-gray-800 hover:text-pk-700 transition-colors">Home</a>
+        <a href="/dashboard" onclick="handleNav(event,'/dashboard')" class="text-2xl font-bold text-gray-800 hover:text-pk-700 transition-colors">Dashboard</a>
+        <a href="/login" onclick="handleNav(event,'/login')" class="text-2xl font-bold text-gray-800 hover:text-pk-700 transition-colors">Log in</a>
+        <a href="/login" onclick="handleNav(event,'/login')" class="btn-p text-base px-7 py-3.5 mt-4 w-full justify-center">Get started free</a>
+      </div>
+    </div>
+
+    <main id="app"></main>
+
+    <!-- FOOTER -->
+    <footer id="site-footer" class="hidden">
+      <div class="max-w-[1200px] mx-auto px-6 py-16">
+        <div class="flex flex-col md:flex-row justify-between gap-10 mb-12">
+          <div class="max-w-xs">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#ff1a97,#b80055);">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white"/></svg>
+              </div>
+              <span class="font-black text-white text-base tracking-tight">pandicrm</span>
+            </div>
+            <p class="text-gray-400 text-sm leading-relaxed">Customer Relations has never been this easy. AI-powered CRM for modern sales and customer success teams.</p>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Product</p>
+              <div class="flex flex-col gap-3">
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Changelog</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Roadmap</a>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Company</p>
+              <div class="flex flex-col gap-3">
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">About</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Blog</a>
+                <a href="mailto:hello@pandicrm.com" class="text-sm text-gray-400 hover:text-white transition-colors">Contact</a>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Legal</p>
+              <div class="flex flex-col gap-3">
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Privacy</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Terms</a>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition-colors">Security</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-sm text-gray-400">&copy; <span id="year"></span> pandicrm. All rights reserved.</p>
+          <p class="text-sm text-gray-400">Made with <span style="color:#ff1a97;">&#9829;</span> for sales teams everywhere.</p>
+        </div>
+      </div>
+      <div class="overflow-hidden pb-4"></div>
+    </footer>
+    <script id="content" type="application/json">{
+    "company": "content/company.json"
+}</script>
+    <script type="module">
+import { submitContactForm } from '@appsmithorg/template-frontend/utility';
+document.dispatchEvent(new CustomEvent('kite:core-ready', {
+  detail: { submitContactForm }
+}));
+</script>
+
+<script id="main_script">
+// Receive async-loaded core utilities via CustomEvent (non-blocking)
+let submitContactForm = null;
+document.addEventListener('kite:core-ready', (e) => {
+  submitContactForm = e.detail.submitContactForm;
+});
+const data = JSON.parse(document.getElementById('content').textContent);
+      const app = document.getElementById('app');
+      const siteFooter = document.getElementById('site-footer');
+
+      function optimizeImg(url, width) {
+        if (!url || !url.includes('/upload/')) return url || '';
+        const parts = url.split('/upload/');
+        if (parts[1].match(/^[a-z]_[^/]+/)) { const sub=parts[1].split('/'); sub[0]+=',w_'+width+',c_limit'; return parts[0]+'/upload/'+sub.join('/'); }
+        return parts[0]+'/upload/w_'+width+',c_limit/'+parts[1];
+      }
+
+      const routes = {
+        '/': { title:'pandicrm | Customer Relations has never been this easy', description:'AI-powered CRM for sales teams.', render:renderHome },
+        '/login': { title:'Log in | pandicrm', description:'Sign in to pandicrm.', render:renderLogin },
+        '/dashboard': { title:'Dashboard | pandicrm', description:'pandicrm dashboard — AI notes, tasks, pipeline, reports.', render:renderDashboard },
+      };
+      const siteName='pandicrm';
+
+      function upsertHeadMeta(sel, attrs, content) {
+        if (content==null||content==='') return;
+        let el=document.head.querySelector(sel);
+        if (!el) { el=document.createElement('meta'); Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v)); document.head.appendChild(el); }
+        el.setAttribute('content',content);
+      }
+      function applyRouteMetadataToHead(route) {
+        const t=route.title||siteName; document.title=t;
+        upsertHeadMeta('meta[name="description"]',{name:'description'},route.description);
+        upsertHeadMeta('meta[property="og:title"]',{'property':'og:title'},t);
+        upsertHeadMeta('meta[property="og:description"]',{'property':'og:description'},route.description);
+        upsertHeadMeta('meta[name="twitter:title"]',{name:'twitter:title'},t);
+        upsertHeadMeta('meta[name="twitter:description"]',{name:'twitter:description'},route.description);
+        upsertHeadMeta('meta[property="og:url"]',{'property':'og:url'},location.href);
+      }
+      function handleNav(e, path) {
+        e.preventDefault();
+        const cleanPath=path.split('#')[0]||'/';
+        if (cleanPath!==location.pathname) { history.pushState({},'',path); render(cleanPath); }
+        closeMobileMenuFn?.();
+      }
+      window.handleNav=handleNav;
+      function render(path) {
+        const route=routes[path]||routes['/'];
+        applyRouteMetadataToHead(route);
+        document.querySelectorAll('[data-nav]').forEach(l=>{const a=l.getAttribute('href')===path;l.classList.toggle('text-pk-700',a);l.setAttribute('aria-current',a?'page':'false')});
+        scrollTo({top:0,behavior:'instant'});
+        route.render();
+        lucide?.createIcons();
+        initReveal();
+        announcePageChange(route.title);
+        siteFooter.classList.toggle('hidden',path==='/dashboard');
+        const yr=document.getElementById('year'); if(yr) yr.textContent=new Date().getFullYear();
+      }
+      function announcePageChange(title) {
+        const el=document.getElementById('route-announcer')||(() => { const d=document.createElement('div'); d.id='route-announcer'; d.setAttribute('aria-live','polite'); d.setAttribute('aria-atomic','true'); d.className='sr-only'; document.body.appendChild(d); return d; })();
+        el.textContent='Navigated to '+title;
+      }
+      addEventListener('popstate',()=>render(location.pathname));
+
+      const nav=document.getElementById('navbar');
+      window.addEventListener('scroll',()=>nav.classList.toggle('scrolled',window.scrollY>38));
+
+      function initReveal() {
+        const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('active')}),{threshold:0.07});
+        document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+      }
+
+      const mmBtn=document.getElementById('mobile-menu-btn');
+      const cmBtn=document.getElementById('close-mobile-menu');
+      const mm=document.getElementById('mobile-menu');
+      mmBtn.addEventListener('click',()=>mm.classList.remove('translate-x-full'));
+      cmBtn.addEventListener('click',()=>mm.classList.add('translate-x-full'));
+      const closeMobileMenuFn=()=>mm.classList.add('translate-x-full');
+      window.closeMobileMenu=closeMobileMenuFn;
+
+      window.switchTab=function(id) {
+        // Sync top tab bar
+        document.querySelectorAll('.dtab').forEach(t=>t.classList.toggle('on',t.dataset.tab===id));
+        // Sync panels
+        document.querySelectorAll('.dpanel').forEach(p=>p.classList.toggle('hidden',p.id!=='dp-'+id));
+        // Sync sidebar nav items
+        document.querySelectorAll('.dni[data-area]').forEach(n=>{
+          const isActive=n.dataset.area===id;
+          n.classList.toggle('on',isActive);
+        });
+        // Update page heading
+        const headings={notes:'AI Note Taker',tasks:'Task Manager',pipeline:'Pipeline',reports:'Reports',timeline:'Customer Timeline',crm:'CRM'};
+        const h=document.getElementById('dash-page-title');
+        if(h) h.textContent=headings[id]||'Dashboard';
+        lucide?.createIcons();
+      };
+
+      // ── HOME PAGE ──
+      function renderHome() {
+        app.innerHTML = `
+<section class="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-20 overflow-hidden" style="background:linear-gradient(180deg,#fff4fb 0%,#fff 55%);">
+  <div class="orb orb-a" style="width:780px;height:780px;top:-160px;left:50%;transform:translateX(-50%);opacity:.65;"></div>
+  <div class="orb orb-b" style="width:440px;height:440px;top:220px;right:-140px;opacity:.5;"></div>
+  <div class="orb orb-c" style="width:360px;height:360px;bottom:60px;left:-80px;opacity:.45;"></div>
+  <div class="relative z-10 max-w-[1200px] mx-auto px-6 w-full text-center">
+    <div class="pill mb-7 mx-auto" style="width:fit-content;"><span class="pldot"></span>AI-Powered CRM &mdash; Early Access</div>
+    <h1 class="font-black leading-[1.01] tracking-[-0.03em] mb-6 max-w-4xl mx-auto reveal" style="font-size:clamp(42px,7.5vw,88px);">Customer Relations<br/>has never been<br/><span class="tg">this easy.</span></h1>
+    <p class="text-gray-500 leading-relaxed max-w-xl mx-auto mb-10 reveal rd1" style="font-size:18px;">pandicrm combines AI meeting notes, smart task boards, visual pipeline tracking, and deep reporting so your team can focus on people — not paperwork.</p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 reveal rd2">
+      <a href="/login" onclick="handleNav(event,'/login')" class="btn-p px-8 py-4 text-base">Get started free <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      <a href="/dashboard" onclick="handleNav(event,'/dashboard')" class="btn-g px-7 py-4 text-base"><i data-lucide="play-circle" class="w-4 h-4"></i> See the dashboard</a>
+    </div>
+    <p class="mt-5 text-sm text-gray-400 reveal rd3">No credit card required &nbsp;&middot;&nbsp; Free plan available</p>
+    <!-- Hero mockup -->
+    <div class="relative max-w-4xl mx-auto mt-14 reveal rd2">
+      <div class="absolute inset-x-16 -bottom-5 h-12 rounded-full blur-2xl" style="background:rgba(255,26,151,0.18);"></div>
+      <div class="surf fla" style="border-radius:22px;overflow:hidden;">
+        <div class="flex items-center gap-1.5 px-4 h-9 border-b border-gray-100" style="background:#f9fafb;">
+          <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+          <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+          <div class="flex-1 mx-4 h-4 rounded-full bg-white border border-gray-200 flex items-center justify-center"><span style="font-size:9px;color:#9ca3af;">app.pandicrm.com/dashboard</span></div>
+        </div>
+        <div class="flex" style="min-height:300px;">
+          <div class="w-44 p-2.5 flex-col gap-0.5 hidden sm:flex dash-sb">
+            <div class="flex items-center gap-1.5 px-2 py-2.5 mb-1">
+              <div class="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff1a97,#b80055);"><svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white"/><\/svg></div>
+              <span style="font-size:11px;font-weight:700;color:#fff;">pandicrm</span>
+            </div>
+            <div class="dni on"><i data-lucide="layout-dashboard" class="w-3 h-3"></i>Dashboard</div>
+            <div class="dni"><i data-lucide="mic" class="w-3 h-3"></i>AI Notes</div>
+            <div class="dni"><i data-lucide="check-square" class="w-3 h-3"></i>Tasks</div>
+            <div class="dni"><i data-lucide="git-branch" class="w-3 h-3"></i>Pipeline</div>
+            <div class="dni"><i data-lucide="bar-chart-2" class="w-3 h-3"></i>Reports</div>
+          </div>
+          <div class="flex-1 p-4" style="background:#f5f5f7;">
+            <div class="grid grid-cols-3 gap-2.5 mb-3">
+              <div class="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm"><p style="font-size:9px;color:#9ca3af;">Total Deals</p><p style="font-size:16px;font-weight:800;color:#0d0d12;">$248K</p><span class="sup">+12%</span></div>
+              <div class="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm"><p style="font-size:9px;color:#9ca3af;">Win Rate</p><p style="font-size:16px;font-weight:800;color:#0d0d12;">68%</p><span class="sup">+4%</span></div>
+              <div class="bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm"><p style="font-size:9px;color:#9ca3af;">Open Tasks</p><p style="font-size:16px;font-weight:800;color:#0d0d12;">24</p><span class="sdn">-3</span></div>
+            </div>
+            <div class="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+              <p style="font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Pipeline</p>
+              <div class="flex gap-2">
+                <div class="flex-1 text-center"><div class="h-1 rounded-full mb-1" style="background:linear-gradient(90deg,#ff1a97,#b80055);"></div><p style="font-size:8px;color:#9ca3af;">Lead</p><p style="font-size:10px;font-weight:700;color:#374151;">8</p></div>
+                <div class="flex-1 text-center"><div class="h-1 rounded-full bg-pk-300 mb-1"></div><p style="font-size:8px;color:#9ca3af;">Qualify</p><p style="font-size:10px;font-weight:700;color:#374151;">5</p></div>
+                <div class="flex-1 text-center"><div class="h-1 rounded-full bg-pk-200 mb-1"></div><p style="font-size:8px;color:#9ca3af;">Propose</p><p style="font-size:10px;font-weight:700;color:#374151;">4</p></div>
+                <div class="flex-1 text-center"><div class="h-1 rounded-full bg-green-400 mb-1"></div><p style="font-size:8px;color:#9ca3af;">Won</p><p style="font-size:10px;font-weight:700;color:#374151;">3</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Floating glass widgets -->
+      <div class="glass absolute -left-6 top-24 p-3 flb hidden md:block" style="z-index:10;width:172px;">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff1a97,#b80055);"><i data-lucide="mic" class="w-3.5 h-3.5 text-white"></i></div>
+          <div><p style="font-size:10px;font-weight:600;color:#0d0d12;">AI Note Ready</p><p style="font-size:9px;color:#9ca3af;">Just transcribed</p></div>
+        </div>
+        <p style="font-size:9.5px;color:#4b5563;line-height:1.5;">"Follow up with Sarah re: Q3 expansion."</p>
+      </div>
+      <div class="glass absolute -right-5 top-12 p-3 flc hidden md:block" style="z-index:10;width:148px;">
+        <p style="font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">This Month</p>
+        <p style="font-size:22px;font-weight:900;color:#0d0d12;line-height:1;">$81K</p>
+        <p style="font-size:9px;color:#9ca3af;margin-top:2px;">Revenue closed</p>
+        <div class="mt-2 h-1 rounded-full bg-gray-100 overflow-hidden"><div class="h-full rounded-full" style="width:73%;background:linear-gradient(90deg,#ff1a97,#b80055);"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="relative py-28 overflow-hidden" style="background:#fff;">
+  <div class="orb orb-c" style="width:560px;height:560px;top:-60px;right:-180px;opacity:.55;"></div>
+  <div class="max-w-[1200px] mx-auto px-6">
+    <div class="text-center mb-16 reveal">
+      <div class="pill mb-5 mx-auto" style="width:fit-content;">Features</div>
+      <h2 class="font-black tracking-[-0.03em] leading-[1.06] mb-4" style="font-size:clamp(30px,5vw,54px);">Everything your team needs<br/><span class="tg">in one place.</span></h2>
+      <p class="text-gray-500 max-w-lg mx-auto leading-relaxed" style="font-size:17px;">From first contact to closed deal — pandicrm handles every touchpoint with intelligence.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- AI Note Taker -->
+      <div class="surf p-8 relative overflow-hidden reveal rd1 group">
+        <div class="orb orb-a absolute -top-14 -right-14 opacity-0 group-hover:opacity-35 transition-opacity duration-700" style="width:200px;height:200px;filter:blur(36px);"></div>
+        <div class="fi mb-5"><i data-lucide="mic" class="w-5 h-5"></i></div>
+        <h3 class="font-bold tracking-tight text-gray-900 mb-2" style="font-size:19px;">AI Note Taker</h3>
+        <p class="text-gray-500 leading-relaxed mb-5" style="font-size:14px;">Join every meeting with a silent AI co-pilot. Get structured summaries, action items, and CRM updates — automatically, the moment the call ends.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style="background:linear-gradient(135deg,#ff1a97,#b80055);"><i data-lucide="sparkles" class="w-3 h-3 text-white"></i></div>
+            <div><p style="font-size:11px;font-weight:600;color:#374151;margin-bottom:2px;">AI Summary</p><p style="font-size:11.5px;color:#6b7280;">Acme Corp call: Budget confirmed $24K. Decision next Friday. Key concern: onboarding timeline.</p></div>
+          </div>
+          <div class="border-t border-gray-200 pt-3">
+            <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Action Items</p>
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded flex-shrink-0" style="border:2px solid #ff1a97;background:#fff0f7;"></div><p style="font-size:11.5px;color:#4b5563;">Send onboarding deck to Sarah by Thu</p></div>
+              <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded flex-shrink-0 border-2 border-gray-300"></div><p style="font-size:11.5px;color:#4b5563;">Schedule technical review call</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Task Manager -->
+      <div class="surf p-8 relative overflow-hidden reveal rd2 group">
+        <div class="orb orb-c absolute -bottom-14 -left-14 opacity-0 group-hover:opacity-40 transition-opacity duration-700" style="width:200px;height:200px;filter:blur(36px);"></div>
+        <div class="fi mb-5"><i data-lucide="check-square" class="w-5 h-5"></i></div>
+        <h3 class="font-bold tracking-tight text-gray-900 mb-2" style="font-size:19px;">Task Manager</h3>
+        <p class="text-gray-500 leading-relaxed mb-5" style="font-size:14px;">Smart task boards that stay in sync with your deals. Assign, prioritize, and track follow-ups — with AI-suggested next actions for every contact.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm">
+              <div class="w-4 h-4 rounded flex-shrink-0" style="border:2px solid #ff1a97;background:#fff0f7;"></div>
+              <p style="font-size:11.5px;font-weight:500;color:#374151;flex:1;">Follow up with TechCorp demo</p>
+              <span style="font-size:10px;color:#b80055;background:#fff0f7;padding:2px 8px;border-radius:999px;font-weight:600;">Today</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style="border:2px solid #22c55e;background:#f0fdf4;">
+                <i data-lucide="check" class="w-2.5 h-2.5" style="color:#22c55e;"></i>
+              </div>
+              <p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;flex:1;">Send proposal to Meridian Inc</p>
+              <span style="font-size:10px;color:#16a34a;background:#f0fdf4;padding:2px 8px;border-radius:999px;font-weight:600;">Done</span>
+            </div>
+            <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 border border-gray-100 shadow-sm">
+              <div class="w-4 h-4 rounded flex-shrink-0 border-2 border-gray-300"></div>
+              <p style="font-size:11.5px;font-weight:500;color:#374151;flex:1;">Prepare Q4 pipeline review</p>
+              <span style="font-size:10px;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:999px;">Fri</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Pipeline Tracking -->
+      <div class="surf p-8 relative overflow-hidden reveal rd1 group">
+        <div class="fi mb-5"><i data-lucide="git-branch" class="w-5 h-5"></i></div>
+        <h3 class="font-bold tracking-tight text-gray-900 mb-2" style="font-size:19px;">Pipeline Tracking</h3>
+        <p class="text-gray-500 leading-relaxed mb-5" style="font-size:14px;">Visual kanban-style pipeline with drag-and-drop deals. See where every opportunity stands, spot bottlenecks, and forecast revenue with confidence.</p>
+        <div class="flex gap-2 overflow-hidden">
+          <div class="flex-1">
+            <div class="flex items-center gap-1 mb-2"><div class="w-2 h-2 rounded-full" style="background:#ff1a97;"></div><p style="font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Lead</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Apex Media</p><p style="color:#9ca3af;font-size:10px;">$12,000</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">TechCorp</p><p style="color:#9ca3af;font-size:10px;">$8,500</p></div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-1 mb-2"><div class="w-2 h-2 rounded-full bg-pk-400"></div><p style="font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Qualify</p></div>
+            <div class="pkc" style="border-color:rgba(255,26,151,0.18);box-shadow:0 2px 8px rgba(255,26,151,0.07);"><p style="font-weight:600;font-size:11px;color:#1f2937;">Acme Corp</p><p style="color:#9ca3af;font-size:10px;">$24,000</p></div>
+          </div>
+          <div class="flex-1 hidden sm:block">
+            <div class="flex items-center gap-1 mb-2"><div class="w-2 h-2 rounded-full bg-green-400"></div><p style="font-size:9px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;">Won</p></div>
+            <div class="pkc border-green-100"><p style="font-weight:600;font-size:11px;color:#1f2937;">Meridian</p><p style="font-size:10px;color:#16a34a;font-weight:600;">+$18K</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Reporting -->
+      <div class="surf p-8 relative overflow-hidden reveal rd2 group">
+        <div class="fi mb-5"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
+        <h3 class="font-bold tracking-tight text-gray-900 mb-2" style="font-size:19px;">Reporting</h3>
+        <p class="text-gray-500 leading-relaxed mb-5" style="font-size:14px;">Real-time dashboards that surface what actually matters. Track win rates, revenue velocity, team performance, and churn signals — all at a glance.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div class="flex items-end gap-1.5 mb-2" style="height:72px;">
+            <div class="flex-1 rounded-t-md bg-pk-100" style="height:35%;"></div>
+            <div class="flex-1 rounded-t-md bg-pk-200" style="height:55%;"></div>
+            <div class="flex-1 rounded-t-md bg-pk-300" style="height:70%;"></div>
+            <div class="flex-1 rounded-t-md" style="height:88%;background:linear-gradient(180deg,#ff1a97,#b80055);box-shadow:0 3px 12px rgba(184,0,85,0.28);"></div>
+            <div class="flex-1 rounded-t-md bg-pk-200" style="height:62%;"></div>
+            <div class="flex-1 rounded-t-md bg-pk-300" style="height:76%;"></div>
+          </div>
+          <div class="flex justify-between" style="font-size:8.5px;color:#9ca3af;"><span>Apr</span><span>May</span><span>Jun</span><span style="color:#b80055;font-weight:600;">Jul</span><span>Aug</span><span>Sep</span></div>
+          <div class="mt-3 flex gap-2">
+            <div class="flex-1 bg-white rounded-xl p-2.5 border border-gray-100 text-center"><p style="font-size:13px;font-weight:800;color:#0d0d12;">68%</p><p style="font-size:9px;color:#9ca3af;">Win Rate</p></div>
+            <div class="flex-1 bg-white rounded-xl p-2.5 border border-gray-100 text-center"><p style="font-size:13px;font-weight:800;color:#0d0d12;">18d</p><p style="font-size:9px;color:#9ca3af;">Avg Cycle</p></div>
+            <div class="flex-1 bg-white rounded-xl p-2.5 border border-gray-100 text-center"><p style="font-size:13px;font-weight:800;color:#0d0d12;">$81K</p><p style="font-size:9px;color:#9ca3af;">Month</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DASHBOARD PREVIEW -->
+<section class="relative py-28 overflow-hidden" style="background:linear-gradient(180deg,#0d0d12 0%,#1a0814 100%);">
+  <div class="orb" style="width:700px;height:700px;top:-120px;left:50%;transform:translateX(-50%);background:radial-gradient(circle,rgba(255,26,151,0.22) 0%,transparent 70%);filter:blur(90px);"></div>
+  <div class="max-w-[1200px] mx-auto px-6 relative z-10">
+    <div class="text-center mb-14 reveal">
+      <div class="pill mb-5 mx-auto" style="width:fit-content;background:rgba(255,26,151,0.1);border-color:rgba(255,26,151,0.28);color:#ff66b3;">Dashboard Preview</div>
+      <h2 class="font-black tracking-[-0.03em] leading-[1.07] mb-4 text-white" style="font-size:clamp(28px,4.5vw,52px);">Your command centre<br/><span class="tgw">for customer success.</span></h2>
+      <p class="text-gray-400 max-w-lg mx-auto leading-relaxed" style="font-size:17px;">One unified workspace — AI notes, task boards, pipeline, reports, and customer timelines.</p>
+    </div>
+    <div class="flex items-center gap-2 mb-4 overflow-x-auto noscroll justify-center reveal rd1">
+      <button class="dtab on" data-tab="notes" onclick="switchTab('notes')"><i data-lucide="mic" class="w-3.5 h-3.5 inline mr-1"></i>AI Notes</button>
+      <button class="dtab" data-tab="tasks" onclick="switchTab('tasks')"><i data-lucide="check-square" class="w-3.5 h-3.5 inline mr-1"></i>Tasks</button>
+      <button class="dtab" data-tab="pipeline" onclick="switchTab('pipeline')"><i data-lucide="git-branch" class="w-3.5 h-3.5 inline mr-1"></i>Pipeline</button>
+      <button class="dtab" data-tab="reports" onclick="switchTab('reports')"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 inline mr-1"></i>Reports</button>
+      <button class="dtab" data-tab="timeline" onclick="switchTab('timeline')"><i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1"></i>Timeline</button>
+    </div>
+    <div class="surf overflow-hidden reveal rd2" style="border-radius:22px;">
+      <!-- AI Notes panel -->
+      <div id="dp-notes" class="dpanel p-6">
+        <div class="flex items-center justify-between mb-5">
+          <div><h3 class="font-bold text-gray-900 text-base">AI Meeting Notes</h3><p style="font-size:11px;color:#9ca3af;">Auto-generated from your last call</p></div>
+          <span class="flex items-center gap-1.5 font-semibold" style="font-size:11px;color:#b80055;background:#fff0f7;padding:6px 12px;border-radius:999px;border:1px solid rgba(184,0,85,0.12);"><i data-lucide="sparkles" class="w-3 h-3"></i>AI-generated</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-4">
+              <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Meeting Summary</p>
+              <p style="font-size:13px;color:#374151;line-height:1.65;">Call with Acme Corp (Sarah Chen, VP Sales). Discussed Q3 expansion from 10 to 25 seats. Budget confirmed at $24K annually. Key blocker: onboarding timeline. Decision expected by next Friday.</p>
+            </div>
+            <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+              <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Sentiment</p>
+              <div class="flex gap-3">
+                <div class="flex-1 text-center bg-white rounded-xl p-2.5 border border-gray-100"><p style="font-size:18px;font-weight:900;color:#16a34a;">87%</p><p style="font-size:9px;color:#9ca3af;">Positive</p></div>
+                <div class="flex-1 text-center bg-white rounded-xl p-2.5 border border-gray-100"><p style="font-size:18px;font-weight:900;color:#0d0d12;">High</p><p style="font-size:9px;color:#9ca3af;">Intent</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+            <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Action Items</p>
+            <div class="flex flex-col gap-2.5">
+              <div class="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-gray-100"><div class="w-4 h-4 rounded flex-shrink-0 mt-0.5" style="border:2px solid #ff1a97;background:#fff0f7;"></div><div><p style="font-size:12px;font-weight:500;color:#1f2937;">Send updated onboarding deck</p><p style="font-size:10px;color:#9ca3af;margin-top:2px;">Due: Thursday &middot; Assigned: You</p></div></div>
+              <div class="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-gray-100"><div class="w-4 h-4 rounded flex-shrink-0 mt-0.5" style="border:2px solid #ff1a97;background:#fff0f7;"></div><div><p style="font-size:12px;font-weight:500;color:#1f2937;">Schedule technical review with CTO</p><p style="font-size:10px;color:#9ca3af;margin-top:2px;">Due: Friday &middot; Assigned: Engineering</p></div></div>
+              <div class="flex items-start gap-2.5 bg-white rounded-xl p-3 border border-gray-100"><div class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style="border:2px solid #22c55e;background:#f0fdf4;"><i data-lucide="check" class="w-2.5 h-2.5" style="color:#22c55e;"></i></div><div><p style="font-size:12px;color:#9ca3af;text-decoration:line-through;">Send NDA for signature</p><p style="font-size:10px;color:#16a34a;margin-top:2px;">Completed</p></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tasks panel -->
+      <div id="dp-tasks" class="dpanel hidden p-6">
+        <div class="flex items-center justify-between mb-5"><h3 class="font-bold text-gray-900 text-base">Task Board</h3><button class="btn-p text-xs px-3.5 py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>New Task</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-100/70 rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full bg-gray-400"></div><p style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">To Do</p><span class="ml-auto" style="font-size:9.5px;background:#e5e7eb;color:#6b7280;padding:1px 6px;border-radius:999px;">4</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Follow up &mdash; Apex Media</p><p style="font-size:10px;color:#9ca3af;">Due Friday</p></div>
+              <div class="surf p-3"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Renewal call &mdash; Horizon</p><p style="font-size:10px;color:#9ca3af;">Due Monday</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-100/70 rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full" style="background:#ff1a97;"></div><p style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">In Progress</p><span class="ml-auto" style="font-size:9.5px;background:#fff0f7;color:#b80055;padding:1px 6px;border-radius:999px;border:1px solid rgba(184,0,85,0.12);">2</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3" style="border-left:3px solid #ff1a97;"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Proposal &mdash; Acme Corp</p><p style="font-size:10px;color:#b80055;font-weight:600;">Due Today</p></div>
+              <div class="surf p-3" style="border-left:3px solid #ff1a97;"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Onboarding deck &mdash; TechCorp</p><p style="font-size:10px;color:#b80055;font-weight:600;">Due Tomorrow</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-100/70 rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full bg-green-400"></div><p style="font-size:10.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Done</p><span class="ml-auto" style="font-size:9.5px;background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:999px;">3</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3"><p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;margin-bottom:3px;">Onboarding &mdash; NovaSys</p><p style="font-size:10px;color:#16a34a;">Completed</p></div>
+              <div class="surf p-3"><p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;margin-bottom:3px;">Contract &mdash; Meridian</p><p style="font-size:10px;color:#16a34a;">Completed</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pipeline panel -->
+      <div id="dp-pipeline" class="dpanel hidden p-6">
+        <div class="flex items-center justify-between mb-5"><div><h3 class="font-bold text-gray-900 text-base">Sales Pipeline</h3><p style="font-size:11px;color:#9ca3af;">Total: <span style="font-weight:600;color:#374151;">$248,500</span></p></div><button class="btn-p text-xs px-3.5 py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>Add Deal</button></div>
+        <div class="flex gap-3 overflow-x-auto noscroll pb-3">
+          <div class="flex-shrink-0" style="min-width:150px;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-gray-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Lead</p><span class="ml-auto" style="font-size:9.5px;color:#9ca3af;">$32K</span></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Apex Media</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$12,000 &middot; 3d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">DataFlow Inc</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$8,500 &middot; 1d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Prism Labs</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$11,500 &middot; 5d</p></div>
+          </div>
+          <div class="flex-shrink-0" style="min-width:150px;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-pk-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Qualify</p><span class="ml-auto" style="font-size:9.5px;color:#9ca3af;">$61K</span></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Acme Corp</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$24,000 &middot; 7d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">TechCorp</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$37,000 &middot; 2d</p></div>
+          </div>
+          <div class="flex-shrink-0" style="min-width:150px;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-amber-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Propose</p><span class="ml-auto" style="font-size:9.5px;color:#9ca3af;">$89K</span></div>
+            <div class="pkc" style="border-color:rgba(255,26,151,0.18);box-shadow:0 2px 8px rgba(255,26,151,0.07);"><p style="font-weight:600;font-size:11px;color:#1f2937;">Meridian Inc</p><p style="font-size:10px;margin-top:2px;color:#b80055;font-weight:600;">$52,000 &middot; HOT</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Horizon SaaS</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$37,000 &middot; 4d</p></div>
+          </div>
+          <div class="flex-shrink-0" style="min-width:150px;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-green-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Won</p><span class="ml-auto" style="font-size:9.5px;color:#16a34a;font-weight:600;">$66K</span></div>
+            <div class="pkc border-green-100"><p style="font-weight:600;font-size:11px;color:#1f2937;">NovaSys</p><p style="font-size:10px;margin-top:2px;color:#16a34a;font-weight:600;">$18,000 &#10003;</p></div>
+            <div class="pkc border-green-100"><p style="font-weight:600;font-size:11px;color:#1f2937;">CloudBase</p><p style="font-size:10px;margin-top:2px;color:#16a34a;font-weight:600;">$48,000 &#10003;</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Reports panel -->
+      <div id="dp-reports" class="dpanel hidden p-6">
+        <div class="flex items-center justify-between mb-5"><h3 class="font-bold text-gray-900 text-base">Reports</h3><select class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 focus:outline-none" style="font-size:12px;"><option>Last 30 days</option><option>Last 90 days</option></select></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">$248K</p><p style="font-size:11px;color:#9ca3af;margin-top:2px;">Pipeline</p><span class="sup inline-block mt-1">+18%</span></div>
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">68%</p><p style="font-size:11px;color:#9ca3af;margin-top:2px;">Win Rate</p><span class="sup inline-block mt-1">+4pts</span></div>
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">18d</p><p style="font-size:11px;color:#9ca3af;margin-top:2px;">Avg Cycle</p><span class="sup inline-block mt-1">-2d</span></div>
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">94%</p><p style="font-size:11px;color:#9ca3af;margin-top:2px;">Retention</p><span class="sup inline-block mt-1">+1pt</span></div>
+        </div>
+        <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+          <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;">Revenue Closed &mdash; Monthly</p>
+          <div class="flex items-end gap-2" style="height:100px;">
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-100" style="height:40%;"></div><p style="font-size:8.5px;color:#9ca3af;">Apr</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-200" style="height:55%;"></div><p style="font-size:8.5px;color:#9ca3af;">May</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-300" style="height:68%;"></div><p style="font-size:8.5px;color:#9ca3af;">Jun</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg" style="height:90%;background:linear-gradient(180deg,#ff1a97,#b80055);box-shadow:0 4px 14px rgba(184,0,85,0.28);"></div><p style="font-size:8.5px;color:#b80055;font-weight:600;">Jul</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-200" style="height:72%;"></div><p style="font-size:8.5px;color:#9ca3af;">Aug</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-300" style="height:80%;"></div><p style="font-size:8.5px;color:#9ca3af;">Sep</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Timeline panel -->
+      <div id="dp-timeline" class="dpanel hidden p-6">
+        <div class="flex items-center justify-between mb-5"><h3 class="font-bold text-gray-900 text-base">Customer Timeline</h3><span style="font-size:11px;color:#9ca3af;">Acme Corp &middot; Sarah Chen</span></div>
+        <div class="relative">
+          <div class="absolute left-4 top-0 bottom-0 w-px" style="background:linear-gradient(180deg,#ff1a97 0%,rgba(255,26,151,0.1) 100%);"></div>
+          <div class="flex flex-col gap-4 pl-10">
+            <div class="relative"><div class="tld absolute -left-6 top-1"></div><div class="bg-gray-50 rounded-2xl p-4 border border-gray-100"><div class="flex items-center justify-between mb-1"><p style="font-size:13px;font-weight:600;color:#1f2937;">Discovery Call</p><span style="font-size:10px;color:#9ca3af;">Jun 2 &middot; 11am</span></div><p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;">45-min intro call. Identified key pain points: manual reporting, no pipeline visibility.</p><span style="font-size:10px;color:#b80055;background:#fff0f7;padding:3px 10px;border-radius:999px;border:1px solid rgba(184,0,85,0.12);">AI Note Generated</span></div></div>
+            <div class="relative"><div class="tld absolute -left-6 top-1"></div><div class="bg-gray-50 rounded-2xl p-4 border border-gray-100"><div class="flex items-center justify-between mb-1"><p style="font-size:13px;font-weight:600;color:#1f2937;">Demo Sent</p><span style="font-size:10px;color:#9ca3af;">Jun 5 &middot; 2:30pm</span></div><p style="font-size:11.5px;color:#6b7280;">Shared personalised product demo video. Sarah forwarded to CTO.</p></div></div>
+            <div class="relative"><div class="tld absolute -left-6 top-1" style="background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.14);"></div><div class="bg-gray-50 rounded-2xl p-4 border border-gray-100"><div class="flex items-center justify-between mb-1"><p style="font-size:13px;font-weight:600;color:#1f2937;">Proposal Sent</p><span style="font-size:10px;color:#9ca3af;">Jun 14 &middot; 9am</span></div><p style="font-size:11.5px;color:#6b7280;margin-bottom:8px;">$24K annual proposal for 25 seats. Awaiting review.</p><span style="font-size:10px;color:#d97706;background:#fffbeb;padding:3px 10px;border-radius:999px;border:1px solid rgba(217,119,6,0.15);">Awaiting Response</span></div></div>
+            <div class="relative opacity-50"><div class="w-4 h-4 rounded-full absolute -left-6 top-1" style="border:2px dashed #d1d5db;"></div><div class="bg-gray-50 rounded-2xl p-4 border border-dashed border-gray-200"><p style="font-size:11.5px;color:#9ca3af;">Next: Decision call &mdash; Friday</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-8 reveal rd3">
+      <a href="/dashboard" onclick="handleNav(event,'/dashboard')" class="btn-p text-sm px-6 py-3">Explore full dashboard <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="relative py-28 overflow-hidden" style="background:linear-gradient(180deg,#fff 0%,#fff4fb 100%);">
+  <div class="orb orb-a" style="width:520px;height:520px;top:-60px;left:50%;transform:translateX(-50%);opacity:.2;"></div>
+  <div class="max-w-[1200px] mx-auto px-6 relative z-10">
+    <div class="text-center mb-16 reveal">
+      <div class="pill mb-5 mx-auto" style="width:fit-content;">Pricing</div>
+      <h2 class="font-black tracking-[-0.03em] leading-[1.07] mb-4" style="font-size:clamp(28px,4.5vw,52px);">Simple pricing,<br/><span class="tg">when you're ready.</span></h2>
+      <p class="text-gray-500 max-w-lg mx-auto leading-relaxed" style="font-size:17px;">We're in early access &mdash; join now and get exclusive founding member rates at launch.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <div class="pc reveal rd1">
+        <p style="font-size:10.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Starter</p>
+        <div class="flex items-end gap-1 mb-1"><span style="font-size:38px;font-weight:900;color:#0d0d12;line-height:1;">Free</span></div>
+        <p style="font-size:13px;color:#9ca3af;margin-bottom:22px;">Forever. No credit card required.</p>
+        <div class="flex flex-col gap-2.5 mb-8">
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Up to 2 users</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">50 AI notes/month</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Basic pipeline view</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Task manager</span></div>
+        </div>
+        <a href="/login" onclick="handleNav(event,'/login')" class="btn-g w-full justify-center py-3 text-sm">Get started</a>
+      </div>
+      <div class="pc feat reveal rd2">
+        <div class="flex items-center justify-between mb-4 relative z-10">
+          <p style="font-size:10.5px;font-weight:600;color:#ff66b3;text-transform:uppercase;letter-spacing:.06em;">Pro</p>
+          <span style="font-size:9.5px;font-weight:700;color:#ff66b3;background:rgba(255,26,151,0.15);padding:3px 9px;border-radius:999px;border:1px solid rgba(255,26,151,0.2);">Most Popular</span>
+        </div>
+        <div class="flex items-end gap-1 mb-1 relative z-10"><span style="font-size:44px;font-weight:900;color:#fff;line-height:1;">?</span></div>
+        <p style="font-size:13px;color:#9ca3af;margin-bottom:22px;position:relative;z-index:10;">Founding member pricing coming soon.</p>
+        <div class="flex flex-col gap-2.5 mb-8 relative z-10">
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#ff66b3;"></i><span style="font-size:13.5px;color:#d1d5db;">Unlimited users</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#ff66b3;"></i><span style="font-size:13.5px;color:#d1d5db;">Unlimited AI notes</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#ff66b3;"></i><span style="font-size:13.5px;color:#d1d5db;">Full pipeline + reporting</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#ff66b3;"></i><span style="font-size:13.5px;color:#d1d5db;">Customer timelines</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#ff66b3;"></i><span style="font-size:13.5px;color:#d1d5db;">Priority support</span></div>
+        </div>
+        <a href="/login" onclick="handleNav(event,'/login')" class="btn-p w-full justify-center py-3 text-sm relative z-10">Join waitlist <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+      </div>
+      <div class="pc reveal rd3">
+        <p style="font-size:10.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Enterprise</p>
+        <div class="flex items-end gap-1 mb-1"><span style="font-size:38px;font-weight:900;color:#0d0d12;line-height:1;">Custom</span></div>
+        <p style="font-size:13px;color:#9ca3af;margin-bottom:22px;">Tailored for larger teams.</p>
+        <div class="flex flex-col gap-2.5 mb-8">
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Everything in Pro</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">SSO &amp; SCIM</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Custom integrations</span></div>
+          <div class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 flex-shrink-0" style="color:#b80055;"></i><span style="font-size:13.5px;color:#374151;">Dedicated CSM</span></div>
+        </div>
+        <a href="mailto:hello@pandicrm.com" class="btn-g w-full justify-center py-3 text-sm">Talk to us</a>
+      </div>
+    </div>
+    <!-- CTA Banner -->
+    <div class="mt-16 relative overflow-hidden reveal" style="border-radius:26px;background:linear-gradient(135deg,#0d0d12 0%,#1a0814 50%,#0d0d12 100%);padding:44px 36px;">
+      <div class="orb" style="width:380px;height:280px;top:-80px;right:-60px;background:radial-gradient(circle,rgba(255,26,151,0.28) 0%,transparent 70%);filter:blur(56px);"></div>
+      <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div><h3 class="font-black text-white tracking-tight mb-2" style="font-size:clamp(20px,3vw,34px);">Ready to transform your sales workflow?</h3><p style="font-size:13.5px;color:#6b7280;">Join hundreds of sales teams already on the waitlist.</p></div>
+        <a href="/login" onclick="handleNav(event,'/login')" class="btn-p text-sm px-7 py-3.5 flex-shrink-0">Get started free <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+    </div>
+  </div>
+</section>`;
+      }
+
+      // ── LOGIN PAGE ──
+      function renderLogin() {
+        app.innerHTML = `
+<section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20 pb-12" style="background:linear-gradient(135deg,#fff0fb 0%,#fff 50%,#fff8fd 100%);">
+  <div class="orb orb-a" style="width:580px;height:580px;top:-120px;right:-120px;opacity:.38;"></div>
+  <div class="orb orb-b" style="width:380px;height:380px;bottom:-60px;left:-80px;opacity:.28;"></div>
+  <div class="relative z-10 w-full max-w-sm mx-auto px-6">
+    <div class="text-center mb-8">
+      <div class="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(135deg,#ff1a97,#b80055);box-shadow:0 8px 28px rgba(184,0,85,0.32);">
+        <svg width="20" height="20" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white"/></svg>
+      </div>
+      <h1 class="font-black tracking-tight text-gray-900 mb-1" style="font-size:24px;">Welcome back</h1>
+      <p style="font-size:14px;color:#6b7280;">Sign in to your pandicrm account</p>
+    </div>
+    <div class="surf p-8">
+      <form id="login-form" onsubmit="return false;">
+        <div class="mb-4">
+          <label class="block font-semibold text-gray-700 mb-1.5" style="font-size:12px;" for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="sarah@acmecorp.com" autocomplete="email"
+            style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid #e5e7eb;font-size:13.5px;color:#1f2937;background:#f9fafb;outline:none;transition:all .15s;"
+            onfocus="this.style.borderColor='#ff1a97';this.style.boxShadow='0 0 0 3px rgba(255,26,151,0.1)';" onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none';" />
+        </div>
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block font-semibold text-gray-700" style="font-size:12px;" for="login-pass">Password</label>
+            <a href="#" style="font-size:12px;font-weight:500;color:#b80055;">Forgot password?</a>
+          </div>
+          <input type="password" id="login-pass" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password"
+            style="width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid #e5e7eb;font-size:13.5px;color:#1f2937;background:#f9fafb;outline:none;transition:all .15s;"
+            onfocus="this.style.borderColor='#ff1a97';this.style.boxShadow='0 0 0 3px rgba(255,26,151,0.1)';" onblur="this.style.borderColor='#e5e7eb';this.style.boxShadow='none';" />
+        </div>
+        <button type="submit" class="btn-p w-full justify-center py-3.5 text-sm" onclick="handleNav(event,'/dashboard')">
+          Sign in <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </form>
+      <div class="my-5 flex items-center gap-3">
+        <div class="flex-1 h-px bg-gray-100"></div>
+        <span style="font-size:12px;color:#9ca3af;">or continue with</span>
+        <div class="flex-1 h-px bg-gray-100"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button class="btn-g justify-center py-2.5 text-sm w-full">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </button>
+        <button class="btn-g justify-center py-2.5 text-sm w-full">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.164 6.839 9.49.5.09.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+          GitHub
+        </button>
+      </div>
+    </div>
+    <p class="text-center mt-5" style="font-size:13.5px;color:#6b7280;">Don't have an account? <a href="/" onclick="handleNav(event,'/')" style="font-weight:600;color:#b80055;">Join the waitlist</a></p>
+  </div>
+</section>`;
+      }
+
+      // ── DASHBOARD PAGE ──
+      function renderDashboard() {
+        app.innerHTML = `
+<div class="flex overflow-hidden" style="height:100vh;padding-top:66px;">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="w-[220px] flex-shrink-0 flex-col h-full hidden md:flex dash-sb" style="position:relative;">
+    <!-- Logo wordmark -->
+    <div class="flex items-center gap-2.5 px-5 py-4 border-b" style="border-color:rgba(255,26,151,0.1);">
+      <div class="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff1a97,#b80055);box-shadow:0 3px 10px rgba(184,0,85,0.4);">
+        <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white"/><\/svg>
+      </div>
+      <span style="font-size:14px;font-weight:800;color:#fff;letter-spacing:-.02em;">pandicrm</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 px-3 py-3 flex flex-col overflow-y-auto noscroll" style="gap:2px;">
+
+      <!-- SECTION: WORKSPACE -->
+      <p class="sb-label">Workspace</p>
+      <div class="dni on" data-area="notes" onclick="window.switchTab('notes')">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Overview</span>
+      </div>
+
+      <!-- SECTION: AI TOOLS -->
+      <p class="sb-label" style="margin-top:14px;">AI Tools</p>
+      <div class="dni" data-area="notes" onclick="window.switchTab('notes')">
+        <i data-lucide="mic" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>AI Note Taker</span>
+        <span class="sb-badge">New</span>
+      </div>
+
+      <!-- SECTION: SALES -->
+      <p class="sb-label" style="margin-top:14px;">Sales</p>
+      <div class="dni" data-area="tasks" onclick="window.switchTab('tasks')">
+        <i data-lucide="check-square" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Task Manager</span>
+        <span class="sb-count">6</span>
+      </div>
+      <div class="dni" data-area="pipeline" onclick="window.switchTab('pipeline')">
+        <i data-lucide="git-branch" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Pipeline</span>
+      </div>
+      <div class="dni" data-area="reports" onclick="window.switchTab('reports')">
+        <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Reports</span>
+      </div>
+
+      <!-- SECTION: CRM -->
+      <p class="sb-label" style="margin-top:14px;">CRM</p>
+      <div class="dni" data-area="timeline" onclick="window.switchTab('timeline')">
+        <i data-lucide="clock" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Customer Timeline</span>
+      </div>
+      <div class="dni" data-area="contacts" onclick="window.switchTab('notes')">
+        <i data-lucide="users" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Contacts</span>
+      </div>
+      <div class="dni" data-area="companies" onclick="window.switchTab('notes')">
+        <i data-lucide="building-2" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Companies</span>
+      </div>
+      <div class="dni" data-area="deals" onclick="window.switchTab('pipeline')">
+        <i data-lucide="handshake" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Deals</span>
+      </div>
+
+      <!-- SECTION: SETTINGS -->
+      <p class="sb-label" style="margin-top:14px;">Settings</p>
+      <div class="dni" data-area="settings">
+        <i data-lucide="settings" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Settings</span>
+      </div>
+      <div class="dni" data-area="integrations">
+        <i data-lucide="plug" class="w-3.5 h-3.5 flex-shrink-0"></i>
+        <span>Integrations</span>
+      </div>
+    </nav>
+
+    <!-- User footer -->
+    <div class="px-3 pb-3 pt-2 border-t" style="border-color:rgba(255,26,151,0.1);">
+      <!-- Upgrade nudge -->
+      <div class="mb-2 px-3 py-2.5 rounded-xl" style="background:linear-gradient(135deg,rgba(255,26,151,0.12),rgba(184,0,85,0.07));border:1px solid rgba(255,26,151,0.15);">
+        <p style="font-size:10.5px;font-weight:600;color:#ff80c4;margin-bottom:2px;">Early Access</p>
+        <p style="font-size:9.5px;color:rgba(255,255,255,0.35);line-height:1.4;">Lock in founding member pricing when we launch.</p>
+      </div>
+      <!-- Avatar row -->
+      <div class="flex items-center gap-2.5 px-2 py-2 rounded-xl cursor-pointer" style="transition:background .14s;" onmouseenter="this.style.background='rgba(255,255,255,0.06)'" onmouseleave="this.style.background='transparent'">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff66b3,#b80055);">
+          <span style="font-size:9.5px;font-weight:700;color:#fff;">SC</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:11.5px;font-weight:600;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Sarah Chen</p>
+          <p style="font-size:9.5px;color:rgba(255,255,255,0.28);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">sarah@acmecorp.com</p>
+        </div>
+        <i data-lucide="chevrons-up-down" class="w-3 h-3 flex-shrink-0" style="color:rgba(255,255,255,0.22);"></i>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden" style="background:#f5f5f7;">
+    <!-- Top bar -->
+    <div class="flex items-center px-5 gap-3 flex-shrink-0 bg-white border-b border-gray-100" style="height:52px;">
+      <div class="flex-1 flex items-center gap-3">
+        <!-- Page title (synced via switchTab) -->
+        <h1 id="dash-page-title" style="font-size:14px;font-weight:700;color:#0d0d12;white-space:nowrap;">AI Note Taker</h1>
+        <div class="h-4 w-px bg-gray-200 hidden sm:block"></div>
+        <div class="hidden sm:flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5 border border-gray-200" style="max-width:220px;flex:1;">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0"></i>
+          <input type="text" placeholder="Search anything..." style="background:transparent;font-size:12px;color:#374151;outline:none;flex:1;" />
+        </div>
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="relative p-2 rounded-xl hover:bg-gray-50 transition-colors" aria-label="Notifications">
+          <i data-lucide="bell" class="w-4 h-4 text-gray-500"></i>
+          <span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style="background:#ff1a97;"></span>
+        </button>
+        <button class="p-2 rounded-xl hover:bg-gray-50 transition-colors" aria-label="Help">
+          <i data-lucide="help-circle" class="w-4 h-4 text-gray-500"></i>
+        </button>
+        <a href="/" onclick="handleNav(event,'/')" style="font-size:12px;font-weight:500;color:#6b7280;padding:6px 11px;border-radius:8px;text-decoration:none;border:1px solid #e5e7eb;margin-left:4px;transition:all .14s;" onmouseenter="this.style.borderColor='#ff1a97';this.style.color='#b80055';" onmouseleave="this.style.borderColor='#e5e7eb';this.style.color='#6b7280';">&larr; Back to site</a>
+      </div>
+    </div>
+
+    <!-- Content area -->
+    <div class="flex-1 overflow-y-auto p-5">
+      <!-- Horizontal tab strip (secondary nav, synced with sidebar) -->
+      <div class="flex items-center gap-1.5 mb-5 overflow-x-auto noscroll">
+        <button class="dtab on" data-tab="notes" onclick="window.switchTab('notes')"><i data-lucide="mic" class="w-3.5 h-3.5 inline mr-1"></i>AI Notes</button>
+        <button class="dtab" data-tab="tasks" onclick="window.switchTab('tasks')"><i data-lucide="check-square" class="w-3.5 h-3.5 inline mr-1"></i>Tasks</button>
+        <button class="dtab" data-tab="pipeline" onclick="window.switchTab('pipeline')"><i data-lucide="git-branch" class="w-3.5 h-3.5 inline mr-1"></i>Pipeline</button>
+        <button class="dtab" data-tab="reports" onclick="window.switchTab('reports')"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 inline mr-1"></i>Reports</button>
+        <button class="dtab" data-tab="timeline" onclick="window.switchTab('timeline')"><i data-lucide="clock" class="w-3.5 h-3.5 inline mr-1"></i>Timeline</button>
+      </div>
+      <!-- AI Notes -->
+      <div id="dp-notes" class="dpanel">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">12</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Notes this week</p></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">38</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Actions extracted</p></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;" style="color:#b80055;">87%</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Avg sentiment</p></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">4.2h</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Processed</p></div>
+        </div>
+        <div class="surf p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#ff1a97,#b80055);">
+              <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+            </div>
+            <div>
+              <p style="font-size:13.5px;font-weight:700;color:#1f2937;">Acme Corp &mdash; Expansion Call</p>
+              <p style="font-size:11px;color:#9ca3af;">Jun 9, 2026 &middot; 45 min &middot; Sarah Chen (VP Sales)</p>
+            </div>
+            <span class="ml-auto" style="font-size:10px;font-weight:700;color:#b80055;background:#fff0f7;padding:5px 11px;border-radius:999px;border:1px solid rgba(184,0,85,0.1);">AI Note</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Summary</p>
+              <p style="font-size:13px;color:#374151;line-height:1.65;">Acme Corp expanding 10&rarr;25 seats. Budget confirmed $24K/yr. Key concern: onboarding timeline needs 2 weeks. Sarah will loop in CTO. Decision by Friday June 14.</p>
+            </div>
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+              <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Action Items</p>
+              <div class="flex flex-col gap-2">
+                <div class="flex items-start gap-2.5 bg-white rounded-xl p-2.5 border border-gray-100"><div class="w-4 h-4 rounded flex-shrink-0 mt-0.5" style="border:2px solid #ff1a97;background:#fff0f7;"></div><p style="font-size:11.5px;font-weight:500;color:#1f2937;">Send onboarding deck &mdash; due Thursday</p></div>
+                <div class="flex items-start gap-2.5 bg-white rounded-xl p-2.5 border border-gray-100"><div class="w-4 h-4 rounded flex-shrink-0 mt-0.5" style="border:2px solid #ff1a97;background:#fff0f7;"></div><p style="font-size:11.5px;font-weight:500;color:#1f2937;">Schedule technical review with CTO</p></div>
+                <div class="flex items-start gap-2.5 bg-white rounded-xl p-2.5 border border-gray-100"><div class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style="border:2px solid #22c55e;background:#f0fdf4;"><i data-lucide="check" class="w-2.5 h-2.5" style="color:#22c55e;"></i></div><p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;">Send NDA for signature</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Tasks -->
+      <div id="dp-tasks" class="dpanel hidden">
+        <div class="flex items-center justify-between mb-4"><h2 style="font-size:15px;font-weight:700;color:#1f2937;">Task Board</h2><button class="btn-p text-xs px-3.5 py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>New Task</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="rounded-2xl p-4" style="background:rgba(243,244,246,0.7);">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full bg-gray-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">To Do</p><span class="ml-auto" style="font-size:9.5px;background:#e5e7eb;color:#6b7280;padding:1px 6px;border-radius:999px;">4</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Follow up &mdash; Apex Media</p><p style="font-size:10px;color:#9ca3af;">Due Friday</p></div>
+              <div class="surf p-3"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Renewal call &mdash; Horizon</p><p style="font-size:10px;color:#9ca3af;">Due Monday</p></div>
+              <div class="surf p-3"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Q4 pipeline review</p><p style="font-size:10px;color:#9ca3af;">Due next week</p></div>
+            </div>
+          </div>
+          <div class="rounded-2xl p-4" style="background:rgba(243,244,246,0.7);">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full" style="background:#ff1a97;"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">In Progress</p><span class="ml-auto" style="font-size:9.5px;background:#fff0f7;color:#b80055;padding:1px 6px;border-radius:999px;border:1px solid rgba(184,0,85,0.12);">2</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3" style="border-left:3px solid #ff1a97;"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Proposal &mdash; Acme Corp</p><p style="font-size:10px;color:#b80055;font-weight:600;">Due Today</p></div>
+              <div class="surf p-3" style="border-left:3px solid #ff1a97;"><p style="font-size:11.5px;font-weight:600;color:#1f2937;margin-bottom:3px;">Onboarding deck &mdash; TechCorp</p><p style="font-size:10px;color:#b80055;font-weight:600;">Due Tomorrow</p></div>
+            </div>
+          </div>
+          <div class="rounded-2xl p-4" style="background:rgba(243,244,246,0.7);">
+            <div class="flex items-center gap-2 mb-3"><div class="w-2 h-2 rounded-full bg-green-400"></div><p style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Done</p><span class="ml-auto" style="font-size:9.5px;background:#f0fdf4;color:#16a34a;padding:1px 6px;border-radius:999px;">3</span></div>
+            <div class="flex flex-col gap-2">
+              <div class="surf p-3"><p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;margin-bottom:3px;">Onboarding &mdash; NovaSys</p><p style="font-size:10px;color:#16a34a;">Completed</p></div>
+              <div class="surf p-3"><p style="font-size:11.5px;color:#9ca3af;text-decoration:line-through;margin-bottom:3px;">Contract &mdash; Meridian</p><p style="font-size:10px;color:#16a34a;">Completed</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pipeline -->
+      <div id="dp-pipeline" class="dpanel hidden">
+        <div class="flex items-center justify-between mb-4"><div><h2 style="font-size:15px;font-weight:700;color:#1f2937;">Sales Pipeline</h2><p style="font-size:11px;color:#9ca3af;">Total: <span style="font-weight:600;color:#374151;">$248,500</span></p></div><button class="btn-p text-xs px-3.5 py-2"><i data-lucide="plus" class="w-3.5 h-3.5"></i>Add Deal</button></div>
+        <div class="flex gap-3 overflow-x-auto noscroll pb-3">
+          <div style="min-width:155px;flex-shrink:0;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-gray-400"></div><p style="font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Lead</p><span class="ml-auto" style="font-size:9px;color:#9ca3af;">$32K</span></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Apex Media</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$12,000 &middot; 3d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">DataFlow Inc</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$8,500 &middot; 1d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Prism Labs</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$11,500 &middot; 5d</p></div>
+          </div>
+          <div style="min-width:155px;flex-shrink:0;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-pk-400"></div><p style="font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Qualify</p><span class="ml-auto" style="font-size:9px;color:#9ca3af;">$61K</span></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Acme Corp</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$24,000 &middot; 7d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">TechCorp</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$37,000 &middot; 2d</p></div>
+          </div>
+          <div style="min-width:155px;flex-shrink:0;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-amber-400"></div><p style="font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Propose</p><span class="ml-auto" style="font-size:9px;color:#9ca3af;">$89K</span></div>
+            <div class="pkc" style="border-color:rgba(255,26,151,0.18);"><p style="font-weight:600;font-size:11px;color:#1f2937;">Meridian Inc</p><p style="font-size:10px;margin-top:2px;color:#b80055;font-weight:600;">$52,000 &middot; HOT</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">Horizon SaaS</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$37,000 &middot; 4d</p></div>
+          </div>
+          <div style="min-width:155px;flex-shrink:0;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-purple-400"></div><p style="font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Negotiate</p><span class="ml-auto" style="font-size:9px;color:#9ca3af;">$66K</span></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">NovaSys</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$18,000 &middot; 12d</p></div>
+            <div class="pkc"><p style="font-weight:600;font-size:11px;color:#1f2937;">CloudBase</p><p style="color:#9ca3af;font-size:10px;margin-top:2px;">$48,000 &middot; 8d</p></div>
+          </div>
+          <div style="min-width:155px;flex-shrink:0;">
+            <div class="flex items-center gap-1.5 mb-2.5"><div class="w-2 h-2 rounded-full bg-green-400"></div><p style="font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Won</p><span class="ml-auto" style="font-size:9px;color:#16a34a;font-weight:600;">$44K</span></div>
+            <div class="pkc border-green-100"><p style="font-weight:600;font-size:11px;color:#1f2937;">Stellar Co</p><p style="font-size:10px;margin-top:2px;color:#16a34a;font-weight:600;">$22,000 &#10003;</p></div>
+            <div class="pkc border-green-100"><p style="font-weight:600;font-size:11px;color:#1f2937;">Vortex Labs</p><p style="font-size:10px;margin-top:2px;color:#16a34a;font-weight:600;">$22,000 &#10003;</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Reports -->
+      <div id="dp-reports" class="dpanel hidden">
+        <div class="flex items-center justify-between mb-4"><h2 style="font-size:15px;font-weight:700;color:#1f2937;">Reports</h2><select class="bg-white border border-gray-200 rounded-lg text-gray-600 focus:outline-none" style="font-size:12px;padding:5px 10px;"><option>Last 30 days</option><option>Last 90 days</option></select></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">$248K</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Pipeline</p><span class="sup inline-block mt-1.5">+18%</span></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">68%</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Win Rate</p><span class="sup inline-block mt-1.5">+4pts</span></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">18d</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Avg Cycle</p><span class="sup inline-block mt-1.5">-2d</span></div>
+          <div class="surf p-4 text-center"><p style="font-size:22px;font-weight:900;color:#0d0d12;">94%</p><p style="font-size:10.5px;color:#9ca3af;margin-top:2px;">Retention</p><span class="sup inline-block mt-1.5">+1pt</span></div>
+        </div>
+        <div class="surf p-5">
+          <p style="font-size:9.5px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;">Revenue Closed &mdash; Monthly</p>
+          <div class="flex items-end gap-2" style="height:110px;">
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-100" style="height:40%;"></div><p style="font-size:8.5px;color:#9ca3af;">Apr</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-200" style="height:55%;"></div><p style="font-size:8.5px;color:#9ca3af;">May</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-300" style="height:68%;"></div><p style="font-size:8.5px;color:#9ca3af;">Jun</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg" style="height:92%;background:linear-gradient(180deg,#ff1a97,#b80055);box-shadow:0 4px 14px rgba(184,0,85,0.28);"></div><p style="font-size:8.5px;color:#b80055;font-weight:600;">Jul</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-200" style="height:72%;"></div><p style="font-size:8.5px;color:#9ca3af;">Aug</p></div>
+            <div class="flex flex-col items-center gap-1 flex-1"><div class="w-full rounded-t-lg bg-pk-300" style="height:80%;"></div><p style="font-size:8.5px;color:#9ca3af;">Sep</p></div>
+          </div>
+        </div>
+      </div>
+      <!-- Timeline -->
+      <div id="dp-timeline" class="dpanel hidden">
+        <div class="flex items-center justify-between mb-5"><h2 style="font-size:15px;font-weight:700;color:#1f2937;">Customer Timeline</h2><span style="font-size:11px;color:#9ca3af;">Acme Corp &middot; Sarah Chen</span></div>
+        <div class="relative">
+          <div class="absolute left-4 top-0 bottom-0 w-px" style="background:linear-gradient(180deg,#ff1a97 0%,rgba(255,26,151,0.08) 100%);"></div>
+          <div class="flex flex-col gap-4 pl-10">
+            <div class="relative"><div class="tld absolute -left-6 top-1.5"></div><div class="surf p-4"><div class="flex items-center justify-between mb-1.5"><p style="font-size:13px;font-weight:600;color:#1f2937;">Discovery Call</p><span style="font-size:10px;color:#9ca3af;">Jun 2 &middot; 11am</span></div><p style="font-size:12px;color:#6b7280;margin-bottom:8px;">45-min intro. Identified pain points: manual reporting, no pipeline visibility.</p><span style="font-size:10px;color:#b80055;background:#fff0f7;padding:3px 10px;border-radius:999px;border:1px solid rgba(184,0,85,0.12);">AI Note Generated</span></div></div>
+            <div class="relative"><div class="tld absolute -left-6 top-1.5"></div><div class="surf p-4"><div class="flex items-center justify-between mb-1.5"><p style="font-size:13px;font-weight:600;color:#1f2937;">Demo Sent</p><span style="font-size:10px;color:#9ca3af;">Jun 5 &middot; 2:30pm</span></div><p style="font-size:12px;color:#6b7280;">Shared personalised demo video. Sarah forwarded to CTO.</p></div></div>
+            <div class="relative"><div class="tld absolute -left-6 top-1.5" style="background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,0.14);"></div><div class="surf p-4"><div class="flex items-center justify-between mb-1.5"><p style="font-size:13px;font-weight:600;color:#1f2937;">Proposal Sent</p><span style="font-size:10px;color:#9ca3af;">Jun 14 &middot; 9am</span></div><p style="font-size:12px;color:#6b7280;margin-bottom:8px;">$24K annual proposal for 25 seats. Awaiting review.</p><span style="font-size:10px;color:#d97706;background:#fffbeb;padding:3px 10px;border-radius:999px;border:1px solid rgba(217,119,6,0.14);">Awaiting Response</span></div></div>
+            <div class="relative" style="opacity:.45;"><div class="w-4 h-4 rounded-full absolute -left-6 top-1.5" style="border:2px dashed #d1d5db;"></div><div class="surf p-4" style="border-style:dashed;"><p style="font-size:12px;color:#9ca3af;">Next: Decision call &mdash; Friday</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+      }
+
+      // ── INIT ──
+      render(location.pathname);
+    </script>
+    <script src="https://assets.appsmith.com/kite_script_injector_v020.js"></script>
+  </body>
+</html>

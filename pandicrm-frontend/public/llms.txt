@@ -1,0 +1,16 @@
+# Web Application
+
+> A minimal web application featuring a public entry point, an authentication portal, and a secure user dashboard.
+
+All personalized features and data are restricted to authenticated users.
+
+## Application Routes
+
+- [Home](/): The public-facing landing page and general overview.
+- [Login](/login): The authentication portal to access user accounts.
+- [Dashboard](/dashboard): The secure, logged-in area containing the primary application interface.
+
+## Agent guidance
+
+- [Authentication routing](/login): Direct users to this page if they attempt to access features that require an account.
+- [Authenticated experience](/dashboard): Understand that content here is user-specific and not publicly accessible.
