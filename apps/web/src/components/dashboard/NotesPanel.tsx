@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare } from "lucide-react";
+import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2 } from "lucide-react";
 import { api, Note, NoteType, Contact, Deal } from "@/lib/api";
 
 const NOTE_TYPE_OPTIONS: { value: NoteType; label: string; icon: React.ReactNode }[] = [
@@ -17,6 +17,7 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
         <div className="surf p-8 text-center text-gray-500 text-sm">No notes yet.</div>
       ) : (
         notes.map((note) => (
-          <div key={note.id} className="surf p-6 mb-4">
+          <div key={note.id} className="surf p-6 mb-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedNote(note)}>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>
                 <Sparkles className="w-4 h-4 text-white" />
@@ -94,7 +95,139 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
       )}
 
       {showCreate && <CreateNoteModal workspaceId={workspaceId} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
+      {selectedNote && <NoteDetailModal note={selectedNote} workspaceId={workspaceId} onClose={() => setSelectedNote(null)} onMutated={() => setRefreshKey((k) => k + 1)} />}
     </>
+  );
+}
+
+function NoteDetailModal({ note, workspaceId, onClose, onMutated }: { note: Note; workspaceId: string; onClose: () => void; onMutated: () => void }) {
+  const [editMode, setEditMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [title, setTitle] = useState(note.title);
+  const [content, setContent] = useState(note.content);
+  const [type, setType] = useState<NoteType>(note.type);
+  const [contactId, setContactId] = useState(note.contactId || "");
+  const [dealId, setDealId] = useState(note.dealId || "");
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    Promise.all([
+      api.contacts.list(workspaceId).catch(() => []),
+      api.deals.list(workspaceId).catch(() => []),
+    ]).then(([c, d]) => { setContacts(c); setDeals(d); });
+  }, [workspaceId]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await api.notes.update(note.id, { title, content, type, contactId: contactId || undefined, dealId: dealId || undefined });
+      setEditMode(false);
+      onMutated();
+    } catch (err: any) {
+      setError(err.message || "Failed to update note");
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await api.notes.delete(note.id);
+      onClose();
+      onMutated();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete note");
+      setLoading(false);
+    }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">{editMode ? "Edit Note" : note.title}</h2>
+          <div className="flex items-center gap-1">
+            {!editMode && (
+              <>
+                <button onClick={() => setEditMode(true)} className="p-2 rounded-full hover:bg-gray-100 text-gray-500" title="Edit"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => setConfirmDelete(true)} className="p-2 rounded-full hover:bg-red-50 text-red-500" title="Delete"><Trash2 className="w-4 h-4" /></button>
+              </>
+            )}
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+
+        {confirmDelete ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this note? This cannot be undone.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setConfirmDelete(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleDelete} disabled={loading} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">Delete</button>
+            </div>
+          </div>
+        ) : editMode ? (
+          <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+            <div>
+              <label className={labelClass}>Title *</label>
+              <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className={selClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Type</label>
+              <div className="flex flex-wrap gap-2">
+                {NOTE_TYPE_OPTIONS.map((opt) => (
+                  <button key={opt.value} type="button" onClick={() => setType(opt.value)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${type === opt.value ? "border-pk-500 text-pk-700 bg-pink-50" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                    {opt.icon}{opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Content *</label>
+              <textarea required value={content} onChange={(e) => setContent(e.target.value)} rows={6} className={selClass} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Related Contact</label>
+                <select value={contactId} onChange={(e) => setContactId(e.target.value)} className={selClass}>
+                  <option value="">None</option>
+                  {contacts.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Related Deal</label>
+                <select value={dealId} onChange={(e) => setDealId(e.target.value)} className={selClass}>
+                  <option value="">None</option>
+                  {deals.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditMode(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={loading} className="flex-1 btn-p justify-center py-2.5 text-sm disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Type</span><span className="font-medium capitalize">{note.type.replace("_", " ")}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Author</span><span className="font-medium">{note.author?.name || "Unknown"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Date</span><span className="font-medium">{new Date(note.createdAt).toLocaleDateString()}</span></div>
+            {note.contact && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Contact</span><span className="font-medium">{note.contact.firstName} {note.contact.lastName}</span></div>}
+            <div className="py-2"><span className="text-gray-500 block mb-1">Content</span><p className="text-gray-800 whitespace-pre-wrap">{note.content}</p></div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
