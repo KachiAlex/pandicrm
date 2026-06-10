@@ -10,7 +10,12 @@ datasource db {
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
+  firstName     String?  @map("first_name")
+  lastName      String?  @map("last_name")
   name          String?
+  company       String?
+  phone         String?
+  role          String?  // admin, sales_rep, manager, support
   avatar        String?
   password      String?  // hashed, for credentials auth
   createdAt     DateTime @default(now()) @map("created_at")
