@@ -37,6 +37,11 @@ export const {
           email: user.email,
           name: user.name,
           image: user.avatar,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          company: user.company,
+          phone: user.phone,
+          role: user.role,
         };
       },
     }),
@@ -45,12 +50,22 @@ export const {
     jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.company = user.company;
+        token.phone = user.phone;
+        token.role = user.role;
       }
       return token;
     },
     session: async ({ session, token }) => {
       if (token?.id) {
         session.user.id = token.id as string;
+        session.user.firstName = (token as any).firstName;
+        session.user.lastName = (token as any).lastName;
+        session.user.company = (token as any).company;
+        session.user.phone = (token as any).phone;
+        session.user.role = (token as any).role;
       }
       return session;
     },
