@@ -63,11 +63,8 @@ export default function Navbar() {
             <Link href="/dashboard" className="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">
               Dashboard
             </Link>
-            <Link href="/login" className="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">
-              Log in
-            </Link>
             <Link href="/login" className="btn-p text-sm px-5 py-2.5 ml-2">
-              Get started <span className="text-sm">→</span>
+              Log in
             </Link>
           </div>
 
@@ -102,11 +99,8 @@ export default function Navbar() {
           <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-gray-800 hover:text-pk-700 transition-colors">
             Dashboard
           </Link>
-          <Link href="/login" onClick={() => setMobileOpen(false)} className="text-2xl font-bold text-gray-800 hover:text-pk-700 transition-colors">
-            Log in
-          </Link>
           <Link href="/login" onClick={() => setMobileOpen(false)} className="btn-p text-base px-7 py-3.5 mt-4 w-full justify-center">
-            Get started free
+            Log in
           </Link>
         </div>
       </div>
