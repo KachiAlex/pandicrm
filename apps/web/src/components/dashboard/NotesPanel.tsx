@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search } from "lucide-react";
+import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search, Wand2, Zap, Tag, DollarSign, Calendar, User, Briefcase, Mail as MailIcon, Phone as PhoneIcon, AlertCircle } from "lucide-react";
 import { api, Note, NoteType, Contact, Deal } from "@/lib/api";
+import { analyzeNote, cognizantEdit, AiInsights } from "@/lib/ai-notes";
+import { useSpeechRecognition } from "@/lib/speech";
 
 const NOTE_TYPE_OPTIONS: { value: NoteType; label: string; icon: React.ReactNode }[] = [
   { value: "manual", label: "Manual", icon: <FileText className="w-3.5 h-3.5" /> },
@@ -47,6 +49,8 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
 
   const total = notes.length;
   const withAi = notes.filter((n) => n.aiSummary).length;
+  const allActionItems = notes.flatMap((n) => analyzeNote(n.content).actionItems);
+  const totalProcessedMins = Math.round(notes.reduce((sum, n) => sum + n.content.split(/\s+/).length, 0) / 130); // ~130 wpm
 
   return (
     <>
@@ -54,9 +58,9 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
           {[
             { v: String(total), l: "Notes this week" },
-            { v: "0", l: "Actions extracted" },
+            { v: String(allActionItems.length), l: "Actions extracted" },
             { v: withAi > 0 ? `${Math.round((withAi / total) * 100)}%` : "0%", l: "With AI Summary", pink: true },
-            { v: "4.2h", l: "Processed" },
+            { v: `${totalProcessedMins}m`, l: "Processed" },
           ].map((s) => (
             <div key={s.l} className="surf p-4 text-center">
               <p style={{ fontSize: 22, fontWeight: 900, color: s.pink ? "#b80055" : "#0d0d12" }}>{s.v}</p>
@@ -260,6 +264,10 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(true);
+  const [insights, setInsights] = useState<AiInsights | null>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptText, setTranscriptText] = useState("");
+  const speech = useSpeechRecognition();
 
   useEffect(() => {
     Promise.all([
@@ -272,12 +280,58 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
     });
   }, [workspaceId]);
 
+  // Auto-run AI analysis when content changes (debounced)
+  useEffect(() => {
+    if (!content.trim()) {
+      setInsights(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const result = analyzeNote(content);
+      setInsights(result);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [content]);
+
+  // Sync speech transcript into content
+  useEffect(() => {
+    if (speech.isListening || speech.transcript || speech.interimTranscript) {
+      const full = speech.transcript + speech.interimTranscript;
+      setTranscriptText(full);
+    }
+  }, [speech.transcript, speech.interimTranscript, speech.isListening]);
+
+  const applyTranscript = () => {
+    const final = speech.getFinal();
+    setContent((prev) => (prev ? prev + " " + final : final).trim());
+    setTranscriptText("");
+    speech.clear();
+    setIsTranscribing(false);
+  };
+
+  const handleCognizantEdit = () => {
+    if (!content.trim()) return;
+    const polished = cognizantEdit(content);
+    setContent(polished);
+  };
+
+  const autoSuggestTitle = () => {
+    if (!content.trim()) return;
+    const sentences = content.split(/[.!?]/).map((s) => s.trim()).filter(Boolean);
+    if (sentences.length > 0) {
+      const first = sentences[0];
+      const candidate = first.length > 60 ? first.slice(0, 60) + "..." : first;
+      setTitle(candidate);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!title.trim() || !content.trim()) { setError("Title and content are required"); return; }
     setLoading(true);
     try {
+      const ai = analyzeNote(content);
       await api.notes.create({
         workspaceId,
         title,
@@ -285,6 +339,7 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
         type,
         contactId: contactId || undefined,
         dealId: dealId || undefined,
+        aiSummary: ai.summary,
       });
       onCreated();
     } catch (err: any) {
@@ -299,7 +354,7 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-bold text-lg text-gray-900">New Note</h2>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
@@ -309,49 +364,202 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
           <div className="flex items-center justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-pk-600" /></div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div>
-              <label className={labelClass}>Title *</label>
-              <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Q3 Review Call with Acme Corp" className={selClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Type</label>
-              <div className="flex flex-wrap gap-2">
-                {NOTE_TYPE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setType(opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${
-                      type === opt.value
-                        ? "border-pk-500 text-pk-700 bg-pink-50"
-                        : "border-gray-200 text-gray-600 hover:border-gray-300"
-                    }`}
-                  >
-                    {opt.icon}{opt.label}
-                  </button>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className={labelClass}>Title *</label>
+                  <div className="flex gap-2">
+                    <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Q3 Review Call with Acme Corp" className={selClass} />
+                    {content.trim() && !title && (
+                      <button type="button" onClick={autoSuggestTitle} className="flex-shrink-0 px-3 py-2 rounded-xl border border-pk-200 text-pk-600 text-xs hover:bg-pink-50 transition-colors" title="Auto-suggest from content">
+                        <Zap className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Type</label>
+                  <div className="flex flex-wrap gap-2">
+                    {NOTE_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setType(opt.value)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors ${
+                          type === opt.value
+                            ? "border-pk-500 text-pk-700 bg-pink-50"
+                            : "border-gray-200 text-gray-600 hover:border-gray-300"
+                        }`}
+                      >
+                        {opt.icon}{opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className={labelClass}>Content *</label>
+                    <div className="flex items-center gap-1.5">
+                      {speech.isSupported && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (speech.isListening) {
+                              speech.stop();
+                              applyTranscript();
+                              setIsTranscribing(false);
+                            } else {
+                              speech.start();
+                              setIsTranscribing(true);
+                            }
+                          }}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
+                            speech.isListening
+                              ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
+                              : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-pk-300"
+                          }`}
+                        >
+                          <Mic className="w-3 h-3" />
+                          {speech.isListening ? "Stop" : "Record"}
+                        </button>
+                      )}
+                      {content.trim().length > 20 && (
+                        <button
+                          type="button"
+                          onClick={handleCognizantEdit}
+                          className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-pink-50 text-pk-600 border border-pink-200 hover:bg-pink-100 transition-colors"
+                          title="Clean up grammar, remove filler words, structure sentences"
+                        >
+                          <Wand2 className="w-3 h-3" />
+                          Cognizant Edit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {isTranscribing && (
+                    <div className="mb-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Recording...</span>
+                      </div>
+                      <p className="text-sm text-gray-700 italic">{transcriptText || "Listening..."}</p>
+                    </div>
+                  )}
+
+                  <textarea required value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your notes here, or click Record to transcribe speech..." rows={6} className={selClass} />
+                  {speech.error && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />{speech.error}
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Related Contact</label>
+                    <select value={contactId} onChange={(e) => setContactId(e.target.value)} className={selClass}>
+                      <option value="">None</option>
+                      {contacts.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Related Deal</label>
+                    <select value={dealId} onChange={(e) => setDealId(e.target.value)} className={selClass}>
+                      <option value="">None</option>
+                      {deals.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Insights Panel */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">AI Insights</p>
+                  {insights && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      insights.sentiment === "positive" ? "bg-green-50 text-green-600" :
+                      insights.sentiment === "negative" ? "bg-red-50 text-red-600" :
+                      "bg-gray-100 text-gray-500"
+                    }`}>
+                      {insights.sentiment}
+                    </span>
+                  )}
+                </div>
+
+                {!insights ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 rounded-xl bg-gray-50 border border-gray-100">
+                    <Sparkles className="w-6 h-6 text-gray-300 mb-2" />
+                    <p className="text-xs text-gray-400">Start typing to see AI insights</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3 overflow-y-auto max-h-[420px]">
+                    {/* Summary */}
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Summary</p>
+                      <p className="text-xs text-gray-700 leading-relaxed">{insights.summary}</p>
+                    </div>
+
+                    {/* Action Items */}
+                    {insights.actionItems.length > 0 && (
+                      <div className="bg-pink-50 rounded-xl p-3 border border-pink-100">
+                        <p className="text-[10px] font-bold text-pk-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                          <Zap className="w-3 h-3" />Action Items ({insights.actionItems.length})
+                        </p>
+                        <ul className="flex flex-col gap-1.5">
+                          {insights.actionItems.map((item, i) => (
+                            <li key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
+                              <span className="w-4 h-4 rounded bg-white border border-pink-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span className="text-[8px] font-bold text-pk-600">{i + 1}</span>
+                              </span>
+                              <span className="leading-relaxed">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Entities */}
+                    {insights.entities.length > 0 && (
+                      <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Detected</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {insights.entities.map((e, i) => {
+                            const icons: Record<string, React.ReactNode> = {
+                              email: <MailIcon className="w-2.5 h-2.5" />,
+                              phone: <PhoneIcon className="w-2.5 h-2.5" />,
+                              amount: <DollarSign className="w-2.5 h-2.5" />,
+                              date: <Calendar className="w-2.5 h-2.5" />,
+                              person: <User className="w-2.5 h-2.5" />,
+                              company: <Briefcase className="w-2.5 h-2.5" />,
+                            };
+                            return (
+                              <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-gray-200 text-[10px] text-gray-600">
+                                {icons[e.type] || <Tag className="w-2.5 h-2.5" />}
+                                <span className="font-medium">{e.value}</span>
+                                <span className="text-gray-300 capitalize">{e.type}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tags */}
+                    {insights.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {insights.tags.map((t) => (
+                          <span key={t} className="px-2.5 py-1 rounded-lg bg-pink-50 border border-pink-100 text-[10px] font-semibold text-pk-600">
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <div>
-              <label className={labelClass}>Content *</label>
-              <textarea required value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your notes here..." rows={6} className={selClass} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Related Contact</label>
-                <select value={contactId} onChange={(e) => setContactId(e.target.value)} className={selClass}>
-                  <option value="">None</option>
-                  {contacts.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Related Deal</label>
-                <select value={dealId} onChange={(e) => setDealId(e.target.value)} className={selClass}>
-                  <option value="">None</option>
-                  {deals.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-            </div>
+
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
               {loading ? "Creating..." : "Create Note"}
             </button>

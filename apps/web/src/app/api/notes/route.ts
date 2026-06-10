@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   if (session instanceof NextResponse) return session;
 
   const body = await req.json();
-  const { workspaceId, contactId, dealId, title, content, type, tags, isShared } = body;
+  const { workspaceId, contactId, dealId, title, content, type, tags, isShared, aiSummary } = body;
 
   if (!workspaceId || !title || !content) {
     return NextResponse.json({ error: "workspaceId, title, and content required" }, { status: 400 });
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
       type,
       tags: tags || [],
       isShared: isShared ?? false,
+      aiSummary: aiSummary || null,
     },
   });
 
