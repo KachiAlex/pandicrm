@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import {
   Mic, CheckSquare, GitBranch, BarChart2, Clock, Search, Bell, HelpCircle,
   ChevronDown, Settings, Plug, Users, Tag, FileText,
-  Loader2
+  Loader2, Check, X, Mail, FileText as FileIcon, CheckCircle, DollarSign,
+  Menu
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { api, Notification } from "@/lib/api";
 import NotesPanel from "@/components/dashboard/NotesPanel";
 import TasksPanel from "@/components/dashboard/TasksPanel";
 import PipelinePanel from "@/components/dashboard/PipelinePanel";
@@ -20,6 +22,38 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("notes");
   const { workspace, loading: loadingWorkspace } = useWorkspace();
   const { data: session } = useSession();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!workspace?.id) return;
+    api.notifications.list(workspace.id).then((data) => setNotifications(data)).catch(() => {});
+  }, [workspace?.id]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markRead = async (id: string) => {
+    await api.notifications.markRead(id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const markAllRead = async () => {
+    if (!workspace?.id) return;
+    await api.notifications.markAllRead(workspace.id);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
   const tabs = [
     { id: "notes", label: "AI Notes", icon: <Mic className="w-3.5 h-3.5" /> },
@@ -42,13 +76,22 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#0d0d12" }}>
+      {/* Mobile sidebar overlay */}
+      {showMobileSidebar && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowMobileSidebar(false)} />
+      )}
       {/* SIDEBAR */}
-      <aside className="dash-sb w-56 flex-shrink-0 hidden md:flex flex-col h-full">
-        <div className="flex items-center gap-2 px-4 py-3.5">
-          <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" /></svg>
+      <aside className={`dash-sb w-56 flex-shrink-0 flex-col h-full fixed md:relative z-50 md:z-auto transition-transform duration-200 ${showMobileSidebar ? "flex translate-x-0" : "hidden md:flex -translate-x-full md:translate-x-0"}`}>
+        <div className="flex items-center justify-between gap-2 px-4 py-3.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" /></svg>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>pandicrm</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>pandicrm</span>
+          <button className="md:hidden p-1 rounded-lg hover:bg-white/10 transition-colors" onClick={() => setShowMobileSidebar(false)} aria-label="Close menu">
+            <X className="w-4 h-4 text-white/70" />
+          </button>
         </div>
 
         <nav className="flex-1 px-3 overflow-y-auto noscroll">
@@ -57,19 +100,19 @@ export default function DashboardPage() {
             <div
               key={item.tab}
               className={`dni ${activeTab === item.tab ? "on" : ""}`}
-              onClick={() => setActiveTab(item.tab)}
+              onClick={() => { setActiveTab(item.tab); setShowMobileSidebar(false); }}
             >
               {item.icon}<span>{item.label}</span>
             </div>
           ))}
           <p className="sb-label" style={{ marginTop: 14 }}>CRM</p>
           {sidebarItems.slice(5).map((item) => (
-            <div key={item.tab} className={`dni ${activeTab === item.tab ? "on" : ""}`} onClick={() => setActiveTab(item.tab)}>
+            <div key={item.tab} className={`dni ${activeTab === item.tab ? "on" : ""}`} onClick={() => { setActiveTab(item.tab); setShowMobileSidebar(false); }}>
               {item.icon}<span>{item.label}</span>
             </div>
           ))}
           <p className="sb-label" style={{ marginTop: 14 }}>Settings</p>
-          <div className="dni"><Settings className="w-3.5 h-3.5 flex-shrink-0" /><span>Settings</span></div>
+          <Link href="/settings" className="dni" onClick={() => setShowMobileSidebar(false)}><Settings className="w-3.5 h-3.5 flex-shrink-0" /><span>Settings</span></Link>
           <div className="dni"><Plug className="w-3.5 h-3.5 flex-shrink-0" /><span>Integrations</span></div>
         </nav>
 
@@ -108,6 +151,9 @@ export default function DashboardPage() {
         {/* Top bar */}
         <div className="flex items-center px-5 gap-3 flex-shrink-0 bg-white border-b border-gray-100" style={{ height: 52 }}>
           <div className="flex-1 flex items-center gap-3">
+            <button className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => setShowMobileSidebar(true)} aria-label="Open menu">
+              <Menu className="w-4 h-4 text-gray-600" />
+            </button>
             <h1 style={{ fontSize: 14, fontWeight: 700, color: "#0d0d12", whiteSpace: "nowrap" }}>
               {tabs.find((t) => t.id === activeTab)?.label || activeTab}
             </h1>
@@ -118,10 +164,60 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button className="relative p-2 rounded-xl hover:bg-gray-50 transition-colors" aria-label="Notifications">
-              <Bell className="w-4 h-4 text-gray-500" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: "#ff1a97" }} />
-            </button>
+            <div className="relative" ref={notifRef}>
+              <button
+                className="relative p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                aria-label="Notifications"
+                onClick={() => setShowNotifications((s) => !s)}
+              >
+                <Bell className="w-4 h-4 text-gray-500" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[9px] font-bold text-white px-1" style={{ background: "#ff1a97" }}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2937" }}>Notifications</p>
+                    {unreadCount > 0 && (
+                      <button onClick={markAllRead} className="text-[10px] font-semibold text-pk-600 hover:text-pk-700 transition-colors">
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-gray-400 text-xs">No notifications yet.</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${n.read ? "opacity-60" : ""}`}
+                          style={{ borderBottom: "1px solid #f9fafb" }}
+                          onClick={() => markRead(n.id)}
+                        >
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: n.type === "deal_won" ? "#f0fdf4" : n.type === "deal_lost" ? "#fef2f2" : n.type === "task_completed" ? "#f0fdf4" : "#fff0f7" }}>
+                            {n.type === "deal_won" ? <DollarSign className="w-3.5 h-3.5 text-green-600" /> :
+                             n.type === "deal_lost" ? <DollarSign className="w-3.5 h-3.5 text-red-500" /> :
+                             n.type === "task_completed" ? <CheckCircle className="w-3.5 h-3.5 text-green-600" /> :
+                             n.type === "note_added" ? <FileIcon className="w-3.5 h-3.5 text-pink-600" /> :
+                             <Mail className="w-3.5 h-3.5 text-pink-600" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p style={{ fontSize: 11.5, fontWeight: 600, color: "#1f2937" }}>{n.title}</p>
+                            <p className="text-[10.5px] text-gray-500 truncate">{n.message}</p>
+                            <p className="text-[9px] text-gray-400 mt-1">{new Date(n.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          {!n.read && <div className="w-2 h-2 rounded-full bg-pink-500 flex-shrink-0 mt-1.5" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button className="p-2 rounded-xl hover:bg-gray-50 transition-colors" aria-label="Help">
               <HelpCircle className="w-4 h-4 text-gray-500" />
             </button>

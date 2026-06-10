@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { notifyWorkspace } from "@/lib/notifications";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAuth();
@@ -27,7 +28,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.dueDate) body.dueDate = new Date(body.dueDate);
   if (body.completedAt) body.completedAt = new Date(body.completedAt);
 
+  const previous = await prisma.task.findUnique({ where: { id }, select: { status: true, title: true, workspaceId: true } });
   const task = await prisma.task.update({ where: { id }, data: body });
+
+  if (previous && body.status === "done" && previous.status !== "done") {
+    const sessionUserId = (session as any).user.id;
+    await notifyWorkspace(previous.workspaceId, sessionUserId, "task_completed", "Task completed", `Task "${previous.title}" was marked as done.`, "task", id);
+  }
+
   return NextResponse.json(task);
 }
 

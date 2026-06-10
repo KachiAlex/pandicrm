@@ -260,3 +260,22 @@ model TimelineEvent {
   @@index([occurredAt])
   @@map("timeline_events")
 }
+
+model Notification {
+  id          String    @id @default(cuid())
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
+  type        String    // deal_won, deal_lost, task_due, task_completed, note_added, deal_stage_change
+  title       String
+  message     String
+  entityType  String?   @map("entity_type") // deal, task, note, account, contact
+  entityId    String?   @map("entity_id")
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+  @@map("notifications")
+}

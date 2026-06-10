@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown } from "lucide-react";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download } from "lucide-react";
 import { api, Account, Contact, Deal } from "@/lib/api";
+import { exportAccounts, exportContacts, exportDeals } from "@/lib/csv";
 
 export default function ListPanel({ workspaceId, type }: { workspaceId: string; type: "accounts" | "contacts" | "deals" }) {
   const [items, setItems] = useState<any[]>([]);
@@ -91,10 +92,21 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
               <Plus className="w-3.5 h-3.5" />New {typeLabel}
             </button>
           )}
+          <button
+            className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
+            onClick={() => {
+              if (type === "accounts") exportAccounts(filteredItems);
+              else if (type === "contacts") exportContacts(filteredItems);
+              else exportDeals(filteredItems);
+            }}
+            title="Export to CSV"
+          >
+            <Download className="w-3.5 h-3.5" />Export
+          </button>
         </div>
       </div>
-      <div className="surf overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="surf overflow-x-auto">
+        <table className="w-full text-sm min-w-[500px]">
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               {headers.map((h) => (

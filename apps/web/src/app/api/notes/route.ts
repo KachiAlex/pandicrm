@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { notifyWorkspace } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth();
@@ -36,10 +37,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "workspaceId, title, and content required" }, { status: 400 });
   }
 
+  const authorId = (session as any).user.id;
   const note = await prisma.note.create({
     data: {
       workspaceId,
-      authorId: (session as any).user.id,
+      authorId,
       contactId,
       dealId,
       title,
@@ -49,6 +51,8 @@ export async function POST(req: NextRequest) {
       isShared: isShared ?? false,
     },
   });
+
+  await notifyWorkspace(workspaceId, authorId, "note_added", "New note added", `Note "${title}" was added.`, "note", note.id);
 
   return NextResponse.json(note, { status: 201 });
 }

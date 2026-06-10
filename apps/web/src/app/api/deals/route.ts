@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { notifyWorkspace } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth();
@@ -39,6 +40,9 @@ export async function POST(req: NextRequest) {
   const deal = await prisma.deal.create({
     data: { workspaceId, accountId, contactId, name, stage, value, currency, probability, closeDate: closeDate ? new Date(closeDate) : null, description },
   });
+
+  const sessionUserId = (session as any).user.id;
+  await notifyWorkspace(workspaceId, sessionUserId, "deal_created", "New deal created", `Deal "${name}" was created in stage ${stage}.`, "deal", deal.id);
 
   return NextResponse.json(deal, { status: 201 });
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Loader2, X, Calendar, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Loader2, X, Calendar, Pencil, Trash2, Search, Download } from "lucide-react";
 import { api, Task, Account, Contact, Deal } from "@/lib/api";
+import { exportTasks } from "@/lib/csv";
 
 const STATUS_LABELS: Record<string, { label: string; dot: string; bg: string }> = {
   todo: { label: "To Do", dot: "#9ca3af", bg: "#e5e7eb" },
@@ -78,6 +79,13 @@ export default function TasksPanel({ workspaceId }: { workspaceId: string }) {
             <option value="created">Sort: Newest</option>
           </select>
           <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}><Plus className="w-3.5 h-3.5" />New Task</button>
+          <button
+            className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
+            onClick={() => exportTasks(filteredTasks)}
+            title="Export to CSV"
+          >
+            <Download className="w-3.5 h-3.5" />Export
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

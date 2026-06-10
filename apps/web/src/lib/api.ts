@@ -73,7 +73,47 @@ export const api = {
       return fetchJSON<TimelineEvent[]>(`/api/timeline?${qs.toString()}`);
     },
   },
+  notifications: {
+    list: (workspaceId: string) =>
+      fetchJSON<Notification[]>(`/api/notifications?workspaceId=${workspaceId}`),
+    markRead: (id: string) =>
+      fetchJSON<Notification>(`/api/notifications/${id}`, { method: "PATCH", body: JSON.stringify({}) }),
+    markAllRead: (workspaceId: string) =>
+      fetchJSON<void>("/api/notifications", { method: "PATCH", body: JSON.stringify({ workspaceId }) }),
+  },
+  user: {
+    get: () => fetchJSON<User>("/api/user"),
+    update: (data: Partial<User>) => fetchJSON<User>("/api/user", { method: "PATCH", body: JSON.stringify(data) }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      fetchJSON<void>("/api/user/password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) }),
+  },
+  workspaces: {
+    update: (id: string, data: Partial<Workspace>) =>
+      fetchJSON<Workspace>(`/api/workspaces/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  },
 };
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  phone?: string;
+  role?: string;
+  createdAt: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface Account {
   id: string;
@@ -189,4 +229,17 @@ export interface TimelineEvent {
   account?: { id: string; name: string };
   contact?: { id: string; firstName: string; lastName: string };
   deal?: { id: string; name: string };
+}
+
+export interface Notification {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  entityType?: string;
+  entityId?: string;
+  read: boolean;
+  createdAt: string;
 }

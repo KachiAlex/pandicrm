@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { notifyWorkspace } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth();
@@ -49,6 +50,9 @@ export async function POST(req: NextRequest) {
       dueDate: dueDate ? new Date(dueDate) : null,
     },
   });
+
+  const sessionUserId = (session as any).user.id;
+  await notifyWorkspace(workspaceId, sessionUserId, "task_created", "New task assigned", `Task "${title}" was created.`, "task", task.id);
 
   return NextResponse.json(task, { status: 201 });
 }
