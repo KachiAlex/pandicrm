@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { api, TimelineEvent } from "@/lib/api";
 
 export default function TimelinePanel({ workspaceId }: { workspaceId: string }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -25,19 +27,39 @@ export default function TimelinePanel({ workspaceId }: { workspaceId: string }) 
     );
   }
 
+  const filteredEvents = events.filter((ev) => {
+    const matchesSearch = !search || ev.title.toLowerCase().includes(search.toLowerCase()) || (ev.description || "").toLowerCase().includes(search.toLowerCase());
+    const matchesType = filterType === "all" || ev.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  const allTypes = Array.from(new Set(events.map((ev) => ev.type)));
+
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>Customer Timeline</h2>
-        <span style={{ fontSize: 11, color: "#9ca3af" }}>{events.length} events</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder="Search events..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
+            <option value="all">All events</option>
+            {allTypes.map((t) => (
+              <option key={t} value={t}>{t.replace("_", " ")}</option>
+            ))}
+          </select>
+          <span style={{ fontSize: 11, color: "#9ca3af" }}>{filteredEvents.length} events</span>
+        </div>
       </div>
       <div className="relative">
         <div className="absolute left-4 top-0 bottom-0 w-px" style={{ background: "linear-gradient(180deg,#ff1a97 0%,rgba(255,26,151,0.08) 100%)" }} />
         <div className="flex flex-col gap-4 pl-10">
-          {events.length === 0 && (
-            <div className="text-center text-gray-500 text-sm py-8">No timeline events yet.</div>
+          {filteredEvents.length === 0 && (
+            <div className="text-center text-gray-500 text-sm py-8">{events.length === 0 ? "No timeline events yet." : "No events match your filters."}</div>
           )}
-          {events.map((ev) => {
+          {filteredEvents.map((ev) => {
             const date = new Date(ev.occurredAt).toLocaleDateString("en-US", { month: "short", day: "numeric" });
             const typeColors: Record<string, { dot: string; glow: string; badge: string; badgeBg: string; badgeBorder: string }> = {
               call: { dot: "#ff1a97", glow: "rgba(255,26,151,0.14)", badge: "#b80055", badgeBg: "#fff0f7", badgeBorder: "rgba(184,0,85,0.12)" },

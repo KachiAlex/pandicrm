@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown } from "lucide-react";
 import { api, Account, Contact, Deal } from "@/lib/api";
 
 export default function ListPanel({ workspaceId, type }: { workspaceId: string; type: "accounts" | "contacts" | "deals" }) {
@@ -10,6 +10,9 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
   const [showCreate, setShowCreate] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -39,34 +42,78 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
 
   const typeLabel = type === "accounts" ? "Account" : type === "contacts" ? "Contact" : "Deal";
 
+  const handleSort = (col: string) => {
+    if (sortColumn === col) { setSortDir((d) => d === "asc" ? "desc" : "asc"); }
+    else { setSortColumn(col); setSortDir("asc"); }
+  };
+
+  const filteredItems = items.filter((item) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    if (type === "accounts") return (item as Account).name.toLowerCase().includes(q) || ((item as Account).industry || "").toLowerCase().includes(q);
+    if (type === "contacts") return `${(item as Contact).firstName} ${(item as Contact).lastName}`.toLowerCase().includes(q) || ((item as Contact).email || "").toLowerCase().includes(q) || ((item as Contact).title || "").toLowerCase().includes(q);
+    return (item as Deal).name.toLowerCase().includes(q) || ((item as Deal).description || "").toLowerCase().includes(q);
+  }).sort((a: any, b: any) => {
+    if (!sortColumn) return 0;
+    let cmp = 0;
+    if (type === "accounts") {
+      if (sortColumn === "Name") cmp = a.name.localeCompare(b.name);
+      else if (sortColumn === "Industry") cmp = (a.industry || "").localeCompare(b.industry || "");
+      else if (sortColumn === "Size") cmp = (a.size || "").localeCompare(b.size || "");
+      else if (sortColumn === "Domain") cmp = (a.domain || "").localeCompare(b.domain || "");
+    } else if (type === "contacts") {
+      if (sortColumn === "Name") cmp = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      else if (sortColumn === "Email") cmp = (a.email || "").localeCompare(b.email || "");
+      else if (sortColumn === "Title") cmp = (a.title || "").localeCompare(b.title || "");
+      else if (sortColumn === "Account") cmp = (a.account?.name || "").localeCompare(b.account?.name || "");
+    } else {
+      if (sortColumn === "Name") cmp = a.name.localeCompare(b.name);
+      else if (sortColumn === "Stage") cmp = a.stage.localeCompare(b.stage);
+      else if (sortColumn === "Value") cmp = Number(a.value) - Number(b.value);
+      else if (sortColumn === "Probability") cmp = Number(a.probability) - Number(b.probability);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>
           {type.charAt(0).toUpperCase() + type.slice(1)}
         </h2>
-        {type !== "deals" && (
-          <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}>
-            <Plus className="w-3.5 h-3.5" />New {typeLabel}
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder={`Search ${type}...`} value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          {type !== "deals" && (
+            <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}>
+              <Plus className="w-3.5 h-3.5" />New {typeLabel}
+            </button>
+          )}
+        </div>
       </div>
       <div className="surf overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
               {headers.map((h) => (
-                <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                <th key={h} onClick={() => handleSort(h)} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-pk-600 transition-colors">
+                  <div className="flex items-center gap-1">
+                    {h}
+                    <ArrowUpDown className="w-3 h-3 opacity-40" />
+                  </div>
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 && (
+            {filteredItems.length === 0 && (
               <tr>
-                <td colSpan={headers.length} className="px-4 py-8 text-center text-gray-400">No {type} yet.</td>
+                <td colSpan={headers.length} className="px-4 py-8 text-center text-gray-400">{items.length === 0 ? `No ${type} yet.` : "No matches found."}</td>
               </tr>
             )}
-            {items.map((item) => {
+            {filteredItems.map((item) => {
               if (type === "accounts") {
                 const a = item as Account;
                 return (

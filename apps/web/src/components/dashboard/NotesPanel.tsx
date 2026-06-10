@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search } from "lucide-react";
 import { api, Note, NoteType, Contact, Deal } from "@/lib/api";
 
 const NOTE_TYPE_OPTIONS: { value: NoteType; label: string; icon: React.ReactNode }[] = [
@@ -19,6 +19,8 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<"all" | NoteType>("all");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -37,12 +39,18 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
     );
   }
 
+  const filteredNotes = notes.filter((n) => {
+    const matchesSearch = !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase());
+    const matchesType = filterType === "all" || n.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
   const total = notes.length;
   const withAi = notes.filter((n) => n.aiSummary).length;
 
   return (
     <>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
           {[
             { v: String(total), l: "Notes this week" },
@@ -56,15 +64,25 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
             </div>
           ))}
         </div>
-        <button className="btn-p text-xs px-3.5 py-2 ml-4 flex-shrink-0" onClick={() => setShowCreate(true)}>
-          <Plus className="w-3.5 h-3.5" />New Note
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 180 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder="Search notes..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          <select value={filterType} onChange={(e) => setFilterType(e.target.value as any)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
+            <option value="all">All types</option>
+            {NOTE_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}>
+            <Plus className="w-3.5 h-3.5" />New Note
+          </button>
+        </div>
       </div>
 
-      {notes.length === 0 ? (
-        <div className="surf p-8 text-center text-gray-500 text-sm">No notes yet.</div>
+      {filteredNotes.length === 0 ? (
+        <div className="surf p-8 text-center text-gray-500 text-sm">{notes.length === 0 ? "No notes yet." : "No notes match your filters."}</div>
       ) : (
-        notes.map((note) => (
+        filteredNotes.map((note) => (
           <div key={note.id} className="surf p-6 mb-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedNote(note)}>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>

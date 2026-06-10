@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Loader2, X, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Plus, Loader2, X, Calendar, Pencil, Trash2, Search } from "lucide-react";
 import { api, Task, Account, Contact, Deal } from "@/lib/api";
 
 const STATUS_LABELS: Record<string, { label: string; dot: string; bg: string }> = {
@@ -16,6 +16,9 @@ export default function TasksPanel({ workspaceId }: { workspaceId: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [filterPriority, setFilterPriority] = useState<"all" | "low" | "medium" | "high">("all");
+  const [sortBy, setSortBy] = useState<"dueDate" | "priority" | "created">("dueDate");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -36,16 +39,51 @@ export default function TasksPanel({ workspaceId }: { workspaceId: string }) {
 
   const groups = ["todo", "in_progress", "done"] as const;
 
+  const filteredTasks = tasks.filter((t) => {
+    const matchesSearch = !search || t.title.toLowerCase().includes(search.toLowerCase()) || (t.description || "").toLowerCase().includes(search.toLowerCase());
+    const matchesPriority = filterPriority === "all" || t.priority === filterPriority;
+    return matchesSearch && matchesPriority;
+  }).sort((a, b) => {
+    if (sortBy === "dueDate") {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }
+    if (sortBy === "priority") {
+      const order = { high: 0, medium: 1, low: 2 };
+      return order[a.priority] - order[b.priority];
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>Task Board</h2>
-        <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}><Plus className="w-3.5 h-3.5" />New Task</button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder="Search tasks..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value as any)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
+            <option value="all">All priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
+            <option value="dueDate">Sort: Due Date</option>
+            <option value="priority">Sort: Priority</option>
+            <option value="created">Sort: Newest</option>
+          </select>
+          <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}><Plus className="w-3.5 h-3.5" />New Task</button>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {groups.map((status) => {
           const meta = STATUS_LABELS[status];
-          const items = tasks.filter((t) => t.status === status);
+          const items = filteredTasks.filter((t) => t.status === status);
           return (
             <div key={status} className="rounded-2xl p-4" style={{ background: "rgba(243,244,246,0.7)" }}>
               <div className="flex items-center gap-2 mb-3">

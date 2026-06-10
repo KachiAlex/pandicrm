@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Loader2, X, DollarSign, Pencil, Trash2 } from "lucide-react";
+import { Plus, Loader2, X, DollarSign, Pencil, Trash2, Search } from "lucide-react";
 import { api, Deal, DealStage, Account, Contact } from "@/lib/api";
 
 const STAGES: { key: DealStage; label: string; dot: string }[] = [
@@ -19,6 +19,8 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
   const [showCreate, setShowCreate] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"valueDesc" | "valueAsc" | "closeDate" | "created">("valueDesc");
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -37,22 +39,49 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
     );
   }
 
-  const total = deals.reduce((sum, d) => sum + Number(d.value), 0);
+  const filteredDeals = deals.filter((d) => {
+    const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || (d.description || "").toLowerCase().includes(search.toLowerCase());
+    return matchesSearch;
+  }).sort((a, b) => {
+    if (sortBy === "valueDesc") return Number(b.value) - Number(a.value);
+    if (sortBy === "valueAsc") return Number(a.value) - Number(b.value);
+    if (sortBy === "closeDate") {
+      if (!a.closeDate && !b.closeDate) return 0;
+      if (!a.closeDate) return 1;
+      if (!b.closeDate) return -1;
+      return new Date(a.closeDate).getTime() - new Date(b.closeDate).getTime();
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const total = filteredDeals.reduce((sum, d) => sum + Number(d.value), 0);
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div>
           <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>Sales Pipeline</h2>
           <p style={{ fontSize: 11, color: "#9ca3af" }}>
             Total: <span style={{ fontWeight: 600, color: "#374151" }}>${(total / 1000).toFixed(0)}K</span>
           </p>
         </div>
-        <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}><Plus className="w-3.5 h-3.5" />Add Deal</button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder="Search deals..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
+            <option value="valueDesc">Sort: Value ↓</option>
+            <option value="valueAsc">Sort: Value ↑</option>
+            <option value="closeDate">Sort: Close Date</option>
+            <option value="created">Sort: Newest</option>
+          </select>
+          <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}><Plus className="w-3.5 h-3.5" />Add Deal</button>
+        </div>
       </div>
       <div className="flex gap-3 overflow-x-auto noscroll pb-3">
         {STAGES.map((stage) => {
-          const items = deals.filter((d) => d.stage === stage.key);
+          const items = filteredDeals.filter((d) => d.stage === stage.key);
           const stageTotal = items.reduce((sum, d) => sum + Number(d.value), 0);
           const won = stage.key === "won";
           return (
