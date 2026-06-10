@@ -246,7 +246,7 @@ function PricingSection() {
                 <div key={f} className="flex items-center gap-2.5"><CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color: "#ff66b3" }} /><span style={{ fontSize: 13.5, color: "#d1d5db" }}>{f}</span></div>
               ))}
             </div>
-            <Link href="/login" className="btn-p w-full justify-center py-3 text-sm relative z-10">Join waitlist <ArrowRight className="w-3.5 h-3.5" /></Link>
+            <Link href="/register" className="btn-p w-full justify-center py-3 text-sm relative z-10">Create account <ArrowRight className="w-3.5 h-3.5" /></Link>
           </div>
           <div className="pc reveal rd3">
             <p style={{ fontSize: 10.5, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 14 }}>Enterprise</p>

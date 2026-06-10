@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,21 +20,40 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    setLoading(false);
+      const data = await res.json();
 
-    if (res?.error) {
-      setError("Invalid email or password");
-      return;
+      if (!res.ok) {
+        setError(data.error || "Something went wrong");
+        setLoading(false);
+        return;
+      }
+
+      // Auto-sign in after registration
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInRes?.error) {
+        setError("Account created but sign-in failed. Please log in manually.");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Network error. Please try again.");
+      setLoading(false);
     }
-
-    router.push("/dashboard");
-    router.refresh();
   };
 
   return (
@@ -70,8 +90,8 @@ export default function LoginPage() {
             </div>
             <span className="font-black text-white text-lg tracking-tight">pandicrm</span>
           </div>
-          <h1 className="font-bold text-white text-xl tracking-tight mb-1">Welcome back</h1>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Sign in to your workspace</p>
+          <h1 className="font-bold text-white text-xl tracking-tight mb-1">Create your account</h1>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Get started with pandicrm for free</p>
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-lg">
@@ -80,10 +100,24 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                Full name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                 Email
@@ -110,9 +144,10 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors"
                 />
                 <button
@@ -125,26 +160,16 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-pk-600 focus:ring-pk-500" />
-                <span className="text-xs text-gray-500">Remember me</span>
-              </label>
-              <a href="#" className="text-xs font-medium text-pk-600 hover:text-pk-700 transition-colors">
-                Forgot password?
-              </a>
-            </div>
-
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
-              {loading ? "Signing in..." : "Sign in"} <ArrowRight className="w-4 h-4" />
+              {loading ? "Creating account..." : "Create account"} <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
           <div className="mt-5 pt-5 border-t border-gray-100 text-center">
             <p className="text-xs text-gray-400">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="font-medium text-pk-600 hover:text-pk-700 transition-colors">
-                Create account
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-pk-600 hover:text-pk-700 transition-colors">
+                Sign in
               </Link>
             </p>
           </div>
