@@ -265,8 +265,6 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(true);
   const [insights, setInsights] = useState<AiInsights | null>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcriptText, setTranscriptText] = useState("");
   const speech = useSpeechRecognition();
 
   useEffect(() => {
@@ -293,21 +291,17 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
     return () => clearTimeout(timer);
   }, [content]);
 
-  // Sync speech transcript into content
+  // When speech stops, auto-append transcript to content
   useEffect(() => {
-    if (speech.isListening || speech.transcript || speech.interimTranscript) {
-      const full = speech.transcript + speech.interimTranscript;
-      setTranscriptText(full);
+    if (!speech.isListening && speech.transcript) {
+      const full = speech.getFinal();
+      if (full) {
+        setContent((prev) => (prev ? prev + " " + full : full).trim());
+        speech.clear();
+      }
     }
-  }, [speech.transcript, speech.interimTranscript, speech.isListening]);
+  }, [speech.isListening]);
 
-  const applyTranscript = () => {
-    const final = speech.getFinal();
-    setContent((prev) => (prev ? prev + " " + final : final).trim());
-    setTranscriptText("");
-    speech.clear();
-    setIsTranscribing(false);
-  };
 
   const handleCognizantEdit = () => {
     if (!content.trim()) return;
@@ -400,17 +394,14 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                   <div className="flex items-center justify-between mb-1.5">
                     <label className={labelClass}>Content *</label>
                     <div className="flex items-center gap-1.5">
-                      {speech.isSupported && (
+                      {speech.isSupported && speech.permission !== "denied" && (
                         <button
                           type="button"
                           onClick={() => {
                             if (speech.isListening) {
                               speech.stop();
-                              applyTranscript();
-                              setIsTranscribing(false);
                             } else {
                               speech.start();
-                              setIsTranscribing(true);
                             }
                           }}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-colors ${
@@ -437,18 +428,43 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                     </div>
                   </div>
 
-                  {isTranscribing && (
+                  {/* Recording status with audio level */}
+                  {speech.isListening && (
                     <div className="mb-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Recording...</span>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Recording</span>
+                        <span className="text-[10px] text-gray-400 ml-auto">Speak clearly...</span>
                       </div>
-                      <p className="text-sm text-gray-700 italic">{transcriptText || "Listening..."}</p>
+                      {/* Audio level bar */}
+                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                        <div
+                          className="h-full rounded-full transition-all duration-100"
+                          style={{
+                            width: `${Math.round(speech.audioLevel * 100)}%`,
+                            background: speech.audioLevel > 0.3
+                              ? "linear-gradient(90deg, #ff1a97, #b80055)"
+                              : "#9ca3af",
+                          }}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-700 italic min-h-[20px]">
+                        {speech.interimTranscript || speech.transcript || "Listening..."}
+                      </p>
                     </div>
                   )}
 
                   <textarea required value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your notes here, or click Record to transcribe speech..." rows={6} className={selClass} />
-                  {speech.error && (
+
+                  {/* Permission denied helper */}
+                  {speech.permission === "denied" && (
+                    <div className="mt-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                      <p className="font-semibold mb-1">Microphone access blocked</p>
+                      <p className="text-amber-600">Click the lock icon in your browser address bar, then allow microphone access for this site.</p>
+                    </div>
+                  )}
+
+                  {speech.error && speech.permission !== "denied" && (
                     <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />{speech.error}
                     </p>
