@@ -2,10 +2,39 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { ArrowRight, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (res?.error) {
+      setError("Invalid email or password");
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  };
 
   return (
     <div
@@ -46,11 +75,13 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-lg">
+          {error && (
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              window.location.href = "/dashboard";
-            }}
+            onSubmit={handleSubmit}
             className="flex flex-col gap-4"
           >
             <div>
@@ -62,6 +93,8 @@ export default function LoginPage() {
                 <input
                   type="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors"
                 />
@@ -77,6 +110,8 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors"
                 />
@@ -100,8 +135,8 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <button type="submit" className="btn-p w-full justify-center py-3 text-sm">
-              Sign in <ArrowRight className="w-4 h-4" />
+            <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
+              {loading ? "Signing in..." : "Sign in"} <ArrowRight className="w-4 h-4" />
             </button>
           </form>
 
