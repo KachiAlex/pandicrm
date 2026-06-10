@@ -25,6 +25,8 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -240,9 +242,42 @@ export default function DashboardPage() {
               <Loader2 className="w-6 h-6 animate-spin text-pk-600" />
             </div>
           ) : !workspace ? (
-            <div className="surf p-8 text-center">
+            <div className="surf p-8 text-center max-w-md mx-auto">
               <h2 className="font-bold text-xl text-gray-900 mb-2">No workspace found</h2>
-              <p className="text-gray-500 text-sm">Create a workspace to get started.</p>
+              <p className="text-gray-500 text-sm mb-6">Create a workspace to get started.</p>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newWorkspaceName.trim()) return;
+                  setCreatingWorkspace(true);
+                  try {
+                    const res = await fetch("/api/workspaces", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ name: newWorkspaceName.trim() }),
+                    });
+                    if (!res.ok) throw new Error("Failed to create workspace");
+                    const data = await res.json();
+                    window.location.reload();
+                  } catch (err: any) {
+                    alert(err.message || "Failed to create workspace");
+                    setCreatingWorkspace(false);
+                  }
+                }}
+                className="flex flex-col gap-3"
+              >
+                <input
+                  type="text"
+                  placeholder="Workspace name"
+                  value={newWorkspaceName}
+                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pk-500 transition-colors"
+                />
+                <button type="submit" disabled={creatingWorkspace || !newWorkspaceName.trim()} className="btn-p text-sm px-4 py-2.5 flex items-center justify-center gap-2">
+                  {creatingWorkspace ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Create Workspace
+                </button>
+              </form>
             </div>
           ) : (
             <>
