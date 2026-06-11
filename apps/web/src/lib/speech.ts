@@ -1,59 +1,98 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 /**
- * Robust Web Speech API wrapper with explicit mic permission,
- * auto-restart on Chrome timeout, and audio level visualization.
+ * Direct Web Speech API hook — no singleton, no class.
+ * Streams interim results live so the user sees text as they speak.
  */
 
 export interface SpeechState {
   isListening: boolean;
   isSupported: boolean;
-  transcript: string;
-  interimTranscript: string;
+  transcript: string;          // accumulated final results
+  interimTranscript: string;     // live draft
   error: string | null;
-  audioLevel: number; // 0–1
-  permission: "unknown" | "granted" | "denied" | "prompt";
+  audioLevel: number;
+  permission: "unknown" | "granted" | "denied";
 }
 
-const SpeechRecognitionAPI = (typeof window !== "undefined"
-  ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
-  : null);
+const getAPI = () =>
+  typeof window !== "undefined"
+    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    : null;
 
-export class SpeechEngine {
-  private recognition: any = null;
-  private listeners: Set<(state: SpeechState) => void> = new Set();
-  private state: SpeechState;
-  private audioContext: AudioContext | null = null;
-  private analyser: AnalyserNode | null = null;
-  private micStream: MediaStream | null = null;
-  private animationId: number = 0;
-  private restartTimeout: any = null;
-  private _shouldListen = false;
+export function useSpeechRecognition() {
+  const [state, setState] = useState<SpeechState>({
+    isListening: false,
+    isSupported: !!getAPI(),
+    transcript: "",
+    interimTranscript: "",
+    error: null,
+    audioLevel: 0,
+    permission: "unknown",
+  });
 
-  constructor() {
-    this.state = {
-      isListening: false,
-      isSupported: !!SpeechRecognitionAPI,
-      transcript: "",
-      interimTranscript: "",
-      error: null,
-      audioLevel: 0,
-      permission: "unknown",
-    };
+  const recognitionRef = useRef<any>(null);
+  const shouldListenRef = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const animFrameRef = useRef<number>(0);
+  const restartTimerRef = useRef<any>(null);
 
-    if (SpeechRecognitionAPI) {
-      this.buildRecognition();
+  const patch = useCallback((partial: Partial<SpeechState>) => {
+    setState((prev) => ({ ...prev, ...partial }));
+  }, []);
+
+  const stopAudioLevel = useCallback(() => {
+    cancelAnimationFrame(animFrameRef.current);
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close(); } catch { /* ignore */ }
+      audioCtxRef.current = null;
     }
-  }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+    }
+    analyserRef.current = null;
+  }, []);
 
-  private buildRecognition() {
-    this.recognition = new SpeechRecognitionAPI();
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true;
-    this.recognition.lang = "en-US";
-    this.recognition.maxAlternatives = 1;
+  const startAudioLevel = useCallback(async () => {
+    stopAudioLevel();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+      const ctx = new AudioContext();
+      audioCtxRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyserRef.current = analyser;
 
-    this.recognition.onresult = (event: any) => {
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const tick = () => {
+        if (!analyserRef.current || !shouldListenRef.current) return;
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        patch({ audioLevel: Math.min(avg / 128, 1) });
+        animFrameRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch {
+      // visualizer is optional
+    }
+  }, [patch, stopAudioLevel]);
+
+  const createRecognition = useCallback(() => {
+    const API = getAPI();
+    if (!API) return null;
+
+    const r = new API();
+    r.continuous = true;
+    r.interimResults = true;
+    r.lang = "en-US";
+
+    r.onresult = (event: any) => {
       let final = "";
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -65,277 +104,167 @@ export class SpeechEngine {
           interim += text;
         }
       }
-      if (final) {
-        this.state.transcript += final;
-      }
-      this.state.interimTranscript = interim;
-      this.state.error = null;
-      this.emit();
+      setState((prev) => ({
+        ...prev,
+        transcript: final ? prev.transcript + final : prev.transcript,
+        interimTranscript: interim,
+        error: null,
+      }));
     };
 
-    this.recognition.onerror = (event: any) => {
-      // no-speech happens between sentences or on silence — ignore and restart
+    r.onerror = (event: any) => {
       if (event.error === "no-speech" || event.error === "audio-capture") {
-        if (this._shouldListen) {
-          this.scheduleRestart(300);
+        if (shouldListenRef.current) {
+          clearTimeout(restartTimerRef.current);
+          restartTimerRef.current = setTimeout(() => {
+            if (shouldListenRef.current && recognitionRef.current) {
+              try { recognitionRef.current.stop(); } catch { /* ignore */ }
+              setTimeout(() => {
+                if (shouldListenRef.current && recognitionRef.current) {
+                  try { recognitionRef.current.start(); } catch { /* ignore */ }
+                }
+              }, 50);
+            }
+          }, 300);
         }
         return;
       }
-
-      if (event.error === "aborted") {
-        // User or code stopped it intentionally
-        return;
-      }
+      if (event.error === "aborted") return;
 
       let msg = "Speech recognition error";
       switch (event.error) {
-        case "not-allowed": msg = "Microphone access denied. Please allow mic in browser settings."; break;
-        case "network": msg = "Network error — check your connection."; break;
+        case "not-allowed": msg = "Microphone access denied. Allow mic in your browser settings."; break;
+        case "network": msg = "Network error — speech service offline."; break;
         case "service-not-allowed": msg = "Speech service not available."; break;
         default: msg = `Error: ${event.error}`;
       }
 
-      this.state.error = msg;
-      this.state.isListening = false;
-      this._shouldListen = false;
-      this.stopAudioLevel();
-      this.emit();
+      shouldListenRef.current = false;
+      stopAudioLevel();
+      patch({ isListening: false, error: msg });
     };
 
-    this.recognition.onend = () => {
-      // Chrome stops after ~60s even with continuous:true — auto-restart
-      if (this._shouldListen) {
-        this.scheduleRestart(150);
-      } else {
-        this.state.isListening = false;
-        this.state.interimTranscript = "";
-        this.stopAudioLevel();
-        this.emit();
-      }
-    };
-
-    this.recognition.onstart = () => {
-      this.state.isListening = true;
-      this.state.error = null;
-      this.emit();
-    };
-  }
-
-  private scheduleRestart(delayMs: number) {
-    clearTimeout(this.restartTimeout);
-    this.restartTimeout = setTimeout(() => {
-      if (this._shouldListen) {
-        try {
-          this.recognition.stop();
-        } catch {
-          // ignore
-        }
-        setTimeout(() => {
-          if (this._shouldListen) {
-            try {
-              this.recognition.start();
-            } catch {
-              this.state.error = "Failed to restart microphone";
-              this.state.isListening = false;
-              this._shouldListen = false;
-              this.stopAudioLevel();
-              this.emit();
-            }
+    r.onend = () => {
+      if (shouldListenRef.current) {
+        // Chrome auto-stops after ~60s — restart
+        clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = setTimeout(() => {
+          if (shouldListenRef.current && recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch { /* ignore */ }
+            setTimeout(() => {
+              if (shouldListenRef.current && recognitionRef.current) {
+                try { recognitionRef.current.start(); } catch {
+                  shouldListenRef.current = false;
+                  stopAudioLevel();
+                  patch({ isListening: false, error: "Failed to restart mic" });
+                }
+              }
+            }, 50);
           }
-        }, 50);
+        }, 150);
+      } else {
+        stopAudioLevel();
+        patch({ isListening: false, interimTranscript: "", audioLevel: 0 });
       }
-    }, delayMs);
-  }
+    };
 
-  subscribe(callback: (state: SpeechState) => void) {
-    this.listeners.add(callback);
-    callback({ ...this.state });
-    return () => { this.listeners.delete(callback); };
-  }
+    r.onstart = () => {
+      patch({ isListening: true, error: null });
+    };
 
-  private emit() {
-    const s = { ...this.state };
-    this.listeners.forEach((cb) => cb(s));
-  }
+    return r;
+  }, [patch, stopAudioLevel]);
 
-  async requestPermission(): Promise<boolean> {
+  const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.state.permission = "denied";
-      this.emit();
+      patch({ permission: "denied", error: "getUserMedia not supported" });
       return false;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.state.permission = "granted";
       stream.getTracks().forEach((t) => t.stop());
-      this.emit();
+      patch({ permission: "granted", error: null });
       return true;
     } catch (err: any) {
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-        this.state.permission = "denied";
-        this.state.error = "Microphone access denied. Click the lock icon in your address bar and allow microphone.";
+        patch({ permission: "denied", error: "Microphone access denied. Click the lock icon in your address bar and allow microphone." });
       } else if (err.name === "NotFoundError") {
-        this.state.error = "No microphone found on this device.";
+        patch({ error: "No microphone found on this device." });
       } else {
-        this.state.error = `Microphone error: ${err.message}`;
+        patch({ error: `Microphone error: ${err.message}` });
       }
-      this.emit();
       return false;
     }
-  }
+  }, [patch]);
 
-  async start() {
-    if (!SpeechRecognitionAPI) {
-      this.state.error = "Speech recognition not supported. Use Chrome, Edge, or Safari.";
-      this.emit();
+  const start = useCallback(async () => {
+    const API = getAPI();
+    if (!API) {
+      patch({ error: "Speech recognition not supported. Use Chrome, Edge, or Safari." });
       return;
     }
 
-    // Request explicit mic permission first
-    if (this.state.permission !== "granted") {
-      const ok = await this.requestPermission();
+    if (state.permission !== "granted") {
+      const ok = await requestPermission();
       if (!ok) return;
     }
 
-    // If already listening, don't duplicate
-    if (this.state.isListening) return;
+    if (state.isListening) return;
 
-    this._shouldListen = true;
-    this.state.error = null;
-    this.state.interimTranscript = "";
+    shouldListenRef.current = true;
+    const r = createRecognition();
+    if (!r) return;
+    recognitionRef.current = r;
 
-    // Rebuild recognition to avoid stale state in some browsers
-    this.buildRecognition();
+    patch({ transcript: "", interimTranscript: "", error: null });
+    startAudioLevel();
 
     try {
-      this.recognition.start();
-      this.startAudioLevel();
-      this.emit();
+      r.start();
     } catch (err: any) {
-      this.state.error = err.message || "Failed to start recording";
-      this.state.isListening = false;
-      this._shouldListen = false;
-      this.emit();
+      shouldListenRef.current = false;
+      stopAudioLevel();
+      patch({ error: err.message || "Failed to start recording" });
     }
-  }
-
-  stop() {
-    this._shouldListen = false;
-    clearTimeout(this.restartTimeout);
-    this.stopAudioLevel();
-    if (this.recognition) {
-      try {
-        this.recognition.stop();
-      } catch {
-        // ignore
-      }
-      try {
-        this.recognition.abort();
-      } catch {
-        // ignore
-      }
-    }
-    this.state.isListening = false;
-    this.state.interimTranscript = "";
-    this.state.audioLevel = 0;
-    this.emit();
-  }
-
-  getFinalTranscript(): string {
-    return (this.state.transcript + this.state.interimTranscript).trim();
-  }
-
-  clear() {
-    this.state.transcript = "";
-    this.state.interimTranscript = "";
-    this.state.error = null;
-    this.emit();
-  }
-
-  private async startAudioLevel() {
-    this.stopAudioLevel();
-    try {
-      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.audioContext = new AudioContext();
-      const source = this.audioContext.createMediaStreamSource(this.micStream);
-      this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 256;
-      source.connect(this.analyser);
-
-      const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-      const tick = () => {
-        if (!this.analyser || !this._shouldListen) return;
-        this.analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        const avg = sum / dataArray.length;
-        this.state.audioLevel = Math.min(avg / 128, 1);
-        this.emit();
-        this.animationId = requestAnimationFrame(tick);
-      };
-      tick();
-    } catch {
-      // Audio level is optional
-    }
-  }
-
-  private stopAudioLevel() {
-    cancelAnimationFrame(this.animationId);
-    if (this.audioContext) {
-      try { this.audioContext.close(); } catch { /* ignore */ }
-      this.audioContext = null;
-    }
-    if (this.micStream) {
-      this.micStream.getTracks().forEach((t) => t.stop());
-      this.micStream = null;
-    }
-    this.analyser = null;
-    this.state.audioLevel = 0;
-  }
-}
-
-// Singleton
-let _engine: SpeechEngine | null = null;
-function getEngine(): SpeechEngine {
-  if (!_engine) _engine = new SpeechEngine();
-  return _engine;
-}
-
-export function useSpeechRecognition() {
-  const [state, setState] = useState<SpeechState>({
-    isListening: false,
-    isSupported: false,
-    transcript: "",
-    interimTranscript: "",
-    error: null,
-    audioLevel: 0,
-    permission: "unknown",
-  });
-
-  const engineRef = useRef<SpeechEngine | null>(null);
-
-  useEffect(() => {
-    const engine = getEngine();
-    engineRef.current = engine;
-    return engine.subscribe(setState);
-  }, []);
-
-  const start = useCallback(() => {
-    getEngine().start();
-  }, []);
+  }, [state.permission, state.isListening, patch, requestPermission, createRecognition, startAudioLevel, stopAudioLevel]);
 
   const stop = useCallback(() => {
-    getEngine().stop();
-  }, []);
+    shouldListenRef.current = false;
+    clearTimeout(restartTimerRef.current);
+    stopAudioLevel();
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch { /* ignore */ }
+      try { recognitionRef.current.abort(); } catch { /* ignore */ }
+    }
+    patch({ isListening: false, interimTranscript: "", audioLevel: 0 });
+  }, [patch, stopAudioLevel]);
 
   const clear = useCallback(() => {
-    getEngine().clear();
-  }, []);
+    patch({ transcript: "", interimTranscript: "", error: null });
+  }, [patch]);
 
   const getFinal = useCallback(() => {
-    return getEngine().getFinalTranscript();
-  }, []);
+    return (state.transcript + state.interimTranscript).trim();
+  }, [state.transcript, state.interimTranscript]);
 
-  return { ...state, start, stop, clear, getFinal };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      shouldListenRef.current = false;
+      clearTimeout(restartTimerRef.current);
+      stopAudioLevel();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch { /* ignore */ }
+      }
+    };
+  }, [stopAudioLevel]);
+
+  return {
+    ...state,
+    start,
+    stop,
+    clear,
+    getFinal,
+  };
 }
 

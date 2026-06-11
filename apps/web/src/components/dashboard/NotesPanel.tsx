@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search, Wand2, Zap, Tag, DollarSign, Calendar, User, Briefcase, Mail as MailIcon, Phone as PhoneIcon, AlertCircle } from "lucide-react";
 import { api, Note, NoteType, Contact, Deal } from "@/lib/api";
 import { analyzeNote, cognizantEdit, AiInsights } from "@/lib/ai-notes";
@@ -266,6 +266,7 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
   const [fetching, setFetching] = useState(true);
   const [insights, setInsights] = useState<AiInsights | null>(null);
   const speech = useSpeechRecognition();
+  const preRecordRef = useRef("");
 
   useEffect(() => {
     Promise.all([
@@ -291,16 +292,15 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
     return () => clearTimeout(timer);
   }, [content]);
 
-  // When speech stops, auto-append transcript to content
+  // Stream interim speech into textarea live while recording
   useEffect(() => {
-    if (!speech.isListening && speech.transcript) {
-      const full = speech.getFinal();
-      if (full) {
-        setContent((prev) => (prev ? prev + " " + full : full).trim());
-        speech.clear();
-      }
+    if (speech.isListening) {
+      const live = speech.transcript + speech.interimTranscript;
+      const base = preRecordRef.current;
+      const next = base ? base + (live ? " " + live : "") : live;
+      setContent(next);
     }
-  }, [speech.isListening]);
+  }, [speech.interimTranscript, speech.transcript, speech.isListening]);
 
 
   const handleCognizantEdit = () => {
@@ -400,7 +400,9 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                           onClick={() => {
                             if (speech.isListening) {
                               speech.stop();
+                              preRecordRef.current = "";
                             } else {
+                              preRecordRef.current = content;
                               speech.start();
                             }
                           }}
