@@ -65,6 +65,7 @@ export function useSpeechRecognition() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const animFrameRef = useRef<number>(0);
   const restartTimerRef = useRef<any>(null);
+  const noSpeechCountRef = useRef(0);
 
   const patch = useCallback((partial: Partial<SpeechState>) => {
     setState((prev) => ({ ...prev, ...partial }));
@@ -155,7 +156,10 @@ export function useSpeechRecognition() {
           interim += text;
         }
       }
-      if (final) addLog(`Final: "${final.trim()}"`);
+      if (final) {
+        noSpeechCountRef.current = 0; // reset counter on success
+        addLog(`Final: "${final.trim()}"`);
+      }
       if (interim) addLog(`Interim: "${interim.trim()}"`);
       setState((prev) => ({
         ...prev,
@@ -167,20 +171,23 @@ export function useSpeechRecognition() {
 
     r.onerror = (event: any) => {
       addLog(`onerror: ${event.error}`);
-      if (event.error === "no-speech" || event.error === "audio-capture") {
-        if (shouldListenRef.current) {
-          clearTimeout(restartTimerRef.current);
-          restartTimerRef.current = setTimeout(() => {
-            if (shouldListenRef.current && recognitionRef.current) {
-              try { recognitionRef.current.stop(); } catch { /* ignore */ }
-              setTimeout(() => {
-                if (shouldListenRef.current && recognitionRef.current) {
-                  try { recognitionRef.current.start(); } catch { /* ignore */ }
-                }
-              }, 50);
-            }
-          }, 300);
+      if (event.error === "no-speech") {
+        noSpeechCountRef.current += 1;
+        addLog(`no-speech count: ${noSpeechCountRef.current}`);
+        if (noSpeechCountRef.current >= 5) {
+          shouldListenRef.current = false;
+          stopAudioLevel();
+          patch({
+            isListening: false,
+            error: "No speech detected 5 times. Speech API uses your OS default microphone (not the selected one). Make sure your OS default mic is working and not muted.",
+          });
         }
+        // Let onend handle the single restart; do NOT duplicate restart here
+        return;
+      }
+      if (event.error === "audio-capture") {
+        addLog("audio-capture error — mic may be in use or unavailable");
+        // Let onend handle restart
         return;
       }
       if (event.error === "aborted") return;
@@ -200,23 +207,22 @@ export function useSpeechRecognition() {
 
     r.onend = () => {
       addLog("onend fired");
-      if (shouldListenRef.current) {
+      if (shouldListenRef.current && noSpeechCountRef.current < 5) {
         clearTimeout(restartTimerRef.current);
         restartTimerRef.current = setTimeout(() => {
           if (shouldListenRef.current && recognitionRef.current) {
-            try { recognitionRef.current.stop(); } catch { /* ignore */ }
-            setTimeout(() => {
-              if (shouldListenRef.current && recognitionRef.current) {
-                try { recognitionRef.current.start(); } catch {
-                  shouldListenRef.current = false;
-                  stopAudioLevel();
-                  patch({ isListening: false, error: "Failed to restart mic" });
-                }
-              }
-            }, 50);
+            try {
+              recognitionRef.current.start();
+              addLog("Restarted after onend");
+            } catch (err: any) {
+              addLog(`Restart failed: ${err.message}`);
+              shouldListenRef.current = false;
+              stopAudioLevel();
+              patch({ isListening: false, error: "Failed to restart mic" });
+            }
           }
-        }, 150);
-      } else {
+        }, 250);
+      } else if (!shouldListenRef.current) {
         stopAudioLevel();
         patch({ isListening: false, interimTranscript: "", audioLevel: 0, audioBars: new Array(16).fill(0) });
       }
@@ -277,7 +283,9 @@ export function useSpeechRecognition() {
     if (!r) return;
     recognitionRef.current = r;
 
+    noSpeechCountRef.current = 0;
     addLog("Starting recognition...");
+    addLog("Note: Speech API uses OS default mic, not selected device");
     patch({ transcript: "", interimTranscript: "", error: null, log: [] });
     await startAudioLevel(state.selectedDeviceId || undefined);
 

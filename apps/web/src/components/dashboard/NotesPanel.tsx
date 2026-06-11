@@ -464,6 +464,9 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                       </select>
                     </div>
                   )}
+                  <div className="mb-2 p-2 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-700">
+                    <span className="font-semibold">Note:</span> Speech transcription always uses your OS default microphone. The selector above only affects the audio visualizer and mic test.
+                  </div>
 
                   {/* Mic test playback */}
                   {speech.testPlaybackUrl && (
