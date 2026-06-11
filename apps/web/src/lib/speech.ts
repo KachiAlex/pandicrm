@@ -65,7 +65,7 @@ export function useSpeechRecognition() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const animFrameRef = useRef<number>(0);
   const restartTimerRef = useRef<any>(null);
-  const noSpeechCountRef = useRef(0);
+  const transcriptRef = useRef("");
 
   const patch = useCallback((partial: Partial<SpeechState>) => {
     setState((prev) => ({ ...prev, ...partial }));
@@ -135,14 +135,16 @@ export function useSpeechRecognition() {
     }
   }, [patch, state.selectedDeviceId, addLog]);
 
-  const createRecognition = useCallback(() => {
+  const createAndStart = useCallback(() => {
     const API = getAPI();
-    if (!API) return null;
+    if (!API) return;
+    if (!shouldListenRef.current) return;
 
     const r = new API();
     r.continuous = true;
     r.interimResults = true;
     r.lang = "en-US";
+    r.maxAlternatives = 1;
 
     r.onresult = (event: any) => {
       let final = "";
@@ -157,13 +159,13 @@ export function useSpeechRecognition() {
         }
       }
       if (final) {
-        noSpeechCountRef.current = 0; // reset counter on success
+        transcriptRef.current = transcriptRef.current + final;
         addLog(`Final: "${final.trim()}"`);
       }
       if (interim) addLog(`Interim: "${interim.trim()}"`);
       setState((prev) => ({
         ...prev,
-        transcript: final ? prev.transcript + final : prev.transcript,
+        transcript: transcriptRef.current,
         interimTranscript: interim,
         error: null,
       }));
@@ -172,22 +174,11 @@ export function useSpeechRecognition() {
     r.onerror = (event: any) => {
       addLog(`onerror: ${event.error}`);
       if (event.error === "no-speech") {
-        noSpeechCountRef.current += 1;
-        addLog(`no-speech count: ${noSpeechCountRef.current}`);
-        if (noSpeechCountRef.current >= 5) {
-          shouldListenRef.current = false;
-          stopAudioLevel();
-          patch({
-            isListening: false,
-            error: "No speech detected 5 times. Speech API uses your OS default microphone (not the selected one). Make sure your OS default mic is working and not muted.",
-          });
-        }
-        // Let onend handle the single restart; do NOT duplicate restart here
-        return;
+        addLog("no-speech — will restart on onend");
+        return; // onend will handle restart
       }
       if (event.error === "audio-capture") {
-        addLog("audio-capture error — mic may be in use or unavailable");
-        // Let onend handle restart
+        addLog("audio-capture — will restart on onend");
         return;
       }
       if (event.error === "aborted") return;
@@ -207,22 +198,15 @@ export function useSpeechRecognition() {
 
     r.onend = () => {
       addLog("onend fired");
-      if (shouldListenRef.current && noSpeechCountRef.current < 5) {
+      if (shouldListenRef.current) {
+        // Create fresh instance immediately to minimize audio loss
         clearTimeout(restartTimerRef.current);
         restartTimerRef.current = setTimeout(() => {
-          if (shouldListenRef.current && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-              addLog("Restarted after onend");
-            } catch (err: any) {
-              addLog(`Restart failed: ${err.message}`);
-              shouldListenRef.current = false;
-              stopAudioLevel();
-              patch({ isListening: false, error: "Failed to restart mic" });
-            }
+          if (shouldListenRef.current) {
+            createAndStart();
           }
-        }, 250);
-      } else if (!shouldListenRef.current) {
+        }, 50);
+      } else {
         stopAudioLevel();
         patch({ isListening: false, interimTranscript: "", audioLevel: 0, audioBars: new Array(16).fill(0) });
       }
@@ -233,12 +217,17 @@ export function useSpeechRecognition() {
       patch({ isListening: true, error: null });
     };
 
-    r.onsoundstart = () => addLog("onsoundstart: sound detected");
-    r.onsoundend = () => addLog("onsoundend: sound stopped");
-    r.onspeechstart = () => addLog("onspeechstart: speech detected");
-    r.onspeechend = () => addLog("onspeechend: speech stopped");
+    r.onsoundstart = () => addLog("onsoundstart");
+    r.onsoundend = () => addLog("onsoundend");
+    r.onspeechstart = () => addLog("onspeechstart");
+    r.onspeechend = () => addLog("onspeechend");
 
-    return r;
+    recognitionRef.current = r;
+    try {
+      r.start();
+    } catch (err: any) {
+      addLog(`start() failed: ${err.message}`);
+    }
   }, [patch, stopAudioLevel, addLog]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -279,25 +268,14 @@ export function useSpeechRecognition() {
     if (state.isListening) return;
 
     shouldListenRef.current = true;
-    const r = createRecognition();
-    if (!r) return;
-    recognitionRef.current = r;
-
-    noSpeechCountRef.current = 0;
+    transcriptRef.current = "";
     addLog("Starting recognition...");
     addLog("Note: Speech API uses OS default mic, not selected device");
     patch({ transcript: "", interimTranscript: "", error: null, log: [] });
     await startAudioLevel(state.selectedDeviceId || undefined);
 
-    try {
-      r.start();
-    } catch (err: any) {
-      addLog(`start() failed: ${err.message}`);
-      shouldListenRef.current = false;
-      stopAudioLevel();
-      patch({ error: err.message || "Failed to start recording" });
-    }
-  }, [state.permission, state.isListening, state.selectedDeviceId, patch, requestPermission, createRecognition, startAudioLevel, stopAudioLevel, addLog]);
+    createAndStart();
+  }, [state.permission, state.isListening, state.selectedDeviceId, patch, requestPermission, createAndStart, startAudioLevel, addLog]);
 
   const stop = useCallback(() => {
     shouldListenRef.current = false;
