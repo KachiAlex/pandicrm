@@ -21,16 +21,29 @@ export const {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
 
-        if (!email || !password) return null;
+        if (!email || !password) {
+          console.error("[AUTH] Missing email or password");
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
         });
 
-        if (!user || !user.password) return null;
+        if (!user) {
+          console.error("[AUTH] User not found:", email);
+          return null;
+        }
+        if (!user.password) {
+          console.error("[AUTH] User has no password:", email);
+          return null;
+        }
 
         const valid = await bcrypt.compare(password, user.password);
-        if (!valid) return null;
+        if (!valid) {
+          console.error("[AUTH] Password mismatch for:", email);
+          return null;
+        }
 
         return {
           id: user.id,
