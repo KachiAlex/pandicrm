@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search, Wand2, Zap, Tag, DollarSign, Calendar, User, Briefcase, Mail as MailIcon, Phone as PhoneIcon, AlertCircle } from "lucide-react";
+import { Sparkles, Loader2, Plus, X, Mic, FileText, Phone, Mail, MessageSquare, Pencil, Trash2, Search, Wand2, Zap, Tag, DollarSign, Calendar, User, Briefcase, Mail as MailIcon, Phone as PhoneIcon, AlertCircle, Settings, Volume2 } from "lucide-react";
 import { api, Note, NoteType, Contact, Deal } from "@/lib/api";
 import { analyzeNote, cognizantEdit, AiInsights } from "@/lib/ai-notes";
 import { useSpeechRecognition } from "@/lib/speech";
@@ -393,7 +393,7 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className={labelClass}>Content *</label>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {speech.isSupported && speech.permission !== "denied" && (
                         <button
                           type="button"
@@ -416,6 +416,25 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                           {speech.isListening ? "Stop" : "Record"}
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={speech.enumerateDevices}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-200 hover:border-pk-300 transition-colors"
+                        title="Refresh microphone list"
+                      >
+                        <Settings className="w-3 h-3" />
+                        Audio Setup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={speech.testMic}
+                        disabled={speech.isTestingMic}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                        title="Record 3 seconds and play back"
+                      >
+                        {speech.isTestingMic ? <Loader2 className="w-3 h-3 animate-spin" /> : <Volume2 className="w-3 h-3" />}
+                        Test Mic
+                      </button>
                       {content.trim().length > 20 && (
                         <button
                           type="button"
@@ -430,29 +449,66 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                     </div>
                   </div>
 
-                  {/* Recording status with audio level */}
+                  {/* Audio Setup Panel */}
+                  {speech.devices.length > 0 && (
+                    <div className="mb-2 p-2 rounded-xl bg-gray-50 border border-gray-200 flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-gray-500 uppercase whitespace-nowrap">Mic:</span>
+                      <select
+                        value={speech.selectedDeviceId || ""}
+                        onChange={(e) => speech.selectDevice(e.target.value)}
+                        className="flex-1 min-w-0 text-xs px-2 py-1 rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-pk-500"
+                      >
+                        {speech.devices.map((d) => (
+                          <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Mic test playback */}
+                  {speech.testPlaybackUrl && (
+                    <div className="mb-2 p-3 rounded-xl bg-blue-50 border border-blue-200">
+                      <p className="text-[10px] font-semibold text-blue-600 mb-1.5">Mic Test Playback</p>
+                      <audio src={speech.testPlaybackUrl} controls className="w-full h-8" />
+                    </div>
+                  )}
+
+                  {/* Recording status with multi-bar visualization */}
                   {speech.isListening && (
                     <div className="mb-2 p-3 rounded-xl bg-gray-50 border border-gray-200">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Recording</span>
-                        <span className="text-[10px] text-gray-400 ml-auto">Speak clearly...</span>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Listening</span>
+                        <span className="text-[10px] text-gray-400 ml-auto">
+                          {speech.audioLevel > 0.05 ? "Sound detected" : "Waiting for sound..."}
+                        </span>
                       </div>
-                      {/* Audio level bar */}
-                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-                        <div
-                          className="h-full rounded-full transition-all duration-100"
-                          style={{
-                            width: `${Math.round(speech.audioLevel * 100)}%`,
-                            background: speech.audioLevel > 0.3
-                              ? "linear-gradient(90deg, #ff1a97, #b80055)"
-                              : "#9ca3af",
-                          }}
-                        />
+                      {/* Multi-bar audio visualizer */}
+                      <div className="flex items-end gap-[2px] h-8 mb-2">
+                        {speech.audioBars.map((bar, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-sm transition-all duration-75"
+                            style={{
+                              height: `${Math.max(bar * 100, 8)}%`,
+                              background: bar > 0.3
+                                ? "linear-gradient(to top, #ff1a97, #b80055)"
+                                : "#d1d5db",
+                            }}
+                          />
+                        ))}
                       </div>
-                      <p className="text-sm text-gray-700 italic min-h-[20px]">
-                        {speech.interimTranscript || speech.transcript || "Listening..."}
-                      </p>
+                      {/* Live transcript */}
+                      <div className="bg-white rounded-lg border border-gray-200 p-2 min-h-[60px]">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Live Transcript</p>
+                        <p className="text-sm text-gray-700 min-h-[20px]">
+                          {speech.transcript}
+                          <span className="text-gray-400">{speech.interimTranscript}</span>
+                          {!speech.transcript && !speech.interimTranscript && (
+                            <span className="text-gray-300 italic">Say something...</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -470,6 +526,18 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                     <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />{speech.error}
                     </p>
+                  )}
+
+                  {/* Debug log */}
+                  {speech.log.length > 0 && (
+                    <div className="mt-2 p-2 rounded-xl bg-gray-900 border border-gray-700">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Debug Log</p>
+                      <div className="max-h-[100px] overflow-y-auto space-y-0.5">
+                        {speech.log.map((line, i) => (
+                          <p key={i} className="text-[10px] font-mono text-green-400">{line}</p>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
