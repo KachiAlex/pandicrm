@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download } from "lucide-react";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload } from "lucide-react";
 import { api, Account, Contact, Deal } from "@/lib/api";
 import { exportAccounts, exportContacts, exportDeals } from "@/lib/csv";
 
@@ -9,6 +9,7 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
@@ -92,6 +93,15 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
               <Plus className="w-3.5 h-3.5" />New {typeLabel}
             </button>
           )}
+          {type === "contacts" && (
+            <button
+              className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
+              onClick={() => setShowImport(true)}
+              title="Import contacts from CSV"
+            >
+              <Upload className="w-3.5 h-3.5" />Import
+            </button>
+          )}
           <button
             className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
             onClick={() => {
@@ -167,6 +177,9 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
       )}
       {showCreate && type === "contacts" && (
         <CreateContactModal workspaceId={workspaceId} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />
+      )}
+      {showImport && type === "contacts" && (
+        <ImportContactsModal workspaceId={workspaceId} onClose={() => setShowImport(false)} onImported={() => { setShowImport(false); setRefreshKey((k) => k + 1); }} />
       )}
       {selectedItem && type === "accounts" && (
         <AccountDetailModal account={selectedItem as Account} onClose={() => setSelectedItem(null)} onMutated={() => setRefreshKey((k) => k + 1)} />
@@ -387,6 +400,128 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
             </div>
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
               {loading ? "Creating..." : "Create Contact"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ImportContactsModal({ workspaceId, onClose, onImported }: { workspaceId: string; onClose: () => void; onImported: () => void }) {
+  const [csvText, setCsvText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<{ created: number; skipped: { row: number; reason: string }[] } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleFile = (file: File) => {
+    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+      setError("Please upload a CSV file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = String(e.target?.result || "");
+      setCsvText(text);
+      setError("");
+      setResult(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!csvText.trim()) { setError("Please paste or upload a CSV file"); return; }
+    setLoading(true);
+    try {
+      const data = await api.contacts.import(workspaceId, csvText);
+      setResult(data);
+      if (data.created > 0) {
+        setTimeout(() => onImported(), 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || "Import failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">Import Contacts</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+        </div>
+
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+
+        {result ? (
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+              <p className="font-semibold">Import complete</p>
+              <p>{result.created} contact(s) created</p>
+              {result.skipped.length > 0 && <p>{result.skipped.length} row(s) skipped</p>}
+            </div>
+            {result.skipped.length > 0 && (
+              <div className="max-h-[200px] overflow-y-auto space-y-1">
+                {result.skipped.map((s, i) => (
+                  <div key={i} className="text-xs text-gray-500">Row {s.row}: {s.reason}</div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Close</button>
+              <button onClick={() => { setResult(null); setCsvText(""); }} className="flex-1 btn-p justify-center py-2.5 text-sm">Import Another</button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div
+              className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${dragOver ? "border-pk-500 bg-pk-50" : "border-gray-200 bg-gray-50"}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }}
+            >
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-1">Drag and drop a CSV file here</p>
+              <p className="text-xs text-gray-400 mb-2">or</p>
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-600 hover:border-pk-500 cursor-pointer transition-colors">
+                Browse files
+                <input type="file" accept=".csv" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); }} />
+              </label>
+            </div>
+
+            <div className="relative">
+              <textarea
+                value={csvText}
+                onChange={(e) => { setCsvText(e.target.value); setError(""); }}
+                placeholder={`First Name,Last Name,Email,Phone,Company,Position,Website\nJohn,Doe,john@acme.com,+1234567890,Acme Inc,CEO,acme.com`}
+                rows={8}
+                className={`${selClass} font-mono text-xs resize-y`}
+              />
+              {csvText && (
+                <button type="button" onClick={() => setCsvText("")} className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-100 text-gray-400">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <a
+              href="/sample-contacts.csv"
+              download
+              className="text-xs text-pk-600 hover:text-pk-700 underline"
+            >
+              Download sample CSV
+            </a>
+
+            <button type="submit" disabled={loading || !csvText.trim()} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
+              {loading ? "Importing..." : "Import Contacts"}
             </button>
           </form>
         )}

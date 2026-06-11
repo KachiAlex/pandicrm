@@ -33,6 +33,11 @@ export const api = {
     update: (id: string, data: Partial<Contact>) =>
       fetchJSON<Contact>(`/api/contacts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/contacts/${id}`, { method: "DELETE" }),
+    import: (workspaceId: string, csvText: string) =>
+      fetchJSON<{ created: number; skipped: { row: number; reason: string }[]; contacts: any[] }>("/api/contacts/import", {
+        method: "POST",
+        body: JSON.stringify({ workspaceId, csvText }),
+      }),
   },
   deals: {
     list: (workspaceId: string) =>
