@@ -531,17 +531,6 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
                     </p>
                   )}
 
-                  {/* Debug log */}
-                  {speech.log.length > 0 && (
-                    <div className="mt-2 p-2 rounded-xl bg-gray-900 border border-gray-700">
-                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Debug Log</p>
-                      <div className="max-h-[100px] overflow-y-auto space-y-0.5">
-                        {speech.log.map((line, i) => (
-                          <p key={i} className="text-[10px] font-mono text-green-400">{line}</p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

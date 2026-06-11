@@ -24,21 +24,12 @@ export interface SpeechState {
   selectedDeviceId: string | null;
   isTestingMic: boolean;
   testPlaybackUrl: string | null;
-  log: string[];
 }
 
 const getAPI = () =>
   typeof window !== "undefined"
     ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     : null;
-
-function logEntry(logs: string[], msg: string): string[] {
-  const time = new Date().toLocaleTimeString();
-  const line = `[${time}] ${msg}`;
-  // eslint-disable-next-line no-console
-  console.log("[Speech]", msg);
-  return [line, ...logs].slice(0, 50);
-}
 
 export function useSpeechRecognition() {
   const [state, setState] = useState<SpeechState>({
@@ -54,7 +45,6 @@ export function useSpeechRecognition() {
     selectedDeviceId: null,
     isTestingMic: false,
     testPlaybackUrl: null,
-    log: [],
   });
 
   const recognitionRef = useRef<any>(null);
@@ -69,10 +59,6 @@ export function useSpeechRecognition() {
 
   const patch = useCallback((partial: Partial<SpeechState>) => {
     setState((prev) => ({ ...prev, ...partial }));
-  }, []);
-
-  const addLog = useCallback((msg: string) => {
-    setState((prev) => ({ ...prev, log: logEntry(prev.log, msg) }));
   }, []);
 
   const stopAudioLevel = useCallback(() => {
@@ -115,9 +101,9 @@ export function useSpeechRecognition() {
       };
       tick();
     } catch (err: any) {
-      addLog(`Audio level error: ${err.message}`);
+      // no-op
     }
-  }, [patch, stopAudioLevel, addLog]);
+  }, [patch, stopAudioLevel]);
 
   const enumerateDevices = useCallback(async () => {
     try {
@@ -131,9 +117,9 @@ export function useSpeechRecognition() {
         patch({ selectedDeviceId: audioInputs[0].deviceId });
       }
     } catch (err: any) {
-      addLog(`Enumerate failed: ${err.message}`);
+      // no-op
     }
-  }, [patch, state.selectedDeviceId, addLog]);
+  }, [patch, state.selectedDeviceId]);
 
   const createAndStart = useCallback(() => {
     const API = getAPI();
@@ -160,9 +146,7 @@ export function useSpeechRecognition() {
       }
       if (final) {
         transcriptRef.current = transcriptRef.current + final;
-        addLog(`Final: "${final.trim()}"`);
       }
-      if (interim) addLog(`Interim: "${interim.trim()}"`);
       setState((prev) => ({
         ...prev,
         transcript: transcriptRef.current,
@@ -172,13 +156,10 @@ export function useSpeechRecognition() {
     };
 
     r.onerror = (event: any) => {
-      addLog(`onerror: ${event.error}`);
       if (event.error === "no-speech") {
-        addLog("no-speech — will restart on onend");
         return; // onend will handle restart
       }
       if (event.error === "audio-capture") {
-        addLog("audio-capture — will restart on onend");
         return;
       }
       if (event.error === "aborted") return;
@@ -197,7 +178,6 @@ export function useSpeechRecognition() {
     };
 
     r.onend = () => {
-      addLog("onend fired");
       if (shouldListenRef.current) {
         // Create fresh instance immediately to minimize audio loss
         clearTimeout(restartTimerRef.current);
@@ -213,22 +193,21 @@ export function useSpeechRecognition() {
     };
 
     r.onstart = () => {
-      addLog("onstart fired");
       patch({ isListening: true, error: null });
     };
 
-    r.onsoundstart = () => addLog("onsoundstart");
-    r.onsoundend = () => addLog("onsoundend");
-    r.onspeechstart = () => addLog("onspeechstart");
-    r.onspeechend = () => addLog("onspeechend");
+    r.onsoundstart = () => {};
+    r.onsoundend = () => {};
+    r.onspeechstart = () => {};
+    r.onspeechend = () => {};
 
     recognitionRef.current = r;
     try {
       r.start();
     } catch (err: any) {
-      addLog(`start() failed: ${err.message}`);
+      // no-op
     }
-  }, [patch, stopAudioLevel, addLog]);
+  }, [patch, stopAudioLevel]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -269,13 +248,11 @@ export function useSpeechRecognition() {
 
     shouldListenRef.current = true;
     transcriptRef.current = "";
-    addLog("Starting recognition...");
-    addLog("Note: Speech API uses OS default mic, not selected device");
-    patch({ transcript: "", interimTranscript: "", error: null, log: [] });
+    patch({ transcript: "", interimTranscript: "", error: null });
     await startAudioLevel(state.selectedDeviceId || undefined);
 
     createAndStart();
-  }, [state.permission, state.isListening, state.selectedDeviceId, patch, requestPermission, createAndStart, startAudioLevel, addLog]);
+  }, [state.permission, state.isListening, state.selectedDeviceId, patch, requestPermission, createAndStart, startAudioLevel]);
 
   const stop = useCallback(() => {
     shouldListenRef.current = false;
@@ -286,8 +263,8 @@ export function useSpeechRecognition() {
       try { recognitionRef.current.abort(); } catch { /* ignore */ }
     }
     patch({ isListening: false, interimTranscript: "", audioLevel: 0, audioBars: new Array(16).fill(0) });
-    addLog("Stopped by user");
-  }, [patch, stopAudioLevel, addLog]);
+    // no-op
+  }, [patch, stopAudioLevel]);
 
   const clear = useCallback(() => {
     patch({ transcript: "", interimTranscript: "", error: null });
@@ -299,13 +276,13 @@ export function useSpeechRecognition() {
 
   const selectDevice = useCallback((deviceId: string) => {
     patch({ selectedDeviceId: deviceId });
-    addLog(`Selected device: ${deviceId}`);
-  }, [patch, addLog]);
+    // no-op
+  }, [patch]);
 
   const testMic = useCallback(async () => {
     if (state.isTestingMic) return;
     patch({ isTestingMic: true, testPlaybackUrl: null, error: null });
-    addLog("Testing microphone...");
+    // no-op
     try {
       const constraints: MediaStreamConstraints = {
         audio: state.selectedDeviceId ? { deviceId: { exact: state.selectedDeviceId } } : true,
@@ -321,7 +298,7 @@ export function useSpeechRecognition() {
         const blob = new Blob(chunks, { type: "audio/webm" });
         const url = URL.createObjectURL(blob);
         patch({ testPlaybackUrl: url, isTestingMic: false });
-        addLog("Mic test recording ready");
+        // no-op
         stream.getTracks().forEach((t) => t.stop());
       };
       recorder.start();
@@ -330,9 +307,9 @@ export function useSpeechRecognition() {
       }, 3000);
     } catch (err: any) {
       patch({ isTestingMic: false, error: `Mic test failed: ${err.message}` });
-      addLog(`Mic test error: ${err.message}`);
+      // no-op
     }
-  }, [state.isTestingMic, state.selectedDeviceId, patch, addLog]);
+  }, [state.isTestingMic, state.selectedDeviceId, patch]);
 
   // Cleanup on unmount
   useEffect(() => {
