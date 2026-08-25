@@ -16,6 +16,11 @@ import {
   changePasswordSchema,
   registerSchema,
   importContactsSchema,
+  createEmailTemplateSchema,
+  updateEmailTemplateSchema,
+  createCampaignSchema,
+  updateCampaignSchema,
+  sendCampaignSchema,
   validateBody,
 } from "@/lib/validations";
 
@@ -342,5 +347,134 @@ describe("validateBody helper", () => {
     if (!result.success) {
       expect(result.error).toContain("name");
     }
+  });
+});
+
+describe("createEmailTemplateSchema", () => {
+  it("validates a valid template", () => {
+    const result = createEmailTemplateSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Welcome Email",
+      subject: "Welcome to PandiCRM",
+      htmlContent: "<p>Hello {{firstName}}</p>",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing workspaceId", () => {
+    const result = createEmailTemplateSchema.safeParse({
+      name: "Template",
+      subject: "Subject",
+      htmlContent: "<p>Hi</p>",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty htmlContent", () => {
+    const result = createEmailTemplateSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Template",
+      subject: "Subject",
+      htmlContent: "",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("updateEmailTemplateSchema", () => {
+  it("accepts partial update", () => {
+    const result = updateEmailTemplateSchema.safeParse({ name: "Updated" });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("createCampaignSchema", () => {
+  it("validates a valid campaign", () => {
+    const result = createCampaignSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Q4 Outreach",
+      subject: "Special Offer",
+      htmlContent: "<p>Hello {{firstName}}</p>",
+      senderName: "PandiCRM",
+      senderEmail: "noreply@pandacrm.com.ng",
+      contactIds: ["c1", "c2"],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid sender email", () => {
+    const result = createCampaignSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Campaign",
+      subject: "Subject",
+      htmlContent: "<p>Hi</p>",
+      senderName: "Test",
+      senderEmail: "not-an-email",
+      contactIds: ["c1"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty contactIds", () => {
+    const result = createCampaignSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Campaign",
+      subject: "Subject",
+      htmlContent: "<p>Hi</p>",
+      senderName: "Test",
+      senderEmail: "noreply@pandacrm.com.ng",
+      contactIds: [],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing senderName", () => {
+    const result = createCampaignSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Campaign",
+      subject: "Subject",
+      htmlContent: "<p>Hi</p>",
+      senderEmail: "noreply@pandacrm.com.ng",
+      contactIds: ["c1"],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts empty replyTo string", () => {
+    const result = createCampaignSchema.safeParse({
+      workspaceId: "ws-1",
+      name: "Campaign",
+      subject: "Subject",
+      htmlContent: "<p>Hi</p>",
+      senderName: "Test",
+      senderEmail: "noreply@pandacrm.com.ng",
+      replyTo: "",
+      contactIds: ["c1"],
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("updateCampaignSchema", () => {
+  it("accepts partial update", () => {
+    const result = updateCampaignSchema.safeParse({ name: "Updated" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid senderEmail", () => {
+    const result = updateCampaignSchema.safeParse({ senderEmail: "bad" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("sendCampaignSchema", () => {
+  it("validates with contact ids", () => {
+    const result = sendCampaignSchema.safeParse({ contactIds: ["c1", "c2"] });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty contactIds", () => {
+    const result = sendCampaignSchema.safeParse({ contactIds: [] });
+    expect(result.success).toBe(false);
   });
 });

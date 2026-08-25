@@ -154,6 +154,50 @@ export const importContactsSchema = z.object({
   csvText: z.string().min(1),
 });
 
+export const createEmailTemplateSchema = z.object({
+  workspaceId: z.string().min(1),
+  name: z.string().min(1).max(200),
+  subject: z.string().min(1).max(500),
+  htmlContent: z.string().min(1).max(500000),
+  textContent: z.string().max(500000).optional(),
+  variables: z.array(z.string().max(50)).max(50).optional(),
+});
+
+export const updateEmailTemplateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).max(500000).optional(),
+  textContent: z.string().max(500000).optional(),
+  variables: z.array(z.string().max(50)).max(50).optional(),
+});
+
+export const createCampaignSchema = z.object({
+  workspaceId: z.string().min(1),
+  templateId: z.string().optional(),
+  name: z.string().min(1).max(200),
+  subject: z.string().min(1).max(500),
+  htmlContent: z.string().min(1).max(500000),
+  textContent: z.string().max(500000).optional(),
+  senderName: z.string().min(1).max(100),
+  senderEmail: z.string().email().max(255),
+  replyTo: z.string().email().max(255).optional().or(z.literal("")),
+  contactIds: z.array(z.string()).min(1).max(10000),
+});
+
+export const updateCampaignSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  htmlContent: z.string().min(1).max(500000).optional(),
+  textContent: z.string().max(500000).optional(),
+  senderName: z.string().min(1).max(100).optional(),
+  senderEmail: z.string().email().max(255).optional(),
+  replyTo: z.string().email().max(255).optional().or(z.literal("")),
+});
+
+export const sendCampaignSchema = z.object({
+  contactIds: z.array(z.string()).min(1).max(10000),
+});
+
 export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) {

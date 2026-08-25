@@ -96,6 +96,29 @@ export const api = {
     update: (id: string, data: Partial<Workspace>) =>
       fetchJSON<Workspace>(`/api/workspaces/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   },
+  campaigns: {
+    list: (workspaceId: string) =>
+      fetchJSON<EmailCampaign[]>(`/api/campaigns?workspaceId=${workspaceId}`),
+    get: (id: string) => fetchJSON<EmailCampaign>(`/api/campaigns/${id}`),
+    create: (data: Partial<EmailCampaign> & { contactIds: string[] }) =>
+      fetchJSON<EmailCampaign>("/api/campaigns", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<EmailCampaign>) =>
+      fetchJSON<EmailCampaign>(`/api/campaigns/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/campaigns/${id}`, { method: "DELETE" }),
+    send: (id: string) =>
+      fetchJSON<{ sent: number; failed: number; total: number }>(`/api/campaigns/${id}/send`, { method: "POST", body: JSON.stringify({}) }),
+    stats: (id: string) => fetchJSON<CampaignStats>(`/api/campaigns/${id}/stats`),
+  },
+  emailTemplates: {
+    list: (workspaceId: string) =>
+      fetchJSON<EmailTemplate[]>(`/api/email-templates?workspaceId=${workspaceId}`),
+    get: (id: string) => fetchJSON<EmailTemplate>(`/api/email-templates/${id}`),
+    create: (data: Partial<EmailTemplate>) =>
+      fetchJSON<EmailTemplate>("/api/email-templates", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<EmailTemplate>) =>
+      fetchJSON<EmailTemplate>(`/api/email-templates/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/email-templates/${id}`, { method: "DELETE" }),
+  },
 };
 
 export interface User {
@@ -247,4 +270,73 @@ export interface Notification {
   entityId?: string;
   read: boolean;
   createdAt: string;
+}
+
+export interface EmailTemplate {
+  id: string;
+  workspaceId: string;
+  name: string;
+  subject: string;
+  htmlContent: string;
+  textContent?: string;
+  variables: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CampaignStatus = "draft" | "scheduled" | "sending" | "sent" | "failed";
+
+export interface EmailCampaign {
+  id: string;
+  workspaceId: string;
+  templateId?: string;
+  template?: { id: string; name: string };
+  name: string;
+  subject: string;
+  htmlContent: string;
+  textContent?: string;
+  senderName: string;
+  senderEmail: string;
+  replyTo?: string;
+  status: CampaignStatus;
+  scheduledAt?: string;
+  sentAt?: string;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  openCount: number;
+  clickCount: number;
+  bounceCount: number;
+  unsubscribeCount: number;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { recipients: number };
+  recipients?: CampaignRecipient[];
+}
+
+export interface CampaignRecipient {
+  id: string;
+  campaignId: string;
+  contactId: string;
+  email: string;
+  status: "pending" | "sent" | "failed" | "opened" | "clicked" | "bounced" | "unsubscribed";
+  brevoMessageId?: string;
+  sentAt?: string;
+  openedAt?: string;
+  errorReason?: string;
+  contact?: { id: string; firstName: string; lastName: string };
+}
+
+export interface CampaignStats {
+  id: string;
+  status: CampaignStatus;
+  totalRecipients: number;
+  sentCount: number;
+  failedCount: number;
+  openCount: number;
+  clickCount: number;
+  bounceCount: number;
+  unsubscribeCount: number;
+  sentAt?: string;
+  recipientBreakdown: Record<string, number>;
 }

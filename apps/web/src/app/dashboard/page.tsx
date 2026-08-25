@@ -7,7 +7,7 @@ import {
   Mic, CheckSquare, GitBranch, BarChart2, Clock, Search, Bell, HelpCircle,
   ChevronDown, Settings, Plug, Users, Tag, FileText,
   Loader2, Check, X, Mail, FileText as FileIcon, CheckCircle, DollarSign,
-  Menu
+  Menu, Send
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { api, Notification } from "@/lib/api";
@@ -17,6 +17,7 @@ import PipelinePanel from "@/components/dashboard/PipelinePanel";
 import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import TimelinePanel from "@/components/dashboard/TimelinePanel";
 import ListPanel from "@/components/dashboard/ListPanel";
+import CampaignsPanel from "@/components/dashboard/CampaignsPanel";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("notes");
@@ -63,6 +64,7 @@ export default function DashboardPage() {
     { id: "pipeline", label: "Pipeline", icon: <GitBranch className="w-3.5 h-3.5" /> },
     { id: "reports", label: "Reports", icon: <BarChart2 className="w-3.5 h-3.5" /> },
     { id: "timeline", label: "Timeline", icon: <Clock className="w-3.5 h-3.5" /> },
+    { id: "campaigns", label: "Campaigns", icon: <Send className="w-3.5 h-3.5" /> },
   ];
 
   const sidebarItems = [
@@ -71,6 +73,7 @@ export default function DashboardPage() {
     { label: "Pipeline", icon: <GitBranch className="w-3.5 h-3.5" />, tab: "pipeline" },
     { label: "Reports", icon: <BarChart2 className="w-3.5 h-3.5" />, tab: "reports" },
     { label: "Timeline", icon: <Clock className="w-3.5 h-3.5" />, tab: "timeline" },
+    { label: "Campaigns", icon: <Send className="w-3.5 h-3.5" />, tab: "campaigns" },
     { label: "Accounts", icon: <Users className="w-3.5 h-3.5" />, tab: "accounts" },
     { label: "Contacts", icon: <Tag className="w-3.5 h-3.5" />, tab: "contacts" },
     { label: "Deals", icon: <FileText className="w-3.5 h-3.5" />, tab: "deals" },
@@ -98,7 +101,7 @@ export default function DashboardPage() {
 
         <nav className="flex-1 px-3 overflow-y-auto noscroll">
           <p className="sb-label">Workspace</p>
-          {sidebarItems.slice(0, 5).map((item) => (
+          {sidebarItems.slice(0, 6).map((item) => (
             <div
               key={item.tab}
               className={`dni ${activeTab === item.tab ? "on" : ""}`}
@@ -108,7 +111,7 @@ export default function DashboardPage() {
             </div>
           ))}
           <p className="sb-label" style={{ marginTop: 14 }}>CRM</p>
-          {sidebarItems.slice(5).map((item) => (
+          {sidebarItems.slice(6).map((item) => (
             <div key={item.tab} className={`dni ${activeTab === item.tab ? "on" : ""}`} onClick={() => { setActiveTab(item.tab); setShowMobileSidebar(false); }}>
               {item.icon}<span>{item.label}</span>
             </div>
@@ -286,6 +289,7 @@ export default function DashboardPage() {
               {activeTab === "pipeline" && <PipelinePanel workspaceId={workspace.id} />}
               {activeTab === "reports" && <ReportsPanel workspaceId={workspace.id} />}
               {activeTab === "timeline" && <TimelinePanel workspaceId={workspace.id} />}
+              {activeTab === "campaigns" && <CampaignsPanel workspaceId={workspace.id} />}
               {activeTab === "accounts" && <ListPanel workspaceId={workspace.id} type="accounts" />}
               {activeTab === "contacts" && <ListPanel workspaceId={workspace.id} type="contacts" />}
               {activeTab === "deals" && <ListPanel workspaceId={workspace.id} type="deals" />}
