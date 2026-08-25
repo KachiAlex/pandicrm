@@ -8,10 +8,10 @@ WORKDIR /app
 
 RUN npm install -g pnpm@9.12.2
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 COPY prisma ./prisma
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # --- builder stage ---
 FROM base AS builder
