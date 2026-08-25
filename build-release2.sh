@@ -1,3 +1,14 @@
+#!/bin/bash
+set -e
+
+export ANDROID_HOME=/opt/android-sdk
+export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools"
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+APP_GRADLE="/opt/pandicrm-mobile/apps/web/android/app/build.gradle"
+
+echo "=== Writing clean build.gradle ==="
+cat > "$APP_GRADLE" << 'GRADLE_EOF'
 apply plugin: 'com.android.application'
 
 android {
@@ -11,17 +22,15 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
-             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
     signingConfigs {
         release {
-            storeFile file(System.env.PANDACRM_KEYSTORE ?: '../../../pandacrm-release.keystore')
-            storePassword System.env.PANDACRM_KEYSTORE_PASS ?: 'PandiCRM2026!Release'
-            keyAlias System.env.PANDACRM_KEY_ALIAS ?: 'pandacrm'
-            keyPassword System.env.PANDACRM_KEY_PASS ?: 'PandiCRM2026!Release'
+            storeFile file('../../pandacrm-release.keystore')
+            storePassword 'PandiCRM2026!Release'
+            keyAlias 'pandacrm'
+            keyPassword 'PandiCRM2026!Release'
         }
     }
     buildTypes {
@@ -61,3 +70,23 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+GRADLE_EOF
+
+echo "=== Verifying build.gradle ==="
+grep -A6 "signingConfigs" "$APP_GRADLE"
+
+echo "=== Building release APK ==="
+cd /opt/pandicrm-mobile/apps/web/android
+chmod +x gradlew
+./gradlew assembleRelease 2>&1 | tail -25
+
+echo "=== Checking APK ==="
+APK=$(find /opt/pandicrm-mobile/apps/web/android -name "*release*.apk" -type f 2>/dev/null | head -1)
+if [ -n "$APK" ]; then
+  echo "Release APK built: $APK"
+  ls -lh "$APK"
+else
+  echo "No release APK found!"
+  find /opt/pandicrm-mobile/apps/web/android -name "*.apk" 2>/dev/null
+  exit 1
+fi
