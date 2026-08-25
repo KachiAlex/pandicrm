@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
+import { createTaskSchema, validateBody } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,11 +39,12 @@ export async function POST(req: NextRequest) {
     if (session instanceof NextResponse) return session;
 
     const body = await req.json();
-    const { workspaceId, assigneeId, accountId, contactId, dealId, title, description, status, priority, dueDate } = body;
-
-    if (!workspaceId || !title) {
-      return NextResponse.json({ error: "workspaceId and title required" }, { status: 400 });
+    const validation = validateBody(createTaskSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { workspaceId, assigneeId, accountId, contactId, dealId, title, description, status, priority, dueDate } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();

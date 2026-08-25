@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
+import { importContactsSchema, validateBody } from "@/lib/validations";
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
@@ -51,14 +52,16 @@ export async function POST(req: NextRequest) {
     const session = await requireAuth();
     if (session instanceof NextResponse) return session;
 
-    const { workspaceId, csvText } = await req.json();
-
-    if (!workspaceId || !csvText || typeof csvText !== "string") {
+    const body = await req.json();
+    const validation = validateBody(importContactsSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "workspaceId and csvText are required" },
+        { error: validation.error },
         { status: 400 }
       );
     }
+
+    const { workspaceId, csvText } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();

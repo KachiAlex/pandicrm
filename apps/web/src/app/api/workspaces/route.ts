@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, serverError } from "@/lib/api-auth";
+import { createWorkspaceSchema, validateBody } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -32,11 +33,12 @@ export async function POST(req: NextRequest) {
 
     const userId = (session as any).user.id;
     const body = await req.json();
-    const { name } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name required" }, { status: 400 });
+    const validation = validateBody(createWorkspaceSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { name } = validation.data;
 
     const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").slice(0, 50);
 

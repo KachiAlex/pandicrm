@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
+import { updateWorkspaceSchema, validateBody } from "@/lib/validations";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,11 +14,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!(await requireWorkspaceAccess(id, userId))) return unauthorized();
 
     const body = await req.json();
-    const { name } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name required" }, { status: 400 });
+    const validation = validateBody(updateWorkspaceSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { name } = validation.data;
 
     const workspace = await prisma.workspace.update({
       where: { id },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
+import { updateContactSchema, validateBody } from "@/lib/validations";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -42,7 +43,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!(await requireWorkspaceAccess(existing.workspaceId, userId))) return unauthorized();
 
     const body = await req.json();
-    const { firstName, lastName, email, phone, title, department, linkedin, accountId } = body;
+    const validation = validateBody(updateContactSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { firstName, lastName, email, phone, title, department, linkedin, accountId } = validation.data;
 
     const contact = await prisma.contact.update({
       where: { id },

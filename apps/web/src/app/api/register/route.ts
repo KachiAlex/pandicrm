@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { registerSchema, validateBody } from "@/lib/validations";
+import { serverError } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,14 +16,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, firstName, lastName, company, phone, role } = await req.json();
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    const body = await req.json();
+    const validation = validateBody(registerSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { email, password, firstName, lastName, company, phone, role } = validation.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -49,8 +50,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(user, { status: 201 });
-  } catch (err) {
-    console.error("Register error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch {
+    return serverError();
   }
 }

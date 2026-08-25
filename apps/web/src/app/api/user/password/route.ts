@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, serverError, notFound } from "@/lib/api-auth";
 import bcrypt from "bcryptjs";
+import { changePasswordSchema, validateBody } from "@/lib/validations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,11 +10,13 @@ export async function POST(req: NextRequest) {
     if (session instanceof NextResponse) return session;
 
     const userId = (session as any).user.id;
-    const { currentPassword, newPassword } = await req.json();
-
-    if (!currentPassword || !newPassword || newPassword.length < 6) {
-      return NextResponse.json({ error: "Current password and new password (min 6 chars) required" }, { status: 400 });
+    const body = await req.json();
+    const validation = validateBody(changePasswordSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+
+    const { currentPassword, newPassword } = validation.data;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.password) {

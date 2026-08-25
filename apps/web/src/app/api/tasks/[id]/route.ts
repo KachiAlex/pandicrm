@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
+import { updateTaskSchema, validateBody } from "@/lib/validations";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -40,7 +41,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!(await requireWorkspaceAccess(previous.workspaceId, userId))) return unauthorized();
 
     const body = await req.json();
-    const { title, description, status, priority, assigneeId, accountId, contactId, dealId, dueDate, completedAt } = body;
+    const validation = validateBody(updateTaskSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { title, description, status, priority, assigneeId, accountId, contactId, dealId, dueDate, completedAt } = validation.data;
     const updateData: any = { title, description, status, priority, assigneeId, accountId, contactId, dealId };
     if (dueDate) updateData.dueDate = new Date(dueDate);
     if (completedAt) updateData.completedAt = new Date(completedAt);

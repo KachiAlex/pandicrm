@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, serverError, notFound } from "@/lib/api-auth";
+import { updateUserSchema, validateBody } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -27,7 +28,12 @@ export async function PATCH(req: NextRequest) {
 
     const userId = (session as any).user.id;
     const body = await req.json();
-    const { name, firstName, lastName, company, phone } = body;
+    const validation = validateBody(updateUserSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { name, firstName, lastName, company, phone } = validation.data;
 
     const user = await prisma.user.update({
       where: { id: userId },
