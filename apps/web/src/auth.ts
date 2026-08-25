@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
@@ -13,6 +14,10 @@ export const {
   trustHost: true,
   session: { strategy: "jwt" },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -70,6 +75,33 @@ export const {
     }),
   ],
   callbacks: {
+    signIn: async ({ user, account }) => {
+      if (account?.provider === "google" && user?.email) {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (!existing) {
+          const nameParts = user.name?.split(" ") || [];
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name || null,
+              firstName: nameParts[0] || null,
+              lastName: nameParts.slice(1).join(" ") || null,
+              avatar: user.image || null,
+              role: null,
+            },
+          });
+        } else if (!existing.avatar && user.image) {
+          await prisma.user.update({
+            where: { id: existing.id },
+            data: { avatar: user.image },
+          });
+        }
+      }
+      return true;
+    },
     jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id;
@@ -78,6 +110,20 @@ export const {
         token.company = user.company;
         token.phone = user.phone;
         token.role = user.role;
+      }
+
+      if (!token.id && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.firstName = dbUser.firstName;
+          token.lastName = dbUser.lastName;
+          token.company = dbUser.company;
+          token.phone = dbUser.phone;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
