@@ -67,8 +67,9 @@ export async function POST(req: NextRequest) {
     let payload;
     try {
       payload = await verifyGoogleIdToken(idToken);
-    } catch {
-      return NextResponse.json({ error: "Invalid Google ID token" }, { status: 401 });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Token verification failed";
+      return NextResponse.json({ error: "Invalid Google ID token", detail: msg }, { status: 401 });
     }
 
     if (!payload?.email) {
@@ -129,7 +130,8 @@ export async function POST(req: NextRequest) {
         avatar: user.avatar,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("[GOOGLE-MOBILE]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
