@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
@@ -47,10 +47,10 @@ function getField(row: string[], headers: string[], names: string[]): string | u
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireAuth();
-  if (session instanceof NextResponse) return session;
-
   try {
+    const session = await requireAuth();
+    if (session instanceof NextResponse) return session;
+
     const { workspaceId, csvText } = await req.json();
 
     if (!workspaceId || !csvText || typeof csvText !== "string") {
@@ -59,6 +59,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const userId = (session as any).user.id;
+    if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
     const rows = parseCSV(csvText);
     if (rows.length < 2) {
@@ -148,8 +151,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ created: created.length, skipped, contacts: created }, { status: 201 });
-  } catch (err: any) {
-    console.error("Contact import error:", err);
-    return NextResponse.json({ error: err.message || "Import failed" }, { status: 500 });
+  } catch {
+    return serverError();
   }
 }

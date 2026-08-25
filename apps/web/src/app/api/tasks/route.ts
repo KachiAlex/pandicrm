@@ -1,58 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
-  const session = await requireAuth();
-  if (session instanceof NextResponse) return session;
+  try {
+    const session = await requireAuth();
+    if (session instanceof NextResponse) return session;
 
-  const { searchParams } = new URL(req.url);
-  const workspaceId = searchParams.get("workspaceId");
+    const { searchParams } = new URL(req.url);
+    const workspaceId = searchParams.get("workspaceId");
 
-  if (!workspaceId) {
-    return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
+    if (!workspaceId) {
+      return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
+    }
+
+    const userId = (session as any).user.id;
+    if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
+
+    const tasks = await prisma.task.findMany({
+      where: { workspaceId },
+      include: {
+        assignee: { select: { id: true, name: true, avatar: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(tasks);
+  } catch {
+    return serverError();
   }
-
-  const tasks = await prisma.task.findMany({
-    where: { workspaceId },
-    include: {
-      assignee: { select: { id: true, name: true, avatar: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json(tasks);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireAuth();
-  if (session instanceof NextResponse) return session;
+  try {
+    const session = await requireAuth();
+    if (session instanceof NextResponse) return session;
 
-  const body = await req.json();
-  const { workspaceId, assigneeId, accountId, contactId, dealId, title, description, status, priority, dueDate } = body;
+    const body = await req.json();
+    const { workspaceId, assigneeId, accountId, contactId, dealId, title, description, status, priority, dueDate } = body;
 
-  if (!workspaceId || !title) {
-    return NextResponse.json({ error: "workspaceId and title required" }, { status: 400 });
+    if (!workspaceId || !title) {
+      return NextResponse.json({ error: "workspaceId and title required" }, { status: 400 });
+    }
+
+    const userId = (session as any).user.id;
+    if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
+
+    const task = await prisma.task.create({
+      data: {
+        workspaceId,
+        assigneeId,
+        accountId,
+        contactId,
+        dealId,
+        title,
+        description,
+        status,
+        priority,
+        dueDate: dueDate ? new Date(dueDate) : null,
+      },
+    });
+
+    await notifyWorkspace(workspaceId, userId, "task_created", "New task assigned", `Task "${title}" was created.`, "task", task.id);
+
+    return NextResponse.json(task, { status: 201 });
+  } catch {
+    return serverError();
   }
-
-  const task = await prisma.task.create({
-    data: {
-      workspaceId,
-      assigneeId,
-      accountId,
-      contactId,
-      dealId,
-      title,
-      description,
-      status,
-      priority,
-      dueDate: dueDate ? new Date(dueDate) : null,
-    },
-  });
-
-  const sessionUserId = (session as any).user.id;
-  await notifyWorkspace(workspaceId, sessionUserId, "task_created", "New task assigned", `Task "${title}" was created.`, "task", task.id);
-
-  return NextResponse.json(task, { status: 201 });
 }

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 export const {
   handlers,
@@ -17,7 +18,13 @@ export const {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials, req) => {
+        const ip = (req as any)?.headers?.get?.("x-forwarded-for") || "unknown";
+        const { allowed, retryAfter } = checkRateLimit(`login:${ip}`);
+        if (!allowed) {
+          throw new Error(`Too many attempts. Try again in ${retryAfter} seconds.`);
+        }
+
         const email = credentials?.email as string;
         const password = credentials?.password as string;
 
@@ -31,19 +38,21 @@ export const {
         });
 
         if (!user) {
-          console.error("[AUTH] User not found:", email);
+          console.error("[AUTH] User not found");
           return null;
         }
         if (!user.password) {
-          console.error("[AUTH] User has no password:", email);
+          console.error("[AUTH] User has no password set");
           return null;
         }
 
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
-          console.error("[AUTH] Password mismatch for:", email);
+          console.error("[AUTH] Invalid credentials");
           return null;
         }
+
+        resetRateLimit(`login:${ip}`);
 
         return {
           id: user.id,

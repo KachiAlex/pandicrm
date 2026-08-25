@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, unauthorized, serverError, notFound } from "@/lib/api-auth";
 
 export async function PATCH(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await requireAuth();
-  if (session instanceof NextResponse) return session;
+  try {
+    const session = await requireAuth();
+    if (session instanceof NextResponse) return session;
 
-  const { id } = await params;
-  const notification = await prisma.notification.update({
-    where: { id },
-    data: { read: true },
-  });
+    const { id } = await params;
+    const userId = (session as any).user.id;
 
-  return NextResponse.json(notification);
+    const notification = await prisma.notification.findUnique({ where: { id }, select: { userId: true, workspaceId: true } });
+    if (!notification) return notFound();
+    if (notification.userId !== userId) return unauthorized();
+
+    const updated = await prisma.notification.update({
+      where: { id },
+      data: { read: true },
+    });
+
+    return NextResponse.json(updated);
+  } catch {
+    return serverError();
+  }
 }
