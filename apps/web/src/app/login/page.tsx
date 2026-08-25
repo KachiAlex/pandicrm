@@ -41,7 +41,45 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setError("");
     setGoogleLoading(true);
-    await signIn("google", { callbackUrl: "/dashboard" });
+
+    const isCapacitor = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.();
+
+    if (isCapacitor) {
+      try {
+        const GoogleAuth = (window as any).Capacitor.Plugins.GoogleAuth;
+        const result = await GoogleAuth.signIn();
+        const idToken = result.authentication?.idToken;
+
+        if (!idToken) {
+          setError("Failed to get Google ID token");
+          setGoogleLoading(false);
+          return;
+        }
+
+        const res = await fetch("/api/auth/google-mobile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || "Google sign-in failed");
+          setGoogleLoading(false);
+          return;
+        }
+
+        (window as any).Capacitor.Plugins.Preferences?.set?.({ key: "auth_token", value: data.token });
+        router.push("/dashboard");
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Google sign-in failed");
+        setGoogleLoading(false);
+      }
+    } else {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    }
   };
 
   return (
