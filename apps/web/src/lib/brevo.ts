@@ -1,6 +1,24 @@
-const BREVO_API_URL = "https://api.brevo.com/v3";
+import nodemailer from "nodemailer";
 
-interface BrevoEmailParams {
+function getTransporter() {
+  const host = process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com";
+  const port = parseInt(process.env.BREVO_SMTP_PORT || "587", 10);
+  const user = process.env.BREVO_SMTP_USER;
+  const pass = process.env.BREVO_SMTP_PASS;
+
+  if (!user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+}
+
+interface EmailParams {
   sender: { name: string; email: string };
   to: { email: string; name?: string }[];
   subject: string;
@@ -8,69 +26,29 @@ interface BrevoEmailParams {
   textContent?: string;
   replyTo?: { email: string; name?: string };
   tags?: string[];
-  messageId?: string;
 }
 
-interface BrevoResponse {
-  messageId?: string;
-  code?: string;
-  message?: string;
-}
-
-export async function sendTransactionalEmail(params: BrevoEmailParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    return { success: false, error: "BREVO_API_KEY is not configured" };
+export async function sendTransactionalEmail(params: EmailParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const transporter = getTransporter();
+  if (!transporter) {
+    return { success: false, error: "Brevo SMTP credentials not configured (BREVO_SMTP_USER and BREVO_SMTP_PASS required)" };
   }
 
   try {
-    const res = await fetch(`${BREVO_API_URL}/smtp/email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": apiKey,
-      },
-      body: JSON.stringify(params),
+    const info = await transporter.sendMail({
+      from: `${params.sender.name} <${params.sender.email}>`,
+      to: params.to.map((r) => (r.name ? `${r.name} <${r.email}>` : r.email)).join(", "),
+      subject: params.subject,
+      html: params.htmlContent,
+      text: params.textContent,
+      replyTo: params.replyTo?.email,
+      headers: params.tags ? { "X-Tags": params.tags.join(",") } : undefined,
     });
 
-    const data: BrevoResponse = await res.json();
-
-    if (!res.ok) {
-      return { success: false, error: data.message || `Brevo API error: ${res.status}` };
-    }
-
-    return { success: true, messageId: data.messageId };
+    return { success: true, messageId: info.messageId };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Failed to send email" };
   }
-}
-
-export async function sendBulkEmails(
-  emails: BrevoEmailParams[]
-): Promise<{ sent: number; failed: number; results: { email: string; success: boolean; messageId?: string; error?: string }[] }> {
-  let sent = 0;
-  let failed = 0;
-  const results: { email: string; success: boolean; messageId?: string; error?: string }[] = [];
-
-  const BATCH_SIZE = 50;
-  for (let i = 0; i < emails.length; i += BATCH_SIZE) {
-    const batch = emails.slice(i, i + BATCH_SIZE);
-    const batchPromises = batch.map(async (email) => {
-      const result = await sendTransactionalEmail(email);
-      const recipientEmail = email.to[0]?.email || "";
-      if (result.success) {
-        sent++;
-        results.push({ email: recipientEmail, success: true, messageId: result.messageId });
-      } else {
-        failed++;
-        results.push({ email: recipientEmail, success: false, error: result.error });
-      }
-      return result;
-    });
-    await Promise.all(batchPromises);
-  }
-
-  return { sent, failed, results };
 }
 
 export function replaceTemplateVariables(html: string, variables: Record<string, string>): string {
