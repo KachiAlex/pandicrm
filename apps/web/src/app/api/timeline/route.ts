@@ -4,7 +4,7 @@ import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { searchParams } = new URL(req.url);

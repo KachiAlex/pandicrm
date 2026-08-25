@@ -49,7 +49,7 @@ function getField(row: string[], headers: string[], names: string[]): string | u
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const body = await req.json();

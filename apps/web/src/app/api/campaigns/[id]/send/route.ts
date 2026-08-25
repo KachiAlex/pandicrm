@@ -5,7 +5,7 @@ import { sendTransactionalEmail, replaceTemplateVariables } from "@/lib/brevo";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { id } = await params;

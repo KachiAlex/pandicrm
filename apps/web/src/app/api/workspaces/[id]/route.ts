@@ -5,7 +5,7 @@ import { updateWorkspaceSchema, validateBody } from "@/lib/validations";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { id } = await params;

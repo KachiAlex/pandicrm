@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 import { updateNoteSchema, validateBody } from "@/lib/validations";
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { id } = await params;
@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { id } = await params;
@@ -58,9 +58,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const { id } = await params;

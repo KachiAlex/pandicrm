@@ -1,8 +1,38 @@
 import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { jwtVerify } from "jose";
 
-export async function requireAuth() {
+export async function requireAuth(req?: NextRequest) {
+  if (req) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      try {
+        const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
+        const { payload } = await jwtVerify(token, secret);
+        if (payload.id && payload.email) {
+          return {
+            user: {
+              id: payload.id as string,
+              email: payload.email as string,
+              name: (payload.name as string) || null,
+              firstName: (payload.firstName as string) || null,
+              lastName: (payload.lastName as string) || null,
+              company: (payload.company as string) || null,
+              phone: (payload.phone as string) || null,
+              role: (payload.role as string) || null,
+              image: (payload.image as string) || null,
+            },
+            expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          } as any;
+        }
+      } catch {
+        return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+      }
+    }
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

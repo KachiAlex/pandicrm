@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, serverError, notFound } from "@/lib/api-auth";
 import { updateUserSchema, validateBody } from "@/lib/validations";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const userId = (session as any).user.id;
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const userId = (session as any).user.id;

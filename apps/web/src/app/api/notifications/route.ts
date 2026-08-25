@@ -4,7 +4,7 @@ import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const userId = (session as any).user.id;
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
     if (session instanceof NextResponse) return session;
 
     const userId = (session as any).user.id;
