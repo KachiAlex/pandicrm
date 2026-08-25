@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pandicrm
+      POSTGRES_PASSWORD: p4nd1crm_s3cure_2026
+      POSTGRES_DB: pandicrm
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pandicrm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://pandicrm:p4nd1crm_s3cure_2026@db:5432/pandicrm?schema=public"
+      AUTH_SECRET: "k9Xm2vQ8rT4wZ7nB3cF6hJ1pL5sY0eA8dG2iU4oN"
+      NEXTAUTH_URL: "http://67.211.210.8"
+      NODE_ENV: "production"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
