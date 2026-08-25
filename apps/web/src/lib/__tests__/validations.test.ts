@@ -110,7 +110,7 @@ describe("createDealSchema", () => {
     const result = createDealSchema.safeParse({
       workspaceId: "ws-1",
       name: "Big Deal",
-      stage: "qualified",
+      stage: "qualify",
       value: 50000,
     });
     expect(result.success).toBe(true);

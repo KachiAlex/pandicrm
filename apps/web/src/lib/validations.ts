@@ -49,7 +49,7 @@ export const createDealSchema = z.object({
   accountId: z.string().optional(),
   contactId: z.string().optional(),
   name: z.string().min(1).max(200),
-  stage: z.enum(["lead", "qualified", "proposal", "negotiation", "won", "lost"]).optional(),
+  stage: z.enum(["lead", "qualify", "propose", "negotiate", "won", "lost"]).optional(),
   value: z.number().nonnegative().optional(),
   currency: z.string().max(10).optional(),
   probability: z.number().min(0).max(100).optional(),
@@ -59,7 +59,7 @@ export const createDealSchema = z.object({
 
 export const updateDealSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  stage: z.enum(["lead", "qualified", "proposal", "negotiation", "won", "lost"]).optional(),
+  stage: z.enum(["lead", "qualify", "propose", "negotiate", "won", "lost"]).optional(),
   value: z.number().nonnegative().optional(),
   currency: z.string().max(10).optional(),
   probability: z.number().min(0).max(100).optional(),
@@ -77,16 +77,16 @@ export const createTaskSchema = z.object({
   dealId: z.string().optional(),
   title: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  status: z.enum(["todo", "in_progress", "done", "cancelled"]).optional(),
-  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  status: z.enum(["todo", "in_progress", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   dueDate: z.string().optional(),
 });
 
 export const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional(),
-  status: z.enum(["todo", "in_progress", "done", "cancelled"]).optional(),
-  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  status: z.enum(["todo", "in_progress", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
   assigneeId: z.string().optional(),
   accountId: z.string().optional(),
   contactId: z.string().optional(),
@@ -101,7 +101,7 @@ export const createNoteSchema = z.object({
   dealId: z.string().optional(),
   title: z.string().min(1).max(200),
   content: z.string().min(1).max(10000),
-  type: z.enum(["call", "email", "meeting", "general", "ai"]).optional(),
+  type: z.enum(["manual", "meeting", "call", "email", "document", "voice_memo"]).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   isShared: z.boolean().optional(),
   aiSummary: z.string().max(2000).optional(),
@@ -110,7 +110,7 @@ export const createNoteSchema = z.object({
 export const updateNoteSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   content: z.string().min(1).max(10000).optional(),
-  type: z.enum(["call", "email", "meeting", "general", "ai"]).optional(),
+  type: z.enum(["manual", "meeting", "call", "email", "document", "voice_memo"]).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   isShared: z.boolean().optional(),
   aiSummary: z.string().max(2000).optional(),
