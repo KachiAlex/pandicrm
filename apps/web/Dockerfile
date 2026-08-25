@@ -8,7 +8,7 @@ WORKDIR /app
 
 RUN npm install -g pnpm@9.12.2
 
-COPY package.json ./
+COPY package.json .npmrc ./
 COPY prisma ./prisma
 
 RUN pnpm install --no-frozen-lockfile
