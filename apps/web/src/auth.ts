@@ -112,7 +112,7 @@ export const {
         token.role = user.role;
       }
 
-      if (!token.id && token.email) {
+      if (token.email && (!token.id || token.role == null)) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
         });
