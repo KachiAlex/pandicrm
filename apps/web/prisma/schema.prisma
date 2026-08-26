@@ -76,6 +76,7 @@ model Workspace {
   timelineEvents TimelineEvent[]
   emailTemplates  EmailTemplate[]
   emailCampaigns  EmailCampaign[]
+  contactCategories ContactCategory[]
 
   @@map("workspaces")
 }
@@ -135,6 +136,7 @@ model Contact {
   avatar      String?
   isPrimary   Boolean  @default(false) @map("is_primary")
   customFields Json?   @map("custom_fields")
+  categoryIds String[] @default([]) @map("category_ids")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -146,6 +148,20 @@ model Contact {
   @@index([workspaceId])
   @@index([accountId])
   @@map("contacts")
+}
+
+model ContactCategory {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  color       String?  @default("#ff1a97")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([workspaceId])
+  @@unique([workspaceId, name])
+  @@map("contact_categories")
 }
 
 enum DealStage {

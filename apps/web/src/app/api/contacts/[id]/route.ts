@@ -48,11 +48,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { firstName, lastName, email, phone, title, department, linkedin, accountId } = validation.data;
+    const { firstName, lastName, email, phone, title, department, linkedin, accountId, categoryIds } = validation.data;
 
     const contact = await prisma.contact.update({
       where: { id },
-      data: { firstName, lastName, email, phone, title, department, linkedin, accountId },
+      data: { firstName, lastName, email, phone, title, department, linkedin, accountId, categoryIds },
     });
     return NextResponse.json(contact);
   } catch {

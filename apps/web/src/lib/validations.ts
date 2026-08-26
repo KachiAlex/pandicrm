@@ -31,6 +31,7 @@ export const createContactSchema = z.object({
   title: z.string().max(100).optional(),
   department: z.string().max(100).optional(),
   linkedin: z.string().url().max(500).optional().or(z.literal("")),
+  categoryIds: z.array(z.string()).max(50).optional(),
 });
 
 export const updateContactSchema = z.object({
@@ -42,6 +43,7 @@ export const updateContactSchema = z.object({
   department: z.string().max(100).optional(),
   linkedin: z.string().url().max(500).optional().or(z.literal("")),
   accountId: z.string().optional(),
+  categoryIds: z.array(z.string()).max(50).optional(),
 });
 
 export const createDealSchema = z.object({
@@ -151,6 +153,7 @@ export const registerSchema = z.object({
 export const importContactsSchema = z.object({
   workspaceId: z.string().min(1),
   csvText: z.string().min(1),
+  categoryIds: z.array(z.string()).max(50).optional(),
 });
 
 export const createEmailTemplateSchema = z.object({
@@ -170,6 +173,23 @@ export const updateEmailTemplateSchema = z.object({
   variables: z.array(z.string().max(50)).max(50).optional(),
 });
 
+export const createContactCategorySchema = z.object({
+  workspaceId: z.string().min(1),
+  name: z.string().min(1).max(100),
+  color: z.string().max(30).optional(),
+});
+
+export const updateContactCategorySchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  color: z.string().max(30).optional(),
+});
+
+export const bulkUpdateContactsSchema = z.object({
+  ids: z.array(z.string()).min(1).max(1000),
+  categoryIds: z.array(z.string()).max(50).optional(),
+  delete: z.boolean().optional(),
+});
+
 export const createCampaignSchema = z.object({
   workspaceId: z.string().min(1),
   templateId: z.string().optional(),
@@ -180,7 +200,8 @@ export const createCampaignSchema = z.object({
   senderName: z.string().min(1).max(100),
   senderEmail: z.string().email().max(255),
   replyTo: z.string().email().max(255).optional().or(z.literal("")),
-  contactIds: z.array(z.string()).min(1).max(10000),
+  contactIds: z.array(z.string()).min(0).max(10000).optional(),
+  categoryIds: z.array(z.string()).max(50).optional(),
 });
 
 export const updateCampaignSchema = z.object({

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload } from "lucide-react";
-import { api, Account, Contact, Deal } from "@/lib/api";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload, Filter, ChevronDown, FolderOpen } from "lucide-react";
+import { api, Account, Contact, Deal, ContactCategory } from "@/lib/api";
 import { exportAccounts, exportContacts, exportDeals } from "@/lib/csv";
 
 export default function ListPanel({ workspaceId, type }: { workspaceId: string; type: "accounts" | "contacts" | "deals" }) {
@@ -15,19 +15,28 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
   const [search, setSearch] = useState("");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<string>("");
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     if (!workspaceId) return;
     setLoading(true);
     const fetcher =
       type === "accounts" ? api.accounts.list(workspaceId) :
-      type === "contacts" ? api.contacts.list(workspaceId) :
+      type === "contacts" ? api.contacts.list(workspaceId, selectedCategory || undefined) :
       api.deals.list(workspaceId);
     fetcher.then((data) => {
       setItems(data);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [workspaceId, type, refreshKey]);
+
+    if (type === "contacts") {
+      api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
+    }
+  }, [workspaceId, type, refreshKey, selectedCategory]);
 
   if (loading) {
     return (
@@ -39,7 +48,7 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
 
   const headers =
     type === "accounts" ? ["Name", "Industry", "Size", "Domain"] :
-    type === "contacts" ? ["Name", "Email", "Title", "Account"] :
+    type === "contacts" ? ["", "Name", "Email", "Title", "Account"] :
     ["Name", "Stage", "Value", "Probability"];
 
   const typeLabel = type === "accounts" ? "Account" : type === "contacts" ? "Contact" : "Deal";
@@ -77,6 +86,48 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
     return sortDir === "asc" ? cmp : -cmp;
   });
 
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const visible = filteredItems.map((c) => c.id);
+    const allSelected = visible.every((id) => selectedIds.has(id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of visible) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkAction = async () => {
+    if (selectedIds.size === 0 || !bulkAction) return;
+    setBulkLoading(true);
+    try {
+      if (bulkAction === "delete") {
+        await api.contacts.bulk({ ids: Array.from(selectedIds), delete: true });
+      } else if (bulkAction.startsWith("cat:")) {
+        const categoryId = bulkAction.split(":")[1];
+        await api.contacts.bulk({ ids: Array.from(selectedIds), categoryIds: [categoryId] });
+      }
+      setSelectedIds(new Set());
+      setBulkAction("");
+      setRefreshKey((k) => k + 1);
+    } catch (err: any) {
+      alert(err.message || "Bulk action failed");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
@@ -88,6 +139,34 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
             <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
             <input type="text" placeholder={`Search ${type}...`} value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
           </div>
+          {type === "contacts" && (
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 outline-none focus:border-pk-500 cursor-pointer appearance-none"
+              >
+                <option value="">All categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <Filter className="w-3 h-3 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+          {type === "contacts" && (
+            <button
+              onClick={() => {
+                const name = prompt("New category name");
+                if (!name) return;
+                api.contactCategories.create({ workspaceId, name }).then((cat) => setCategories((prev) => [...prev, cat])).catch(() => {});
+              }}
+              className="text-xs font-medium text-pk-600 px-2 py-2 rounded-lg border border-pk-200 hover:bg-pink-50 transition-colors"
+              title="Create category"
+            >
+              + Category
+            </button>
+          )}
           {type !== "deals" && (
             <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}>
               <Plus className="w-3.5 h-3.5" />New {typeLabel}
@@ -115,11 +194,46 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
           </button>
         </div>
       </div>
+
+      {type === "contacts" && selectedIds.size > 0 && (
+        <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-pink-50 border border-pink-100">
+          <span className="text-xs font-medium text-pk-700">{selectedIds.size} selected</span>
+          <div className="flex-1" />
+          <select
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 outline-none"
+          >
+            <option value="">Action...</option>
+            <option value="delete">Delete</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={`cat:${cat.id}`}>Add to {cat.name}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkAction}
+            disabled={!bulkAction || bulkLoading}
+            className="btn-p text-xs px-3 py-1.5 disabled:opacity-60"
+          >
+            {bulkLoading ? "Applying..." : "Apply"}
+          </button>
+        </div>
+      )}
       <div className="surf overflow-x-auto">
         <table className="w-full text-sm min-w-[500px]">
           <thead>
             <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-              {headers.map((h) => (
+              {type === "contacts" && (
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={filteredItems.length > 0 && filteredItems.every((c) => selectedIds.has(c.id))}
+                    onChange={toggleAll}
+                    className="rounded text-pk-600"
+                  />
+                </th>
+              )}
+              {headers.filter(Boolean).map((h) => (
                 <th key={h} onClick={() => handleSort(h)} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-pk-600 transition-colors">
                   <div className="flex items-center gap-1">
                     {h}
@@ -149,11 +263,31 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
               }
               if (type === "contacts") {
                 const c = item as Contact;
+                const cats = categories.filter((cat) => c.categoryIds?.includes(cat.id));
                 return (
                   <tr key={c.id} className="hover:bg-gray-50 transition-colors cursor-pointer" style={{ borderBottom: "1px solid #f9fafb" }} onClick={() => setSelectedItem(c)}>
+                    <td className="px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(c.id)}
+                        onClick={(e) => { e.stopPropagation(); toggleSelection(c.id); }}
+                        onChange={() => {}}
+                        className="rounded text-pk-600"
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium text-gray-900">{c.firstName} {c.lastName}</td>
                     <td className="px-4 py-3 text-gray-500">{c.email || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{c.title || "—"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1 max-w-[180px]">
+                        {cats.map((cat) => (
+                          <span key={cat.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: (cat.color || "#ff1a97") + "20", color: cat.color || "#ff1a97" }}>
+                            {cat.name}
+                          </span>
+                        ))}
+                        {cats.length === 0 && <span className="text-gray-400 text-xs">—</span>}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-500">{c.account?.name || "—"}</td>
                   </tr>
                 );
@@ -307,12 +441,17 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
   const [department, setDepartment] = useState("");
   const [accountId, setAccountId] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    api.accounts.list(workspaceId).then((a) => { setAccounts(a); setFetching(false); }).catch(() => setFetching(false));
+    Promise.all([
+      api.accounts.list(workspaceId),
+      api.contactCategories.list(workspaceId),
+    ]).then(([a, c]) => { setAccounts(a); setCategories(c); setFetching(false); }).catch(() => setFetching(false));
   }, [workspaceId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -330,6 +469,7 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
         title: title || undefined,
         department: department || undefined,
         accountId: accountId || undefined,
+        categoryIds: selectedCategoryIds,
       });
       onCreated();
     } catch (err: any) {
@@ -398,6 +538,23 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
                 {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
+            <div>
+              <label className={labelClass}>Categories</label>
+              <select
+                multiple
+                value={selectedCategoryIds}
+                onChange={(e) => {
+                  const opts = Array.from(e.target.selectedOptions).map((o) => o.value);
+                  setSelectedCategoryIds(opts);
+                }}
+                className={selClass}
+                style={{ minHeight: 80 }}
+              >
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
               {loading ? "Creating..." : "Create Contact"}
             </button>
@@ -414,6 +571,12 @@ function ImportContactsModal({ workspaceId, onClose, onImported }: { workspaceId
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ created: number; skipped: { row: number; reason: string }[] } | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
+  }, [workspaceId]);
 
   const handleFile = (file: File) => {
     if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
@@ -436,7 +599,7 @@ function ImportContactsModal({ workspaceId, onClose, onImported }: { workspaceId
     if (!csvText.trim()) { setError("Please paste or upload a CSV file"); return; }
     setLoading(true);
     try {
-      const data = await api.contacts.import(workspaceId, csvText);
+      const data = await api.contacts.import(workspaceId, csvText, selectedCategoryIds);
       setResult(data);
       if (data.created > 0) {
         setTimeout(() => onImported(), 1500);
@@ -510,6 +673,20 @@ function ImportContactsModal({ workspaceId, onClose, onImported }: { workspaceId
                   <X className="w-3 h-3" />
                 </button>
               )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Assign to Category (optional)</label>
+              <select
+                value={selectedCategoryIds[0] || ""}
+                onChange={(e) => setSelectedCategoryIds(e.target.value ? [e.target.value] : [])}
+                className={selClass}
+              >
+                <option value="">No category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
             </div>
 
             <a

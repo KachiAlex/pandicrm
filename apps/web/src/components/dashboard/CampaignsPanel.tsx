@@ -119,8 +119,10 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const [htmlContent, setHtmlContent] = useState("<p>Hello {{firstName}},</p>\n<p>This is a test email from PandiCRM.</p>\n<p>Best regards,<br/>{{senderName}}</p>");
   const [textContent, setTextContent] = useState("");
   const [signature, setSignature] = useState("Best regards,\nPandiCRM Team");
-  const [contacts, setContacts] = useState<{ id: string; firstName: string; lastName: string; email?: string }[]>([]);
+  const [contacts, setContacts] = useState<{ id: string; firstName: string; lastName: string; email?: string; categoryIds?: string[] }[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
+  const [categories, setCategories] = useState<{ id: string; name: string; color?: string }[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [templates, setTemplates] = useState<{ id: string; name: string; subject: string; htmlContent: string }[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [loading, setLoading] = useState(false);
@@ -131,6 +133,7 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
       setContacts(data.filter((c) => c.email));
     }).catch(() => {});
     api.emailTemplates.list(workspaceId).then(setTemplates).catch(() => {});
+    api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
   }, [workspaceId]);
 
   const toggleContact = (id: string) => {
@@ -150,6 +153,15 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
     }
   };
 
+  const toggleCategory = (id: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const applyTemplate = (templateId: string) => {
     setSelectedTemplate(templateId);
     if (!templateId) return;
@@ -167,8 +179,8 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const signatureToHtml = (sig: string) => escapeHtmlEntities(sig).replace(/\n/g, "<br/>");
 
   const handleSubmit = async () => {
-    if (!name || !subject || !senderName || !senderEmail || selectedContacts.size === 0) {
-      setError("Please fill in all required fields and select at least one contact");
+    if (!name || !subject || !senderName || !senderEmail || (selectedContacts.size === 0 && selectedCategories.size === 0)) {
+      setError("Please fill in all required fields and select at least one contact or category");
       return;
     }
     setLoading(true);
@@ -194,6 +206,7 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
         htmlContent: finalHtml,
         textContent: finalText || undefined,
         contactIds: Array.from(selectedContacts),
+        categoryIds: Array.from(selectedCategories),
         templateId: selectedTemplate || undefined,
       });
       onCreated();
@@ -276,6 +289,24 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
               setSignature(sig);
             }}
           />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-gray-700">Categories ({selectedCategories.size} selected)</label>
+          </div>
+          {categories.length === 0 ? (
+            <p className="text-xs text-gray-400 p-3 bg-gray-50 rounded-xl">No categories yet. Create categories in the contacts page.</p>
+          ) : (
+            <div className="max-h-32 overflow-y-auto bg-gray-50 rounded-xl border border-gray-200">
+              {categories.map((cat) => (
+                <label key={cat.id} className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0">
+                  <input type="checkbox" checked={selectedCategories.has(cat.id)} onChange={() => toggleCategory(cat.id)} className="rounded text-pk-600" />
+                  <span className="text-sm text-gray-700">{cat.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

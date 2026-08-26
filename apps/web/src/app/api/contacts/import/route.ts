@@ -61,10 +61,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { workspaceId, csvText } = validation.data;
+    const { workspaceId, csvText, categoryIds } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
+
+    // Validate categories if provided
+    if (categoryIds && categoryIds.length > 0) {
+      const categories = await prisma.contactCategory.findMany({
+        where: { id: { in: categoryIds }, workspaceId },
+        select: { id: true },
+      });
+      if (categories.length !== categoryIds.length) {
+        return NextResponse.json({ error: "One or more categories do not exist" }, { status: 400 });
+      }
+    }
 
     const rows = parseCSV(csvText);
     if (rows.length < 2) {
@@ -147,6 +158,7 @@ export async function POST(req: NextRequest) {
           department,
           linkedin,
           customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+          categoryIds: categoryIds || undefined,
         },
       });
 

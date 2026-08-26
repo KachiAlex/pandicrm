@@ -25,19 +25,30 @@ export const api = {
     delete: (id: string) => fetchJSON<void>(`/api/accounts/${id}`, { method: "DELETE" }),
   },
   contacts: {
-    list: (workspaceId: string) =>
-      fetchJSON<Contact[]>(`/api/contacts?workspaceId=${workspaceId}`),
+    list: (workspaceId: string, categoryId?: string) =>
+      fetchJSON<Contact[]>(`/api/contacts?workspaceId=${workspaceId}${categoryId ? `&categoryId=${categoryId}` : ""}`),
     get: (id: string) => fetchJSON<Contact>(`/api/contacts/${id}`),
     create: (data: Partial<Contact>) =>
       fetchJSON<Contact>("/api/contacts", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<Contact>) =>
       fetchJSON<Contact>(`/api/contacts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/contacts/${id}`, { method: "DELETE" }),
-    import: (workspaceId: string, csvText: string) =>
+    bulk: (data: { ids: string[]; categoryIds?: string[]; delete?: boolean }) =>
+      fetchJSON<{ updated?: number; deleted?: number }>("/api/contacts/bulk", { method: "POST", body: JSON.stringify(data) }),
+    import: (workspaceId: string, csvText: string, categoryIds?: string[]) =>
       fetchJSON<{ created: number; skipped: { row: number; reason: string }[]; contacts: any[] }>("/api/contacts/import", {
         method: "POST",
-        body: JSON.stringify({ workspaceId, csvText }),
+        body: JSON.stringify({ workspaceId, csvText, categoryIds }),
       }),
+  },
+  contactCategories: {
+    list: (workspaceId: string) =>
+      fetchJSON<ContactCategory[]>(`/api/contact-categories?workspaceId=${workspaceId}`),
+    create: (data: Partial<ContactCategory>) =>
+      fetchJSON<ContactCategory>("/api/contact-categories", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<ContactCategory>) =>
+      fetchJSON<ContactCategory>(`/api/contact-categories/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/contact-categories/${id}`, { method: "DELETE" }),
   },
   deals: {
     list: (workspaceId: string) =>
@@ -100,7 +111,7 @@ export const api = {
     list: (workspaceId: string) =>
       fetchJSON<EmailCampaign[]>(`/api/campaigns?workspaceId=${workspaceId}`),
     get: (id: string) => fetchJSON<EmailCampaign>(`/api/campaigns/${id}`),
-    create: (data: Partial<EmailCampaign> & { contactIds: string[] }) =>
+    create: (data: Partial<EmailCampaign> & { contactIds?: string[]; categoryIds?: string[] }) =>
       fetchJSON<EmailCampaign>("/api/campaigns", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<EmailCampaign>) =>
       fetchJSON<EmailCampaign>(`/api/campaigns/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
@@ -171,9 +182,20 @@ export interface Contact {
   linkedin?: string;
   avatar?: string;
   isPrimary: boolean;
+  categoryIds: string[];
   createdAt: string;
   updatedAt: string;
   account?: { id: string; name: string };
+}
+
+export interface ContactCategory {
+  id: string;
+  workspaceId: string;
+  name: string;
+  color?: string;
+  count?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type DealStage = "lead" | "qualify" | "propose" | "negotiate" | "won" | "lost";

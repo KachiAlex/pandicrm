@@ -44,21 +44,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { workspaceId, templateId, name, subject, htmlContent, textContent, senderName, senderEmail, replyTo, contactIds } = validation.data;
+    const { workspaceId, templateId, name, subject, htmlContent, textContent, senderName, senderEmail, replyTo, contactIds, categoryIds } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
+    const contactWhere: any = { workspaceId, email: { not: null } };
+    if (contactIds && contactIds.length > 0) {
+      contactWhere.id = { in: contactIds };
+    }
+
+    if (categoryIds && categoryIds.length > 0) {
+      contactWhere.OR = [
+        contactWhere.id ? { id: { in: contactIds } } : undefined,
+        { categoryIds: { hasSome: categoryIds } },
+      ].filter(Boolean);
+      delete contactWhere.id;
+    }
+
     const contacts = await prisma.contact.findMany({
-      where: {
-        id: { in: contactIds },
-        workspaceId,
-        email: { not: null },
-      },
+      where: contactWhere,
       select: { id: true, email: true, firstName: true, lastName: true },
     });
 
-    if (contacts.length === 0) {
+    const uniqueContacts = Array.from(new Map(contacts.map((c) => [c.id, c])).values());
+
+    if (uniqueContacts.length === 0) {
       return NextResponse.json({ error: "No valid contacts with email addresses found" }, { status: 400 });
     }
 
@@ -74,9 +85,9 @@ export async function POST(req: NextRequest) {
         senderEmail,
         replyTo: replyTo || null,
         status: "draft",
-        totalRecipients: contacts.length,
+        totalRecipients: uniqueContacts.length,
         recipients: {
-          create: contacts.map((c) => ({
+          create: uniqueContacts.map((c) => ({
             contactId: c.id,
             email: c.email!,
           })),

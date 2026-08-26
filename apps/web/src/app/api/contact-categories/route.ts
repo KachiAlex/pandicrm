@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
-import { createContactSchema, validateBody } from "@/lib/validations";
+import { createContactCategorySchema, validateBody } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
-    const categoryId = searchParams.get("categoryId");
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
@@ -19,18 +18,19 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const where: any = { workspaceId };
-    if (categoryId) {
-      where.categoryIds = { has: categoryId };
-    }
-
-    const contacts = await prisma.contact.findMany({
-      where,
-      include: { account: { select: { id: true, name: true } } },
-      orderBy: { createdAt: "desc" },
+    const categories = await prisma.contactCategory.findMany({
+      where: { workspaceId },
+      orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(contacts);
+    const withCounts = await Promise.all(
+      categories.map(async (c) => ({
+        ...c,
+        count: await prisma.contact.count({ where: { workspaceId, categoryIds: { has: c.id } } }),
+      }))
+    );
+
+    return NextResponse.json(withCounts);
   } catch {
     return serverError();
   }
@@ -42,21 +42,28 @@ export async function POST(req: NextRequest) {
     if (session instanceof NextResponse) return session;
 
     const body = await req.json();
-    const validation = validateBody(createContactSchema, body);
+    const validation = validateBody(createContactCategorySchema, body);
     if (!validation.success) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, categoryIds } = validation.data;
+    const { workspaceId, name, color } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const contact = await prisma.contact.create({
-      data: { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, categoryIds },
+    const existing = await prisma.contactCategory.findFirst({
+      where: { workspaceId, name: { equals: name, mode: "insensitive" } },
+    });
+    if (existing) {
+      return NextResponse.json({ error: "A category with this name already exists" }, { status: 409 });
+    }
+
+    const category = await prisma.contactCategory.create({
+      data: { workspaceId, name, color },
     });
 
-    return NextResponse.json(contact, { status: 201 });
+    return NextResponse.json(category, { status: 201 });
   } catch {
     return serverError();
   }
