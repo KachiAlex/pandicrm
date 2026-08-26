@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { ArrowLeft, Loader2, Save, Lock, User, CheckCircle, Building2 } from "lucide-react";
-import { api, User as ApiUser, Workspace } from "@/lib/api";
+import { ArrowLeft, Loader2, Save, Lock, User, CheckCircle, Building2, Users, X, Trash2, Shield, UserPlus } from "lucide-react";
+import { api, User as ApiUser, Workspace, WorkspaceMember } from "@/lib/api";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -30,6 +30,12 @@ export default function SettingsPage() {
   const [workspaceName, setWorkspaceName] = useState("");
   const [savingWorkspace, setSavingWorkspace] = useState(false);
   const [workspaceMessage, setWorkspaceMessage] = useState("");
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState("");
 
   useEffect(() => {
     api.user.get().then((data) => {
@@ -40,15 +46,63 @@ export default function SettingsPage() {
       setCompany(data.company || "");
       setPhone(data.phone || "");
     }).catch(() => {});
-    // Fetch workspace from local hook isn't available here, use a simple fetch
     fetch("/api/workspaces").then((r) => r.ok ? r.json() : []).then((data: Workspace[]) => {
       if (data.length > 0) {
         setWorkspace(data[0]);
         setWorkspaceName(data[0].name);
+        loadMembers(data[0].id);
       }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  const loadMembers = async (id: string) => {
+    setMembersLoading(true);
+    try {
+      const list = await api.workspaces.members(id);
+      setMembers(list);
+    } catch {
+      setMembers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!workspace) return;
+    setInviteLoading(true);
+    setInviteMessage("");
+    try {
+      const member = await api.workspaces.invite(workspace.id, { email: inviteEmail, role: inviteRole });
+      setMembers((prev) => [...prev, member]);
+      setInviteEmail("");
+      setInviteMessage("Member invited successfully.");
+    } catch (err: any) {
+      setInviteMessage(err.message || "Failed to invite member.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleRemove = async (targetUserId: string) => {
+    if (!workspace) return;
+    if (!confirm("Remove this member?")) return;
+    try {
+      await api.workspaces.removeMember(workspace.id, targetUserId);
+      setMembers((prev) => prev.filter((m) => m.userId !== targetUserId));
+    } catch {}
+  };
+
+  const handleRoleChange = async (targetUserId: string, role: string) => {
+    if (!workspace) return;
+    try {
+      await api.workspaces.updateMember(workspace.id, targetUserId, { role });
+      setMembers((prev) => prev.map((m) => m.userId === targetUserId ? { ...m, role: role as any } : m));
+    } catch {}
+  };
+
+  const isOwner = workspace?.ownerId === user?.id;
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,6 +247,89 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+        </div>
+
+        <div className="surf p-6 mb-5">
+          <div className="flex items-center gap-2 mb-5">
+            <Users className="w-4 h-4 text-pk-600" />
+            <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Workspace Members</h2>
+          </div>
+
+          {workspace && (
+            <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 mb-4">
+              <div className="relative flex-1">
+                <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="colleague@company.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-sm outline-none focus:border-pk-500 transition-colors"
+                />
+              </div>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
+                className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500"
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button type="submit" disabled={inviteLoading} className="btn-p text-xs px-4 py-2.5 disabled:opacity-60">
+                {inviteLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Invite"}
+              </button>
+            </form>
+          )}
+
+          {inviteMessage && (
+            <p className={`text-xs mb-4 ${inviteMessage.includes("success") ? "text-green-600" : "text-red-500"}`}>{inviteMessage}</p>
+          )}
+
+          {membersLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-pk-600" /></div>
+          ) : members.length === 0 ? (
+            <p className="text-xs text-gray-400">No members found.</p>
+          ) : (
+            <div className="space-y-2">
+              {members.map((m) => (
+                <div key={m.userId} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-pk-100 text-pk-700 flex items-center justify-center text-xs font-semibold">
+                      {(m.firstName?.[0] || m.name?.[0] || m.email[0]).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-800 font-medium truncate">
+                        {m.firstName && m.lastName ? `${m.firstName} ${m.lastName}` : m.name || m.email}
+                      </p>
+                      <p className="text-[10px] text-gray-400 truncate">{m.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {m.role === "owner" ? (
+                      <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">Owner</span>
+                    ) : isOwner ? (
+                      <select
+                        value={m.role}
+                        onChange={(e) => handleRoleChange(m.userId, e.target.value)}
+                        className="text-[10px] bg-white border border-gray-200 rounded px-2 py-1 outline-none"
+                      >
+                        <option value="member">Member</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded capitalize">{m.role}</span>
+                    )}
+                    {isOwner && m.role !== "owner" && (
+                      <button onClick={() => handleRemove(m.userId)} className="p-1.5 rounded-md hover:bg-red-50 text-red-500" title="Remove">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="surf p-6">

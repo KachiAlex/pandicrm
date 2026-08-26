@@ -106,6 +106,14 @@ export const api = {
   workspaces: {
     update: (id: string, data: Partial<Workspace>) =>
       fetchJSON<Workspace>(`/api/workspaces/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    members: (id: string) =>
+      fetchJSON<WorkspaceMember[]>(`/api/workspaces/${id}/members`),
+    invite: (id: string, data: { email: string; role?: string }) =>
+      fetchJSON<WorkspaceMember>(`/api/workspaces/${id}/members`, { method: "POST", body: JSON.stringify(data) }),
+    updateMember: (id: string, userId: string, data: { role: string }) =>
+      fetchJSON<WorkspaceMember>(`/api/workspaces/${id}/members/${userId}`, { method: "PATCH", body: JSON.stringify(data) }),
+    removeMember: (id: string, userId: string) =>
+      fetchJSON<void>(`/api/workspaces/${id}/members/${userId}`, { method: "DELETE" }),
   },
   campaigns: {
     list: (workspaceId: string) =>
@@ -152,6 +160,17 @@ export interface Workspace {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WorkspaceMember {
+  id: string;
+  userId: string;
+  email: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  role: "owner" | "admin" | "member";
+  joinedAt: string;
 }
 
 export interface Account {

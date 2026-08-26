@@ -128,6 +128,15 @@ export const updateWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
 });
 
+export const inviteWorkspaceMemberSchema = z.object({
+  email: z.string().email().max(255),
+  role: z.enum(["member", "admin"]).default("member"),
+});
+
+export const updateWorkspaceMemberSchema = z.object({
+  role: z.enum(["member", "admin", "owner"]).optional(),
+});
+
 export const updateUserSchema = z.object({
   name: z.string().max(200).optional(),
   firstName: z.string().max(100).optional(),

@@ -60,6 +60,25 @@ export async function requireWorkspaceAccess(workspaceId: string, userId: string
   return true;
 }
 
+export async function requireWorkspaceRole(workspaceId: string, userId: string, required: "owner" | "admin" | "member" = "member") {
+  const workspace = await prisma.workspace.findFirst({
+    where: { id: workspaceId, ownerId: userId },
+    select: { id: true },
+  });
+  if (workspace) return { role: "owner" as const, ok: true };
+
+  const membership = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId },
+    select: { role: true },
+  });
+  if (!membership) return { ok: false };
+
+  const roles = ["member", "admin", "owner"];
+  const userLevel = roles.indexOf(membership.role);
+  const requiredLevel = roles.indexOf(required);
+  return { role: membership.role as "member" | "admin" | "owner", ok: userLevel >= requiredLevel };
+}
+
 export function unauthorized() {
   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
