@@ -7,7 +7,7 @@ import {
   Mic, CheckSquare, GitBranch, BarChart2, Clock, Search, Bell, HelpCircle,
   ChevronDown, Settings, Plug, Users, Tag, FileText,
   Loader2, Check, X, Mail, FileText as FileIcon, CheckCircle, DollarSign,
-  Menu, Send
+  Menu, Send, Lock
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { api, Notification } from "@/lib/api";
@@ -18,6 +18,7 @@ import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import TimelinePanel from "@/components/dashboard/TimelinePanel";
 import ListPanel from "@/components/dashboard/ListPanel";
 import CampaignsPanel from "@/components/dashboard/CampaignsPanel";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("notes");
@@ -28,6 +29,9 @@ export default function DashboardPage() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,6 +43,9 @@ export default function DashboardPage() {
     function handleClick(e: MouseEvent) {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -121,33 +128,77 @@ export default function DashboardPage() {
           <div className="dni"><Plug className="w-3.5 h-3.5 flex-shrink-0" /><span>Integrations</span></div>
         </nav>
 
-        <div className="px-3 pb-3 pt-2 border-t" style={{ borderColor: "rgba(255,26,151,0.1)" }}>
+        <div className="px-3 pb-3 pt-2 border-t relative" style={{ borderColor: "rgba(255,26,151,0.1)" }}>
           <div className="mb-2 px-3 py-2.5 rounded-xl" style={{ background: "linear-gradient(135deg,rgba(255,26,151,0.12),rgba(184,0,85,0.07))", border: "1px solid rgba(255,26,151,0.15)" }}>
             <p style={{ fontSize: 10.5, fontWeight: 600, color: "#ff80c4", marginBottom: 2 }}>Early Access</p>
             <p style={{ fontSize: 9.5, color: "rgba(255,255,255,0.35)", lineHeight: 1.4 }}>Lock in founding member pricing when we launch.</p>
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl cursor-pointer text-left"
-            style={{ transition: "background .14s" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-          >
-            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff66b3,#b80055)" }}>
-              <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff" }}>
-                {(session?.user?.name || session?.user?.email || "U").slice(0, 2).toUpperCase()}
-              </span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.8)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {session?.user?.name || session?.user?.email || "User"}
-              </p>
-              <p style={{ fontSize: 9.5, color: "rgba(255,255,255,0.28)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {session?.user?.email || ""}
-              </p>
-            </div>
-            <ChevronDown className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(255,255,255,0.22)" }} />
-          </button>
+          <div ref={userMenuRef}>
+            <button
+              onClick={() => setShowUserMenu((s) => !s)}
+              className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl cursor-pointer text-left"
+              style={{ transition: "background .14s" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+            >
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff66b3,#b80055)" }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "#fff" }}>
+                  {(session?.user?.name || session?.user?.email || "U").slice(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 11.5, fontWeight: 600, color: "rgba(255,255,255,0.8)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {session?.user?.name || session?.user?.email || "User"}
+                </p>
+                <p style={{ fontSize: 9.5, color: "rgba(255,255,255,0.28)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {session?.user?.email || ""}
+                </p>
+              </div>
+              <ChevronDown className={`w-3 h-3 flex-shrink-0 transition-transform ${showUserMenu ? "rotate-180" : ""}`} style={{ color: "rgba(255,255,255,0.22)" }} />
+            </button>
+
+            {showUserMenu && (
+              <div className="absolute left-3 right-3 bottom-14 rounded-xl overflow-hidden" style={{ background: "rgba(23,20,25,0.98)", border: "1px solid rgba(255,26,151,0.12)" }}>
+                <Link
+                  href="/settings"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs"
+                  style={{ color: "rgba(255,255,255,0.8)", transition: "background .14s" }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <Settings className="w-3.5 h-3.5 flex-shrink-0" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => { setShowUserMenu(false); setShowChangePassword(true); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs"
+                  style={{ color: "rgba(255,255,255,0.8)", transition: "background .14s" }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                >
+                  <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+                  Change Password
+                </button>
+                <button
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs"
+                  style={{ color: "rgba(255,255,255,0.8)", transition: "background .14s" }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                >
+                  <div className="w-3.5 h-3.5 flex items-center justify-center flex-shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </div>
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
@@ -297,6 +348,8 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      <ChangePasswordModal isOpen={showChangePassword} onClose={() => setShowChangePassword(false)} />
     </div>
   );
 }
