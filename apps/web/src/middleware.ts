@@ -6,7 +6,8 @@ export default auth((req) => {
   const isAuthRoute = nextUrl.pathname === "/login";
   const isPublicRoute = nextUrl.pathname === "/";
   const isAdminRoute = nextUrl.pathname.startsWith("/admin");
-  const role = (req.auth as any)?.user?.role;
+  const authPayload = req.auth as any;
+  const role = authPayload?.role ?? authPayload?.user?.role;
   const isAdmin = ["admin", "superadmin"].includes(role ?? "");
 
   if (isAuthRoute) {
