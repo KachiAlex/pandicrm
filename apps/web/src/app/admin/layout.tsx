@@ -24,6 +24,9 @@ export default async function AdminLayout({
             <Link href="/admin/users" className="text-pink-600 font-medium">
               Users
             </Link>
+            <Link href="/admin/workspaces" className="text-pink-600 font-medium">
+              Workspaces
+            </Link>
             <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">
               Back to app
             </Link>
