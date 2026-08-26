@@ -104,6 +104,10 @@ export default function SettingsPage() {
 
   const isOwner = workspace?.ownerId === user?.id;
 
+  const myMember = members.find((m) => m.userId === user?.id);
+  const myRole = myMember?.role || (isOwner ? "owner" : "member");
+  const canManage = myRole === "owner" || myRole === "admin";
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -255,7 +259,7 @@ export default function SettingsPage() {
             <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Workspace Members</h2>
           </div>
 
-          {workspace && (
+          {workspace && canManage && (
             <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2 mb-4">
               <div className="relative flex-1">
                 <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -308,7 +312,7 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-2">
                     {m.role === "owner" ? (
                       <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">Owner</span>
-                    ) : isOwner ? (
+                    ) : canManage ? (
                       <select
                         value={m.role}
                         onChange={(e) => handleRoleChange(m.userId, e.target.value)}
@@ -320,7 +324,7 @@ export default function SettingsPage() {
                     ) : (
                       <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded capitalize">{m.role}</span>
                     )}
-                    {isOwner && m.role !== "owner" && (
+                    {canManage && m.role !== "owner" && (
                       <button onClick={() => handleRemove(m.userId)} className="p-1.5 rounded-md hover:bg-red-50 text-red-500" title="Remove">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

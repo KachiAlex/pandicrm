@@ -95,8 +95,18 @@ export function isAdmin(role?: string | null) {
   return ["admin", "superadmin"].includes(role ?? "");
 }
 
+export function isSuperAdmin(role?: string | null) {
+  return (role ?? "") === "superadmin";
+}
+
 export function requireAdmin(session: { user?: { role?: string | null } }) {
   if (!isAdmin(session?.user?.role)) {
+    return unauthorized();
+  }
+}
+
+export function requireSuperAdmin(session: { user?: { role?: string | null } }) {
+  if (!isSuperAdmin(session?.user?.role)) {
     return unauthorized();
   }
 }

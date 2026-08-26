@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, isAdmin, unauthorized, serverError } from "@/lib/api-auth";
+import { requireAuth, isSuperAdmin, unauthorized, serverError } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth(req);
   if (session instanceof NextResponse) return session;
-  if (!isAdmin(session.user.role)) return unauthorized();
+  if (!isSuperAdmin(session.user.role)) return unauthorized();
 
   try {
     const users = await prisma.user.findMany({
@@ -33,7 +32,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await requireAuth(req);
   if (session instanceof NextResponse) return session;
-  if (!isAdmin(session.user.role)) return unauthorized();
+  if (!isSuperAdmin(session.user.role)) return unauthorized();
 
   try {
     const body = await req.json();
@@ -54,7 +53,7 @@ export async function PATCH(req: NextRequest) {
     const updated = await prisma.user.update({
       where: { id },
       data: {
-        ...(role !== undefined ? { role: role as UserRole } : {}),
+        ...(role !== undefined ? { role: role as any } : {}),
         ...(isActive !== undefined ? { isActive } : {}),
       },
       select: {

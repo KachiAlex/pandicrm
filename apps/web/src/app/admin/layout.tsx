@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { isSuperAdmin } from "@/lib/api-auth";
 
 export default async function AdminLayout({
   children,
@@ -10,7 +11,7 @@ export default async function AdminLayout({
   const session = await auth();
   const role = session?.user?.role;
 
-  if (!["admin", "superadmin"].includes(role ?? "")) {
+  if (!isSuperAdmin(role)) {
     redirect("/dashboard");
   }
 

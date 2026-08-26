@@ -1,13 +1,14 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { isSuperAdmin } from "@/lib/api-auth";
 import UsersTable from "./_components/users-table";
 
 export default async function AdminUsersPage() {
   const session = await auth();
   const role = session?.user?.role;
 
-  if (!["admin", "superadmin"].includes(role ?? "")) {
+  if (!isSuperAdmin(role)) {
     redirect("/dashboard");
   }
 
