@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { api, Notification } from "@/lib/api";
+import { playAlarm } from "@/lib/alarm";
 import NotesPanel from "@/components/dashboard/NotesPanel";
 import TasksPanel from "@/components/dashboard/TasksPanel";
 import PipelinePanel from "@/components/dashboard/PipelinePanel";
@@ -33,11 +34,20 @@ export default function DashboardPage() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+  const alarmPlayedRef = useRef(false);
 
   useEffect(() => {
     if (!workspace?.id) return;
     api.notifications.list(workspace.id).then((data) => setNotifications(data)).catch(() => {});
   }, [workspace?.id]);
+
+  useEffect(() => {
+    if (alarmPlayedRef.current) return;
+    if (notifications.some((n) => n.type === "task_overdue" && !n.read)) {
+      alarmPlayedRef.current = true;
+      playAlarm();
+    }
+  }, [notifications]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
