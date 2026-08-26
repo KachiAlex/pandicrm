@@ -19,6 +19,7 @@ import ReportsPanel from "@/components/dashboard/ReportsPanel";
 import TimelinePanel from "@/components/dashboard/TimelinePanel";
 import ListPanel from "@/components/dashboard/ListPanel";
 import CampaignsPanel from "@/components/dashboard/CampaignsPanel";
+import IntegrationsPanel from "@/components/dashboard/IntegrationsPanel";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 export default function DashboardPage() {
@@ -82,6 +83,7 @@ export default function DashboardPage() {
     { id: "reports", label: "Reports", icon: <BarChart2 className="w-3.5 h-3.5" /> },
     { id: "timeline", label: "Timeline", icon: <Clock className="w-3.5 h-3.5" /> },
     { id: "campaigns", label: "Campaigns", icon: <Send className="w-3.5 h-3.5" /> },
+    { id: "integrations", label: "Integrations", icon: <Plug className="w-3.5 h-3.5" /> },
   ];
 
   const sidebarItems = [
@@ -135,7 +137,7 @@ export default function DashboardPage() {
           ))}
           <p className="sb-label" style={{ marginTop: 14 }}>Settings</p>
           <Link href="/settings" className="dni" onClick={() => setShowMobileSidebar(false)}><Settings className="w-3.5 h-3.5 flex-shrink-0" /><span>Settings</span></Link>
-          <div className="dni"><Plug className="w-3.5 h-3.5 flex-shrink-0" /><span>Integrations</span></div>
+          <div className={`dni ${activeTab === "integrations" ? "on" : ""}`} onClick={() => { setActiveTab("integrations"); setShowMobileSidebar(false); }}><Plug className="w-3.5 h-3.5 flex-shrink-0" /><span>Integrations</span></div>
         </nav>
 
         <div className="px-3 pb-3 pt-2 border-t relative" style={{ borderColor: "rgba(255,26,151,0.1)" }}>
@@ -351,6 +353,7 @@ export default function DashboardPage() {
               {activeTab === "reports" && <ReportsPanel workspaceId={workspace.id} />}
               {activeTab === "timeline" && <TimelinePanel workspaceId={workspace.id} />}
               {activeTab === "campaigns" && <CampaignsPanel workspaceId={workspace.id} />}
+              {activeTab === "integrations" && <IntegrationsPanel workspaceId={workspace.id} />}
               {activeTab === "accounts" && <ListPanel workspaceId={workspace.id} type="accounts" />}
               {activeTab === "contacts" && <ListPanel workspaceId={workspace.id} type="contacts" />}
               {activeTab === "deals" && <ListPanel workspaceId={workspace.id} type="deals" />}

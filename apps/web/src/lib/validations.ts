@@ -227,6 +227,22 @@ export const sendCampaignSchema = z.object({
   contactIds: z.array(z.string()).min(1).max(10000),
 });
 
+export const createIntegrationSchema = z.object({
+  workspaceId: z.string().min(1),
+  type: z.enum(["email", "sms", "calendar"]),
+  provider: z.string().min(1).max(100),
+  label: z.string().max(200).optional(),
+  isActive: z.boolean().optional().default(true),
+  config: z.record(z.string(), z.unknown()).default({}),
+});
+
+export const updateIntegrationSchema = z.object({
+  provider: z.string().min(1).max(100).optional(),
+  label: z.string().max(200).optional().or(z.literal("")),
+  isActive: z.boolean().optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
+});
+
 export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) {

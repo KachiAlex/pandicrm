@@ -1,6 +1,30 @@
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
 
-function getTransporter() {
+async function getTransporter(workspaceId?: string) {
+  if (workspaceId) {
+    const integration = await prisma.integration.findFirst({
+      where: { workspaceId, type: "email", isActive: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (integration) {
+      const c = (integration.config as any) || {};
+      const host = c.host || "smtp-relay.brevo.com";
+      const port = parseInt(c.port || "587", 10);
+      const user = c.user;
+      const pass = c.pass;
+      if (user && pass) {
+        return nodemailer.createTransport({
+          host,
+          port,
+          secure: c.secure === true || port === 465,
+          auth: { user, pass },
+        });
+      }
+    }
+  }
+
   const host = process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com";
   const port = parseInt(process.env.BREVO_SMTP_PORT || "587", 10);
   const user = process.env.BREVO_SMTP_USER;
@@ -19,6 +43,7 @@ function getTransporter() {
 }
 
 interface EmailParams {
+  workspaceId?: string;
   sender: { name: string; email: string };
   to: { email: string; name?: string }[];
   subject: string;
@@ -29,9 +54,9 @@ interface EmailParams {
 }
 
 export async function sendTransactionalEmail(params: EmailParams): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const transporter = getTransporter();
+  const transporter = await getTransporter(params.workspaceId);
   if (!transporter) {
-    return { success: false, error: "Brevo SMTP credentials not configured (BREVO_SMTP_USER and BREVO_SMTP_PASS required)" };
+    return { success: false, error: "Email provider not configured. Add an email integration or set BREVO_SMTP_USER and BREVO_SMTP_PASS." };
   }
 
   try {

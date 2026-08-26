@@ -138,6 +138,16 @@ export const api = {
       fetchJSON<EmailTemplate>(`/api/email-templates/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/email-templates/${id}`, { method: "DELETE" }),
   },
+  integrations: {
+    list: (workspaceId: string) =>
+      fetchJSON<Integration[]>(`/api/integrations?workspaceId=${workspaceId}`),
+    create: (data: Partial<Integration>) =>
+      fetchJSON<Integration>("/api/integrations", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<Integration>) =>
+      fetchJSON<Integration>(`/api/integrations/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/integrations/${id}`, { method: "DELETE" }),
+    test: (id: string) => fetchJSON<{ success: boolean; message: string; authUrl?: string }>(`/api/integrations/${id}/test`, { method: "POST" }),
+  },
 };
 
 export interface User {
@@ -380,4 +390,16 @@ export interface CampaignStats {
   unsubscribeCount: number;
   sentAt?: string;
   recipientBreakdown: Record<string, number>;
+}
+
+export interface Integration {
+  id: string;
+  workspaceId: string;
+  type: "email" | "sms" | "calendar";
+  provider: string;
+  label?: string;
+  isActive: boolean;
+  config: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
 }

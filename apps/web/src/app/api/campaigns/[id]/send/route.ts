@@ -72,6 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const personalizedSubject = replaceTemplateVariables(campaign.subject, variables);
 
       const result = await sendTransactionalEmail({
+        workspaceId: campaign.workspaceId,
         sender: { name: campaign.senderName, email: campaign.senderEmail },
         to: [{ email: recipient.email, name: `${contact.firstName} ${contact.lastName}`.trim() }],
         subject: personalizedSubject,
