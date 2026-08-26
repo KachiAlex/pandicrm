@@ -146,7 +146,6 @@ export const registerSchema = z.object({
   lastName: z.string().max(100).optional(),
   company: z.string().max(200).optional(),
   phone: z.string().max(50).optional(),
-  role: z.string().max(100).optional(),
 });
 
 export const importContactsSchema = z.object({

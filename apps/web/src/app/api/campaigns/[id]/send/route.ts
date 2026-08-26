@@ -12,9 +12,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const campaign = await prisma.emailCampaign.findUnique({
       where: { id },
       include: {
+        workspace: { select: { name: true } },
         recipients: {
           include: {
-            contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+            contact: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                account: { select: { name: true } },
+              },
+            },
           },
         },
       },
@@ -49,6 +58,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         lastName: contact.lastName || "",
         fullName: `${contact.firstName} ${contact.lastName}`.trim(),
         email: recipient.email,
+        company: contact.account?.name || "",
+        senderName: campaign.senderName,
+        senderEmail: campaign.senderEmail,
+        workspaceName: campaign.workspace?.name || "",
+        unsubscribeUrl: `https://pandacrm.com.ng/unsubscribe?campaign=${campaign.id}&recipient=${recipient.id}`,
       };
 
       const personalizedHtml = replaceTemplateVariables(campaign.htmlContent, variables);

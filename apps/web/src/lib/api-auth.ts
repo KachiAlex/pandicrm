@@ -21,7 +21,7 @@ export async function requireAuth(req?: NextRequest) {
               lastName: (payload.lastName as string) || null,
               company: (payload.company as string) || null,
               phone: (payload.phone as string) || null,
-              role: (payload.role as string) || null,
+              role: (payload.role as string) || "user",
               image: (payload.image as string) || null,
             },
             expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -70,4 +70,14 @@ export function serverError(message = "Internal server error") {
 
 export function notFound() {
   return NextResponse.json({ error: "Not found" }, { status: 404 });
+}
+
+export function isAdmin(role?: string | null) {
+  return ["admin", "superadmin"].includes(role ?? "");
+}
+
+export function requireAdmin(session: { user?: { role?: string | null } }) {
+  if (!isAdmin(session?.user?.role)) {
+    return unauthorized();
+  }
 }

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { email, password, firstName, lastName, company, phone, role } = validation.data;
+    const { email, password, firstName, lastName, company, phone } = validation.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
         name: fullName,
         company: company || null,
         phone: phone || null,
-        role: role || null,
         password: hashed,
       },
       select: { id: true, email: true, name: true },

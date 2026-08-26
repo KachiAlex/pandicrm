@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Mail, Plus, Loader2, Send, BarChart3, Trash2, CheckCircle, XCircle, Clock, Eye, MousePointerClick } from "lucide-react";
 import { api, EmailCampaign, CampaignStats } from "@/lib/api";
+import CampaignEmailEditor from "./CampaignEmailEditor";
 
 export default function CampaignsPanel({ workspaceId }: { workspaceId: string }) {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
@@ -117,6 +118,7 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const [replyTo, setReplyTo] = useState("");
   const [htmlContent, setHtmlContent] = useState("<p>Hello {{firstName}},</p>\n<p>This is a test email from PandiCRM.</p>\n<p>Best regards,<br/>{{senderName}}</p>");
   const [textContent, setTextContent] = useState("");
+  const [signature, setSignature] = useState("Best regards,\nPandiCRM Team");
   const [contacts, setContacts] = useState<{ id: string; firstName: string; lastName: string; email?: string }[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [templates, setTemplates] = useState<{ id: string; name: string; subject: string; htmlContent: string }[]>([]);
@@ -155,8 +157,14 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
     if (t) {
       setSubject(t.subject);
       setHtmlContent(t.htmlContent);
+      setTextContent("");
     }
   };
+
+  const escapeHtmlEntities = (text: string) =>
+    text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const signatureToHtml = (sig: string) => escapeHtmlEntities(sig).replace(/\n/g, "<br/>");
 
   const handleSubmit = async () => {
     if (!name || !subject || !senderName || !senderEmail || selectedContacts.size === 0) {
@@ -166,6 +174,16 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
     setLoading(true);
     setError("");
     try {
+      const signatureHtml = signatureToHtml(signature);
+      const signaturePlain = signature;
+
+      const finalHtml = htmlContent
+        .replaceAll("{{signature}}", signatureHtml)
+        .replaceAll("{{ signature }}", signatureHtml);
+      const finalText = textContent
+        .replaceAll("{{signature}}", signaturePlain)
+        .replaceAll("{{ signature }}", signaturePlain);
+
       await api.campaigns.create({
         workspaceId,
         name,
@@ -173,8 +191,8 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
         senderName,
         senderEmail,
         replyTo: replyTo || undefined,
-        htmlContent,
-        textContent: textContent || undefined,
+        htmlContent: finalHtml,
+        textContent: finalText || undefined,
         contactIds: Array.from(selectedContacts),
         templateId: selectedTemplate || undefined,
       });
@@ -245,16 +263,19 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email Content (HTML) *</label>
-          <textarea value={htmlContent} onChange={(e) => setHtmlContent(e.target.value)} rows={8}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500 font-mono" />
-          <p className="text-[10px] text-gray-400 mt-1">Variables: {`{{firstName}}`}, {`{{lastName}}`}, {`{{fullName}}`}, {`{{email}}`}</p>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Plain Text (optional)</label>
-          <textarea value={textContent} onChange={(e) => setTextContent(e.target.value)} rows={3}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email Content *</label>
+          <CampaignEmailEditor
+            htmlContent={htmlContent}
+            textContent={textContent}
+            signature={signature}
+            senderName={senderName}
+            senderEmail={senderEmail}
+            onChange={({ htmlContent, textContent, signature: sig }) => {
+              setHtmlContent(htmlContent);
+              setTextContent(textContent);
+              setSignature(sig);
+            }}
+          />
         </div>
 
         <div>

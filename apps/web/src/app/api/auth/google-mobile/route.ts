@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           firstName: nameParts[0] || null,
           lastName: nameParts.slice(1).join(" ") || null,
           avatar: payload.picture || null,
-          role: null,
+          role: "user",
         },
       });
     }

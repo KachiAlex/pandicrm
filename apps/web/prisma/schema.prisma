@@ -7,6 +7,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  admin
+  superadmin
+}
+
+enum Permission {
+  users_read
+  users_create
+  users_update
+  users_delete
+  users_manage
+  workspaces_manage
+  billing_manage
+}
+
+model RolePermission {
+  id         String     @id @default(cuid())
+  role       UserRole
+  permission Permission
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  @@unique([role, permission])
+  @@map("role_permissions")
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -15,7 +41,8 @@ model User {
   name          String?
   company       String?
   phone         String?
-  role          String?  // admin, sales_rep, manager, support
+  role          UserRole @default(user)
+  isActive      Boolean  @default(true) @map("is_active")
   avatar        String?
   password      String?  // hashed, for credentials auth
   createdAt     DateTime @default(now()) @map("created_at")

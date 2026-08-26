@@ -90,7 +90,7 @@ export const {
               firstName: nameParts[0] || null,
               lastName: nameParts.slice(1).join(" ") || null,
               avatar: user.image || null,
-              role: null,
+              role: "user",
             },
           });
         } else if (!existing.avatar && user.image) {
