@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 
 export const {
@@ -39,6 +38,7 @@ export const {
           return null;
         }
 
+        const { prisma } = await import("@/lib/prisma");
         const user = await prisma.user.findUnique({
           where: { email },
         });
@@ -77,6 +77,7 @@ export const {
   callbacks: {
     signIn: async ({ user, account }) => {
       if (account?.provider === "google" && user?.email) {
+        const { prisma } = await import("@/lib/prisma");
         const existing = await prisma.user.findUnique({
           where: { email: user.email },
         });
@@ -102,28 +103,14 @@ export const {
       }
       return true;
     },
-    jwt: async ({ token }) => {
-      if (token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            company: true,
-            phone: true,
-            role: true,
-          },
-        });
-
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.firstName = dbUser.firstName;
-          token.lastName = dbUser.lastName;
-          token.company = dbUser.company;
-          token.phone = dbUser.phone;
-          token.role = dbUser.role;
-        }
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = (user as any).id ?? token.id ?? token.sub;
+        token.firstName = (user as any).firstName ?? user.name?.split(" ")[0] ?? token.firstName;
+        token.lastName = (user as any).lastName ?? user.name?.split(" ").slice(1).join(" ") ?? token.lastName;
+        token.company = (user as any).company ?? token.company;
+        token.phone = (user as any).phone ?? token.phone;
+        token.role = (user as any).role ?? "user";
       }
       return token;
     },
