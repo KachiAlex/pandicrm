@@ -82,6 +82,30 @@ export default function FollowUpsPage() {
   const [categoryId, setCategoryId] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [showCreate, setShowCreate] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [candidatePage, setCandidatePage] = useState(0);
+  const candidatePageSize = 20;
+
+  const filteredCandidates = useMemo(() => {
+    return allContacts.filter((c) => {
+      const matchesCategory = !categoryId || (c.categoryIds || []).includes(categoryId);
+      const q = search.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+        (c.email || "").toLowerCase().includes(q);
+      const matchesStatus = !statusFilter || c.status === statusFilter;
+      return matchesCategory && matchesSearch && matchesStatus;
+    });
+  }, [allContacts, categoryId, search, statusFilter]);
+
+  const totalCandidatePages = Math.ceil(filteredCandidates.length / candidatePageSize);
+  const paginatedCandidates = filteredCandidates.slice(
+    candidatePage * candidatePageSize,
+    (candidatePage + 1) * candidatePageSize
+  );
+
+  useEffect(() => setCandidatePage(0), [categoryId, search, statusFilter]);
 
   const [form, setForm] = useState<LogForm>({
     type: "call",
@@ -335,6 +359,21 @@ export default function FollowUpsPage() {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-1">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none min-w-[140px]"
+                  >
+                    <option value="">All statuses</option>
+                    <option value="new">New</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="opportunity">Opportunity</option>
+                    <option value="customer">Customer</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
                 <button
                   onClick={() => setShowCreate(true)}
                   className="btn-p text-xs px-3 py-2.5 flex items-center gap-1.5"
@@ -343,43 +382,53 @@ export default function FollowUpsPage() {
                   New contact
                 </button>
               </div>
-              {(() => {
-                const candidates = allContacts
-                  .filter((c) => {
-                    const matchesCategory = !categoryId || (c.categoryIds || []).includes(categoryId);
-                    const q = search.trim().toLowerCase();
-                    const matchesSearch =
-                      !q ||
-                      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
-                      (c.email || "").toLowerCase().includes(q);
-                    return matchesCategory && matchesSearch;
-                  })
-                  .slice(0, 6);
-                return candidates.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {candidates.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {c.firstName} {c.lastName}
-                          </p>
-                          <p className="text-[11px] text-gray-500 truncate">{c.email || c.phone || "-"}</p>
-                        </div>
-                        <button
-                          onClick={() => openLog(c, "call")}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 hover:border-pk-500 hover:text-pk-600"
-                        >
-                          Log
-                        </button>
+              {paginatedCandidates.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {paginatedCandidates.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {c.firstName} {c.lastName}
+                        </p>
+                        <p className="text-[11px] text-gray-500 truncate">{c.email || c.phone || "-"}</p>
                       </div>
-                    ))}
+                      <button
+                        onClick={() => openLog(c, "call")}
+                        className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 hover:border-pk-500 hover:text-pk-600"
+                      >
+                        Log
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : search || categoryId || statusFilter ? (
+                <p className="text-xs text-gray-500">No matching contacts.</p>
+              ) : (
+                <p className="text-xs text-gray-500">Select a category or search to find a contact to follow up.</p>
+              )}
+              {totalCandidatePages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    Page {candidatePage + 1} of {totalCandidatePages} ({filteredCandidates.length} contacts)
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCandidatePage((p) => Math.max(0, p - 1))}
+                      disabled={candidatePage === 0}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700 hover:border-pk-500 hover:text-pk-600 disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCandidatePage((p) => Math.min(totalCandidatePages - 1, p + 1))}
+                      disabled={candidatePage === totalCandidatePages - 1}
+                      className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs text-gray-700 hover:border-pk-500 hover:text-pk-600 disabled:opacity-50"
+                    >
+                      Next
+                    </button>
                   </div>
-                ) : search || categoryId ? (
-                  <p className="text-xs text-gray-500">No matching contacts.</p>
-                ) : (
-                  <p className="text-xs text-gray-500">Select a category or search to find a contact to follow up.</p>
-                );
-              })()}
+                </div>
+              )}
             </div>
 
             {loading ? (
