@@ -235,7 +235,7 @@ export default function LoginPage() {
             onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "#ff66b3")}
             onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "rgba(255,255,255,0.35)")}
           >
-            &larr; Back to site
+            ← Back to site
           </Link>
         </div>
       </div>

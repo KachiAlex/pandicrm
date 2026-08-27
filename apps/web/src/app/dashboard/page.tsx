@@ -289,7 +289,7 @@ export default function DashboardPage() {
             <button className="p-2 rounded-xl hover:bg-gray-50 transition-colors" aria-label="Help">
               <HelpCircle className="w-4 h-4 text-gray-500" />
             </button>
-            <Link href="/" className="text-xs font-medium text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 ml-1 hover:border-pk-500 hover:text-pk-700 transition-colors">&larr; Back to site</Link>
+            <Link href="/" className="text-xs font-medium text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 ml-1 hover:border-pk-500 hover:text-pk-700 transition-colors">← Back to site</Link>
           </div>
         </div>
 

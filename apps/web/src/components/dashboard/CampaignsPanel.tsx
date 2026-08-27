@@ -221,7 +221,7 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-bold text-gray-900">New Campaign</h2>
-        <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-700">&larr; Back</button>
+        <button onClick={onCancel} className="text-xs text-gray-500 hover:text-gray-700">← Back</button>
       </div>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
@@ -407,7 +407,7 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <button onClick={onBack} className="text-xs text-gray-500 hover:text-gray-700 mb-2">&larr; Back to campaigns</button>
+          <button onClick={onBack} className="text-xs text-gray-500 hover:text-gray-700 mb-2">← Back to campaigns</button>
           <h2 className="text-lg font-bold text-gray-900">{campaign.name}</h2>
         </div>
         <div className="flex items-center gap-2">
