@@ -12,6 +12,7 @@ import {
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { api, Notification } from "@/lib/api";
 import { playAlarm } from "@/lib/alarm";
+import Logo from "@/components/Logo";
 import NotesPanel from "@/components/dashboard/NotesPanel";
 import TasksPanel from "@/components/dashboard/TasksPanel";
 import PipelinePanel from "@/components/dashboard/PipelinePanel";
@@ -108,10 +109,7 @@ export default function DashboardPage() {
       <aside className={`dash-sb w-56 flex-shrink-0 flex-col h-full fixed md:relative z-50 md:z-auto transition-transform duration-200 ${showMobileSidebar ? "flex translate-x-0" : "hidden md:flex -translate-x-full md:translate-x-0"}`}>
         <div className="flex items-center justify-between gap-2 px-4 py-3.5">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" /></svg>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>pandicrm</span>
+            <Logo variant="white" className="h-7 w-auto" />
           </div>
           <button className="md:hidden p-1 rounded-lg hover:bg-white/10 transition-colors" onClick={() => setShowMobileSidebar(false)} aria-label="Close menu">
             <X className="w-4 h-4 text-white/70" />

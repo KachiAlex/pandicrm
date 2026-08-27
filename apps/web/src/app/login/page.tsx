@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, User, Building2, Phone, Briefcase, X } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -102,19 +103,8 @@ export default function LoginPage() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg,#ff1a97,#b80055)",
-                boxShadow: "0 4px 14px rgba(184,0,85,0.35)",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" />
-              </svg>
-            </div>
-            <span className="font-black text-white text-lg tracking-tight">pandicrm</span>
+          <div className="flex items-center justify-center mb-4">
+            <Logo variant="white" className="h-9 w-auto" />
           </div>
           <h1 className="font-bold text-white text-xl tracking-tight mb-1">Welcome back</h1>
           <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Sign in to your workspace</p>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -39,20 +40,7 @@ export default function Navbar() {
       >
         <div className="max-w-[1200px] mx-auto px-6 h-[66px] flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg,#ff1a97,#b80055)",
-                boxShadow: "0 4px 14px rgba(184,0,85,0.35)",
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" />
-              </svg>
-            </div>
-            <span className="font-black text-base tracking-tight text-[#0d0d12]">
-              pandi<span className="text-pk-700">crm</span>
-            </span>
+            <Logo className="h-8 w-auto" />
           </Link>
 
           <div className="hidden md:flex items-center gap-1">
@@ -85,9 +73,7 @@ export default function Navbar() {
         }`}
       >
         <div className="h-[66px] flex items-center justify-between px-6 border-b border-gray-100">
-          <span className="font-black text-gray-900 text-base tracking-tight">
-            pandi<span className="text-pk-700">crm</span>
-          </span>
+          <Logo className="h-8 w-auto" />
           <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="p-2 text-gray-700">
             <X className="w-5 h-5" />
           </button>
