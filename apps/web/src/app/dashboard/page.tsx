@@ -5,7 +5,7 @@ import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import {
   Mic, CheckSquare, GitBranch, BarChart2, Clock, Search, Bell, HelpCircle,
-  ChevronDown, Settings, Plug, Users, Tag, FileText,
+  ChevronDown, Settings, Plug, Users, Tag, FileText, Phone,
   Loader2, Check, X, Mail, FileText as FileIcon, CheckCircle, DollarSign,
   Menu, Send, Lock
 } from "lucide-react";
@@ -133,6 +133,7 @@ export default function DashboardPage() {
               {item.icon}<span>{item.label}</span>
             </div>
           ))}
+          <Link href="/follow-ups" className="dni" onClick={() => setShowMobileSidebar(false)}><Phone className="w-3.5 h-3.5 flex-shrink-0" /><span>Follow-ups</span></Link>
           <p className="sb-label" style={{ marginTop: 14 }}>Settings</p>
           <Link href="/settings" className="dni" onClick={() => setShowMobileSidebar(false)}><Settings className="w-3.5 h-3.5 flex-shrink-0" /><span>Settings</span></Link>
           <div className={`dni ${activeTab === "integrations" ? "on" : ""}`} onClick={() => { setActiveTab("integrations"); setShowMobileSidebar(false); }}><Plug className="w-3.5 h-3.5 flex-shrink-0" /><span>Integrations</span></div>

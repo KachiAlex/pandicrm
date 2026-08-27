@@ -42,6 +42,8 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ workspaceId, csvText, categoryIds }),
       }),
+    followUp: (id: string, data: any) =>
+      fetchJSON<Contact>(`/api/contacts/${id}/follow-up`, { method: "POST", body: JSON.stringify(data) }),
   },
   contactCategories: {
     list: (workspaceId: string) =>
@@ -150,6 +152,31 @@ export const api = {
     delete: (id: string) => fetchJSON<void>(`/api/integrations/${id}`, { method: "DELETE" }),
     test: (id: string) => fetchJSON<{ success: boolean; message: string; authUrl?: string }>(`/api/integrations/${id}/test`, { method: "POST" }),
   },
+  followUps: {
+    list: (workspaceId: string, filter?: string) =>
+      fetchJSON<Contact[]>(`/api/follow-ups?workspaceId=${workspaceId}${filter ? `&filter=${filter}` : ""}`),
+    activity: (workspaceId: string, params?: { from?: string; to?: string; contactId?: string; type?: string; outcome?: string }) => {
+      const qs = new URLSearchParams({ workspaceId });
+      if (params?.from) qs.append("from", params.from);
+      if (params?.to) qs.append("to", params.to);
+      if (params?.contactId) qs.append("contactId", params.contactId);
+      if (params?.type) qs.append("type", params.type);
+      if (params?.outcome) qs.append("outcome", params.outcome);
+      return fetchJSON<TimelineEvent[]>(`/api/follow-ups/activity?${qs.toString()}`);
+    },
+    exportCsv: (workspaceId: string, params?: { from?: string; to?: string; contactId?: string; type?: string; outcome?: string }) => {
+      const qs = new URLSearchParams({ workspaceId, format: "csv" });
+      if (params?.from) qs.append("from", params.from);
+      if (params?.to) qs.append("to", params.to);
+      if (params?.contactId) qs.append("contactId", params.contactId);
+      if (params?.type) qs.append("type", params.type);
+      if (params?.outcome) qs.append("outcome", params.outcome);
+      return fetch(`/api/follow-ups/activity?${qs.toString()}`).then((r) => {
+        if (!r.ok) throw new Error("Export failed");
+        return r.blob();
+      });
+    },
+  },
 };
 
 export interface User {
@@ -215,6 +242,10 @@ export interface Contact {
   isPrimary: boolean;
   status: "new" | "qualified" | "opportunity" | "customer" | "lost";
   categoryIds: string[];
+  customFields?: any;
+  nextFollowUpAt?: string;
+  lastFollowUpAt?: string;
+  followUpCadence?: string;
   createdAt: string;
   updatedAt: string;
   account?: { id: string; name: string };
@@ -247,7 +278,7 @@ export interface Deal {
   createdAt: string;
   updatedAt: string;
   account?: { id: string; name: string };
-  contact?: { id: string; firstName: string; lastName: string };
+  contact?: { id: string; firstName: string; lastName: string; email?: string; nextFollowUpAt?: string };
 }
 
 export type TaskStatus = "todo" | "in_progress" | "done";
@@ -289,7 +320,7 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
   author?: { id: string; name?: string; avatar?: string };
-  contact?: { id: string; firstName: string; lastName: string };
+  contact?: { id: string; firstName: string; lastName: string; email?: string; nextFollowUpAt?: string };
 }
 
 export type TimelineEventType = "call" | "email" | "meeting" | "note" | "deal_stage_change" | "task_completed";
@@ -309,7 +340,7 @@ export interface TimelineEvent {
   createdAt: string;
   author?: { id: string; name?: string; avatar?: string };
   account?: { id: string; name: string };
-  contact?: { id: string; firstName: string; lastName: string };
+  contact?: { id: string; firstName: string; lastName: string; email?: string; nextFollowUpAt?: string };
   deal?: { id: string; name: string };
 }
 
@@ -378,7 +409,7 @@ export interface CampaignRecipient {
   sentAt?: string;
   openedAt?: string;
   errorReason?: string;
-  contact?: { id: string; firstName: string; lastName: string };
+  contact?: { id: string; firstName: string; lastName: string; email?: string; nextFollowUpAt?: string };
 }
 
 export interface CampaignStats {
