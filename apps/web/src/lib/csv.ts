@@ -1,7 +1,17 @@
-export function downloadCSV(filename: string, rows: string[][]) {
-  const csv = rows.map((row) =>
-    row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(",")
-  ).join("\n");
+function escapeField(value: unknown): string {
+  const str = String(value ?? "");
+  if (str.includes('"') || str.includes(",") || str.includes("\n") || str.includes("\r")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export function toCSV(rows: unknown[][]): string {
+  return rows.map((row) => row.map(escapeField).join(",")).join("\n");
+}
+
+export function downloadCSV(filename: string, rows: unknown[][]) {
+  const csv = toCSV(rows);
 
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);

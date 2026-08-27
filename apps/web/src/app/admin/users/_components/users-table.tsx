@@ -10,11 +10,12 @@ type AdminUser = {
   firstName: string | null;
   lastName: string | null;
   role: string;
+  plan: string;
   isActive: boolean;
   createdAt: string;
 };
 
-type UserPatch = Partial<Pick<AdminUser, "role" | "isActive">>;
+type UserPatch = Partial<Pick<AdminUser, "role" | "plan" | "isActive">>;
 
 export default function UsersTable({
   initialUsers,
@@ -58,6 +59,7 @@ export default function UsersTable({
             <th className="px-4 py-3 text-left font-medium text-gray-500">Name</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Role</th>
+            <th className="px-4 py-3 text-left font-medium text-gray-500">Plan</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Active</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Joined</th>
           </tr>
@@ -83,6 +85,20 @@ export default function UsersTable({
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                   <option value="superadmin">Superadmin</option>
+                </select>
+              </td>
+              <td className="px-4 py-3">
+                <select
+                  value={user.plan}
+                  disabled={saving === user.id}
+                  onChange={(e) =>
+                    updateUser(user.id, { plan: e.target.value })
+                  }
+                  className="border rounded px-2 py-1 text-xs"
+                >
+                  <option value="free">Free</option>
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
                 </select>
               </td>
               <td className="px-4 py-3">

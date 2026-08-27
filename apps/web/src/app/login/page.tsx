@@ -295,7 +295,7 @@ function RegisterModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-bold text-lg text-gray-900">Create your account</h2>
-            <p className="text-xs text-gray-400">Get started with pandicrm for free</p>
+            <p className="text-xs text-gray-400">Get started with pandacrm for free</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500">
             <X className="w-5 h-5" />

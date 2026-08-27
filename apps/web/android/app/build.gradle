@@ -19,9 +19,9 @@ android {
     signingConfigs {
         release {
             storeFile file(System.env.PANDACRM_KEYSTORE ?: '../../../pandacrm-release.keystore')
-            storePassword System.env.PANDACRM_KEYSTORE_PASS ?: 'PandiCRM2026!Release'
+            storePassword System.env.PANDACRM_KEYSTORE_PASS ?: 'Pandacrm2026!Release'
             keyAlias System.env.PANDACRM_KEY_ALIAS ?: 'pandacrm'
-            keyPassword System.env.PANDACRM_KEY_PASS ?: 'PandiCRM2026!Release'
+            keyPassword System.env.PANDACRM_KEY_PASS ?: 'Pandacrm2026!Release'
         }
     }
     buildTypes {

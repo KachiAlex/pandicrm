@@ -35,21 +35,46 @@ export async function POST(req: NextRequest) {
     const hashed = await bcrypt.hash(password, 12);
     const fullName = [firstName, lastName].filter(Boolean).join(" ") || null;
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        name: fullName,
-        company: company || null,
-        phone: phone || null,
-        password: hashed,
-      },
-      select: { id: true, email: true, name: true },
+    const workspaceName = `${firstName || "My"}'s Workspace`;
+
+    const { user, workspace } = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          name: fullName,
+          company: company || null,
+          phone: phone || null,
+          password: hashed,
+        },
+        select: { id: true, email: true, name: true },
+      });
+
+      const workspace = await tx.workspace.create({
+        data: {
+          name: workspaceName,
+          slug: user.id,
+          ownerId: user.id,
+          plan: "starter",
+        },
+        select: { id: true, name: true, slug: true, ownerId: true },
+      });
+
+      await tx.workspaceMember.create({
+        data: {
+          workspaceId: workspace.id,
+          userId: user.id,
+          role: "owner",
+        },
+      });
+
+      return { user, workspace };
     });
 
-    return NextResponse.json(user, { status: 201 });
-  } catch {
+    return NextResponse.json({ user, workspace }, { status: 201 });
+  } catch (err) {
+    console.error("[REGISTER] Unexpected error during registration:", err);
     return serverError();
   }
 }

@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
         firstName: true,
         lastName: true,
         role: true,
+        plan: true,
         isActive: true,
         createdAt: true,
       },
@@ -36,7 +37,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { id, role, isActive } = body;
+    const { id, role, isActive, plan } = body;
 
     if (!id || typeof id !== "string") {
       return NextResponse.json({ error: "Missing user id" }, { status: 400 });
@@ -44,6 +45,10 @@ export async function PATCH(req: NextRequest) {
 
     if (role !== undefined && !["user", "admin", "superadmin"].includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
+    if (plan !== undefined && !["free", "standard", "premium"].includes(plan)) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     if (isActive !== undefined && typeof isActive !== "boolean") {
@@ -54,6 +59,7 @@ export async function PATCH(req: NextRequest) {
       where: { id },
       data: {
         ...(role !== undefined ? { role: role as any } : {}),
+        ...(plan !== undefined ? { plan: plan as any } : {}),
         ...(isActive !== undefined ? { isActive } : {}),
       },
       select: {
@@ -61,6 +67,7 @@ export async function PATCH(req: NextRequest) {
         email: true,
         name: true,
         role: true,
+        plan: true,
         isActive: true,
       },
     });

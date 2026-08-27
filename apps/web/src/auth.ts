@@ -24,14 +24,14 @@ export const {
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials, req) => {
-        const ip = (req as any)?.headers?.get?.("x-forwarded-for") || "unknown";
+        const ip = req?.headers?.get?.("x-forwarded-for") ?? "unknown";
         const { allowed, retryAfter } = checkRateLimit(`login:${ip}`);
         if (!allowed) {
           throw new Error(`Too many attempts. Try again in ${retryAfter} seconds.`);
         }
 
-        const email = credentials?.email as string;
-        const password = credentials?.password as string;
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
 
         if (!email || !password) {
           console.error("[AUTH] Missing email or password");
@@ -58,18 +58,23 @@ export const {
           return null;
         }
 
+        if (!user.isActive) {
+          console.error("[AUTH] User is inactive");
+          return null;
+        }
+
         resetRateLimit(`login:${ip}`);
 
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.avatar,
           firstName: user.firstName,
           lastName: user.lastName,
           company: user.company,
           phone: user.phone,
           role: user.role,
+          isActive: user.isActive,
         };
       },
     }),
@@ -83,17 +88,43 @@ export const {
         });
 
         if (!existing) {
+          const email = user.email!;
           const nameParts = user.name?.split(" ") || [];
-          await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name || null,
-              firstName: nameParts[0] || null,
-              lastName: nameParts.slice(1).join(" ") || null,
-              avatar: user.image || null,
-              role: "user",
-            },
+          const firstName = nameParts[0] || null;
+          const lastName = nameParts.slice(1).join(" ") || null;
+
+          await prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+              data: {
+                email,
+                name: user.name || null,
+                firstName,
+                lastName,
+                avatar: user.image || null,
+                role: "user",
+              },
+            });
+
+            const workspace = await tx.workspace.create({
+              data: {
+                name: `${firstName || "My"}'s Workspace`,
+                slug: newUser.id,
+                ownerId: newUser.id,
+                plan: "starter",
+              },
+            });
+
+            await tx.workspaceMember.create({
+              data: {
+                workspaceId: workspace.id,
+                userId: newUser.id,
+                role: "owner",
+              },
+            });
           });
+        } else if (!existing.isActive) {
+          console.error("[AUTH] Inactive Google user attempted sign-in", user.email);
+          return false;
         } else if (!existing.avatar && user.image) {
           await prisma.user.update({
             where: { id: existing.id },
@@ -105,23 +136,43 @@ export const {
     },
     jwt: async ({ token, user }) => {
       if (user) {
-        token.id = (user as any).id ?? token.id ?? token.sub;
-        token.firstName = (user as any).firstName ?? user.name?.split(" ")[0] ?? token.firstName;
-        token.lastName = (user as any).lastName ?? user.name?.split(" ").slice(1).join(" ") ?? token.lastName;
-        token.company = (user as any).company ?? token.company;
-        token.phone = (user as any).phone ?? token.phone;
-        token.role = (user as any).role ?? "user";
+        const { prisma } = await import("@/lib/prisma");
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.email = dbUser.email;
+          token.firstName = dbUser.firstName ?? user.name?.split(" ")[0] ?? token.firstName;
+          token.lastName = dbUser.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? token.lastName;
+          token.company = dbUser.company ?? user.company ?? token.company;
+          token.phone = dbUser.phone ?? user.phone ?? token.phone;
+          token.role = dbUser.role ?? "user";
+          token.isActive = dbUser.isActive ?? true;
+        } else {
+          token.id = user.id ?? token.id ?? token.sub;
+          token.email = user.email ?? token.email;
+          token.firstName = user.firstName ?? user.name?.split(" ")[0] ?? token.firstName;
+          token.lastName = user.lastName ?? user.name?.split(" ").slice(1).join(" ") ?? token.lastName;
+          token.company = user.company ?? token.company;
+          token.phone = user.phone ?? token.phone;
+          token.role = user.role ?? "user";
+          token.isActive = user.isActive ?? token.isActive ?? true;
+        }
       }
       return token;
     },
     session: async ({ session, token }) => {
       if (token?.id) {
-        session.user.id = token.id as string;
-        session.user.firstName = (token as any).firstName;
-        session.user.lastName = (token as any).lastName;
-        session.user.company = (token as any).company;
-        session.user.phone = (token as any).phone;
-        session.user.role = (token as any).role;
+        session.user.id = token.id;
+        if (token.email) session.user.email = token.email;
+        session.user.firstName = token.firstName;
+        session.user.lastName = token.lastName;
+        session.user.company = token.company;
+        session.user.phone = token.phone;
+        session.user.role = token.role;
+        session.user.isActive = token.isActive ?? true;
       }
       return session;
     },

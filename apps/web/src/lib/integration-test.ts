@@ -26,7 +26,7 @@ export async function testEmailIntegration(config: any, toEmail: string): Promis
     });
 
     await transporter.sendMail({
-      from: `"PandiCRM Test" <${user}>`,
+      from: `"Pandacrm Test" <${user}>`,
       to: toEmail,
       subject: "Integration test",
       text: "Your email integration is working.",
@@ -50,7 +50,7 @@ export async function testSmsIntegration(config: any): Promise<TestResult> {
 
   try {
     const auth = Buffer.from(`${sid}:${token}`).toString("base64");
-    const body = new URLSearchParams({ From: from, To: to, Body: "PandiCRM SMS integration test" });
+    const body = new URLSearchParams({ From: from, To: to, Body: "Pandacrm SMS integration test" });
 
     const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
       method: "POST",

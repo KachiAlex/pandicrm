@@ -107,7 +107,8 @@ export function useSpeechRecognition() {
 
   const enumerateDevices = useCallback(async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
       const all = await navigator.mediaDevices.enumerateDevices();
       const audioInputs = all
         .filter((d) => d.kind === "audioinput")
@@ -146,12 +147,8 @@ export function useSpeechRecognition() {
       }
       if (final) {
         transcriptRef.current = transcriptRef.current + final;
-        // eslint-disable-next-line no-console
-        console.log("[Speech] Final:", final.trim());
       }
       if (interim) {
-        // eslint-disable-next-line no-console
-        console.log("[Speech] Interim:", interim.trim());
       }
       setState((prev) => ({
         ...prev,
@@ -162,8 +159,6 @@ export function useSpeechRecognition() {
     };
 
     r.onerror = (event: any) => {
-      // eslint-disable-next-line no-console
-      console.log("[Speech] onerror:", event.error);
       if (event.error === "no-speech") {
         return; // onend will handle restart
       }
@@ -186,14 +181,10 @@ export function useSpeechRecognition() {
     };
 
     r.onend = () => {
-      // eslint-disable-next-line no-console
-      console.log("[Speech] onend fired, shouldListen:", shouldListenRef.current);
       if (shouldListenRef.current) {
         clearTimeout(restartTimerRef.current);
         restartTimerRef.current = setTimeout(() => {
           if (shouldListenRef.current) {
-            // eslint-disable-next-line no-console
-            console.log("[Speech] Restarting with fresh instance");
             createAndStart();
           }
         }, 300);
@@ -204,8 +195,6 @@ export function useSpeechRecognition() {
     };
 
     r.onstart = () => {
-      // eslint-disable-next-line no-console
-      console.log("[Speech] onstart fired");
       patch({ isListening: true, error: null });
     };
 
@@ -217,10 +206,7 @@ export function useSpeechRecognition() {
     recognitionRef.current = r;
     try {
       r.start();
-      // eslint-disable-next-line no-console
-      console.log("[Speech] start() succeeded");
     } catch (err: any) {
-      // eslint-disable-next-line no-console
       console.error("[Speech] start() failed:", err.message);
     }
   }, [patch, stopAudioLevel]);
@@ -264,10 +250,6 @@ export function useSpeechRecognition() {
 
     shouldListenRef.current = true;
     transcriptRef.current = "";
-    // eslint-disable-next-line no-console
-    console.log("[Speech] Starting recognition...");
-    // eslint-disable-next-line no-console
-    console.log("[Speech] Note: Speech API always uses OS default mic, not selected device");
     patch({ transcript: "", interimTranscript: "", error: null });
     await startAudioLevel(state.selectedDeviceId || undefined);
 
@@ -283,8 +265,6 @@ export function useSpeechRecognition() {
       try { recognitionRef.current.abort(); } catch { /* ignore */ }
     }
     patch({ isListening: false, interimTranscript: "", audioLevel: 0, audioBars: new Array(16).fill(0) });
-    // eslint-disable-next-line no-console
-    console.log("[Speech] Stopped by user");
   }, [patch, stopAudioLevel]);
 
   const clear = useCallback(() => {
@@ -297,15 +277,11 @@ export function useSpeechRecognition() {
 
   const selectDevice = useCallback((deviceId: string) => {
     patch({ selectedDeviceId: deviceId });
-    // eslint-disable-next-line no-console
-    console.log("[Speech] Selected device:", deviceId);
   }, [patch]);
 
   const testMic = useCallback(async () => {
     if (state.isTestingMic) return;
     patch({ isTestingMic: true, testPlaybackUrl: null, error: null });
-    // eslint-disable-next-line no-console
-    console.log("[Speech] Testing microphone...");
     try {
       const constraints: MediaStreamConstraints = {
         audio: state.selectedDeviceId ? { deviceId: { exact: state.selectedDeviceId } } : true,
@@ -321,8 +297,6 @@ export function useSpeechRecognition() {
         const blob = new Blob(chunks, { type: "audio/webm" });
         const url = URL.createObjectURL(blob);
         patch({ testPlaybackUrl: url, isTestingMic: false });
-        // eslint-disable-next-line no-console
-        console.log("[Speech] Mic test recording ready");
         stream.getTracks().forEach((t) => t.stop());
       };
       recorder.start();
@@ -331,7 +305,6 @@ export function useSpeechRecognition() {
       }, 3000);
     } catch (err: any) {
       patch({ isTestingMic: false, error: `Mic test failed: ${err.message}` });
-      // eslint-disable-next-line no-console
       console.error("[Speech] Mic test error:", err.message);
     }
   }, [state.isTestingMic, state.selectedDeviceId, patch]);
@@ -359,4 +332,5 @@ export function useSpeechRecognition() {
     enumerateDevices,
   };
 }
+
 

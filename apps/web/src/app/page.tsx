@@ -43,7 +43,7 @@ function HeroSection() {
           Customer Relations<br/>has never been<br/><span className="tg">this easy.</span>
         </h1>
         <p className="text-gray-500 leading-relaxed max-w-xl mx-auto mb-10 reveal rd1" style={{ fontSize: 18 }}>
-          pandicrm combines AI meeting notes, smart task boards, visual pipeline tracking, and deep reporting so your team can focus on people — not paperwork.
+          pandacrm combines AI meeting notes, smart task boards, visual pipeline tracking, and deep reporting so your team can focus on people — not paperwork.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 reveal rd2">
           <Link href="/login" className="btn-p px-8 py-4 text-base">Get started free <ArrowRight className="w-4 h-4" /></Link>
@@ -63,7 +63,7 @@ function HeroMockup() {
       <div className="surf fla" style={{ borderRadius: 22, overflow: "hidden" }}>
         <div className="flex items-center gap-1.5 px-4 h-9 border-b border-gray-100" style={{ background: "#f9fafb" }}>
           <div className="w-2.5 h-2.5 rounded-full bg-red-400" /><div className="w-2.5 h-2.5 rounded-full bg-yellow-400" /><div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-          <div className="flex-1 mx-4 h-4 rounded-full bg-white border border-gray-200 flex items-center justify-center"><span style={{ fontSize: 9, color: "#9ca3af" }}>app.pandicrm.com/dashboard</span></div>
+          <div className="flex-1 mx-4 h-4 rounded-full bg-white border border-gray-200 flex items-center justify-center"><span style={{ fontSize: 9, color: "#9ca3af" }}>app.pandacrm.com/dashboard</span></div>
         </div>
         <div className="flex" style={{ minHeight: 300 }}>
           <div className="w-44 p-2.5 flex-col gap-0.5 hidden sm:flex dash-sb">
@@ -71,7 +71,7 @@ function HeroMockup() {
               <div className="w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#ff1a97,#b80055)" }}>
                 <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M7 12.5C7 12.5 1.5 8.833 1.5 5A3.5 3.5 0 0 1 7 2.917 3.5 3.5 0 0 1 12.5 5C12.5 8.833 7 12.5 7 12.5Z" fill="white" /></svg>
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>pandicrm</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>pandacrm</span>
             </div>
             <div className="dni on"><BarChart2 className="w-3 h-3" />Dashboard</div>
             <div className="dni"><Mic className="w-3 h-3" />AI Notes</div>
@@ -124,7 +124,7 @@ function FeaturesSection() {
         <div className="text-center mb-16 reveal">
           <div className="pill mb-5 mx-auto" style={{ width: "fit-content" }}>Features</div>
           <h2 className="font-black tracking-[-0.03em] leading-[1.06] mb-4" style={{ fontSize: "clamp(30px,5vw,54px)" }}>Everything your team needs<br/><span className="tg">in one place.</span></h2>
-          <p className="text-gray-500 max-w-lg mx-auto leading-relaxed" style={{ fontSize: 17 }}>From first contact to closed deal — pandicrm handles every touchpoint with intelligence.</p>
+          <p className="text-gray-500 max-w-lg mx-auto leading-relaxed" style={{ fontSize: 17 }}>From first contact to closed deal — pandacrm handles every touchpoint with intelligence.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <FeatureCard icon={<Mic className="w-5 h-5" />} title="AI Note Taker" delay="rd1"
@@ -257,7 +257,7 @@ function PricingSection() {
                 <div key={f} className="flex items-center gap-2.5"><CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color: "#b80055" }} /><span style={{ fontSize: 13.5, color: "#374151" }}>{f}</span></div>
               ))}
             </div>
-            <a href="mailto:hello@pandicrm.com" className="btn-g w-full justify-center py-3 text-sm">Talk to us</a>
+            <a href="mailto:hello@pandacrm.com" className="btn-g w-full justify-center py-3 text-sm">Talk to us</a>
           </div>
         </div>
       </div>

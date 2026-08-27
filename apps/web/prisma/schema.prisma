@@ -13,6 +13,12 @@ enum UserRole {
   superadmin
 }
 
+enum UserPlan {
+  free
+  standard
+  premium
+}
+
 enum Permission {
   users_read
   users_create
@@ -42,6 +48,7 @@ model User {
   company       String?
   phone         String?
   role          UserRole @default(user)
+  plan          UserPlan @default(free)
   isActive      Boolean  @default(true) @map("is_active")
   avatar        String?
   password      String?  // hashed, for credentials auth

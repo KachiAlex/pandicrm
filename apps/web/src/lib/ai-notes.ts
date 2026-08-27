@@ -1,5 +1,5 @@
 /**
- * On-device NLP engine for PandiCRM AI Notes.
+ * On-device NLP engine for Pandacrm AI Notes.
  * No external API calls — everything runs in the browser/server.
  */
 

@@ -23,7 +23,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_URL="postgresql://pandicrm:p4nd1crm_s3cure_2026@db:5432/pandicrm?schema=public"
+ENV DATABASE_URL="postgresql://pandacrm:p4nd1crm_s3cure_2026@db:5432/pandacrm?schema=public"
 
 RUN pnpm prisma generate
 RUN pnpm next build

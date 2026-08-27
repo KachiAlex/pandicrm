@@ -4,15 +4,15 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminHashed = await bcrypt.hash(process.env.ADMIN_PASSWORD || "PandiCRM2026!Admin", 12);
+  const adminHashed = await bcrypt.hash(process.env.ADMIN_PASSWORD || "Pandacrm2026!Admin", 12);
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@pandacrm.com.ng" },
     update: { role: "admin", isActive: true },
     create: {
       email: "admin@pandacrm.com.ng",
-      name: "PandiCRM Admin",
-      firstName: "PandiCRM",
+      name: "Pandacrm Admin",
+      firstName: "Pandacrm",
       lastName: "Admin",
       role: "admin",
       isActive: true,

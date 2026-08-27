@@ -31,7 +31,7 @@ export default function Footer() {
               <div className="flex flex-col gap-3">
                 <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">About</a>
                 <a href="#" className="text-sm text-gray-400 hover:text-white transition-colors">Blog</a>
-                <a href="mailto:hello@pandicrm.com" className="text-sm text-gray-400 hover:text-white transition-colors">Contact</a>
+                <a href="mailto:hello@pandacrm.com" className="text-sm text-gray-400 hover:text-white transition-colors">Contact</a>
               </div>
             </div>
             <div>
@@ -45,7 +45,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} pandicrm. All rights reserved.</p>
+          <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} pandacrm. All rights reserved.</p>
           <p className="text-sm text-gray-400">
             Made with <span className="text-pk-500">&#9829;</span> for sales teams everywhere.
           </p>

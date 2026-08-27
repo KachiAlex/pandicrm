@@ -124,8 +124,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const [updated] = await prisma.$transaction(ops);
     return NextResponse.json(updated);
-  } catch (err: any) {
-    console.error(err);
+  } catch (err) {
+    console.error("[FOLLOW-UP] Error logging follow-up:", err);
     return serverError();
   }
 }

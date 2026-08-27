@@ -355,7 +355,7 @@ describe("createEmailTemplateSchema", () => {
     const result = createEmailTemplateSchema.safeParse({
       workspaceId: "ws-1",
       name: "Welcome Email",
-      subject: "Welcome to PandiCRM",
+      subject: "Welcome to Pandacrm",
       htmlContent: "<p>Hello {{firstName}}</p>",
     });
     expect(result.success).toBe(true);
@@ -395,7 +395,7 @@ describe("createCampaignSchema", () => {
       name: "Q4 Outreach",
       subject: "Special Offer",
       htmlContent: "<p>Hello {{firstName}}</p>",
-      senderName: "PandiCRM",
+      senderName: "Pandacrm",
       senderEmail: "noreply@pandacrm.com.ng",
       contactIds: ["c1", "c2"],
     });

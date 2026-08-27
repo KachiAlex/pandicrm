@@ -84,7 +84,7 @@ export default function RegisterPage() {
             <Logo variant="white" className="h-9 w-auto" />
           </div>
           <h1 className="font-bold text-white text-xl tracking-tight mb-1">Create your account</h1>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Get started with pandicrm for free</p>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>Get started with pandacrm for free</p>
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-lg">

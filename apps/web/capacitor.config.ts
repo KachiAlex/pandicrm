@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.pandacrm.app",
-  appName: "PandiCRM",
+  appName: "Pandacrm",
   webDir: "www",
   server: {
     url: "https://pandacrm.com.ng",

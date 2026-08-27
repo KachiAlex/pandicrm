@@ -30,7 +30,7 @@ export default async function AdminDashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Superadmin Dashboard</h1>
-      <p className="text-sm text-gray-500 mb-8">Overview and management for the pandicrm platform.</p>
+      <p className="text-sm text-gray-500 mb-8">Overview and management for the pandacrm platform.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {cards.map((c) => (
           <Link

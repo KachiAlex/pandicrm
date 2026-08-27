@@ -12,6 +12,9 @@ export async function requireAuth(req?: NextRequest) {
         const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
         const { payload } = await jwtVerify(token, secret);
         if (payload.id && payload.email) {
+          if (payload.isActive === false) {
+            return NextResponse.json({ error: "Account inactive" }, { status: 401 });
+          }
           return {
             user: {
               id: payload.id as string,
@@ -23,6 +26,7 @@ export async function requireAuth(req?: NextRequest) {
               phone: (payload.phone as string) || null,
               role: (payload.role as string) || "user",
               image: (payload.image as string) || null,
+              isActive: payload.isActive as boolean ?? true,
             },
             expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           } as any;
@@ -34,7 +38,7 @@ export async function requireAuth(req?: NextRequest) {
   }
 
   const session = await auth();
-  if (!session?.user?.id) {
+  if ((session as any)?.user?.isActive === false || !(session as any)?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return session;

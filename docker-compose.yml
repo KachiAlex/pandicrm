@@ -3,13 +3,13 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: pandicrm
+      POSTGRES_USER: pandacrm
       POSTGRES_PASSWORD: p4nd1crm_s3cure_2026
-      POSTGRES_DB: pandicrm
+      POSTGRES_DB: pandacrm
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pandicrm"]
+      test: ["CMD-SHELL", "pg_isready -U pandacrm"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,9 +22,9 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      DATABASE_URL: "postgresql://pandicrm:p4nd1crm_s3cure_2026@db:5432/pandicrm?schema=public"
-      AUTH_SECRET: "k9Xm2vQ8rT4wZ7nB3cF6hJ1pL5sY0eA8dG2iU4oN"
-      NEXTAUTH_URL: "http://67.211.210.8"
+      DATABASE_URL: "${DATABASE_URL}"
+      AUTH_SECRET: "${AUTH_SECRET}"
+      AUTH_URL: "${AUTH_URL}"
       NODE_ENV: "production"
     depends_on:
       db:

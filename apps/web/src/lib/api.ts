@@ -188,6 +188,7 @@ export interface User {
   company?: string;
   phone?: string;
   role?: string;
+  isActive?: boolean;
   createdAt: string;
 }
 

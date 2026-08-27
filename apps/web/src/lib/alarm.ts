@@ -21,6 +21,10 @@ export function playAlarm() {
     oscillator.connect(gain);
     gain.connect(ctx.destination);
 
+    oscillator.onended = () => {
+      try { ctx.close(); } catch { /* ignore */ }
+    };
+
     oscillator.start();
     oscillator.stop(ctx.currentTime + 0.3);
   } catch {

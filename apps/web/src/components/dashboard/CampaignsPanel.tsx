@@ -116,9 +116,9 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [replyTo, setReplyTo] = useState("");
-  const [htmlContent, setHtmlContent] = useState("<p>Hello {{firstName}},</p>\n<p>This is a test email from PandiCRM.</p>\n<p>Best regards,<br/>{{senderName}}</p>");
+  const [htmlContent, setHtmlContent] = useState("<p>Hello {{firstName}},</p>\n<p>This is a test email from Pandacrm.</p>\n<p>Best regards,<br/>{{senderName}}</p>");
   const [textContent, setTextContent] = useState("");
-  const [signature, setSignature] = useState("Best regards,\nPandiCRM Team");
+  const [signature, setSignature] = useState("Best regards,\nPandacrm Team");
   const [contacts, setContacts] = useState<{ id: string; firstName: string; lastName: string; email?: string; categoryIds?: string[] }[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [categories, setCategories] = useState<{ id: string; name: string; color?: string }[]>([]);

@@ -153,10 +153,10 @@ export default function CampaignEmailEditor({
     .replace(/{{fullName}}/g, "John Doe")
     .replace(/{{email}}/g, "john@example.com")
     .replace(/{{company}}/g, "Acme Corp")
-    .replace(/{{senderName}}/g, senderName || "PandiCRM Team")
+    .replace(/{{senderName}}/g, senderName || "Pandacrm Team")
     .replace(/{{senderEmail}}/g, senderEmail || "team@pandacrm.com.ng")
-    .replace(/{{signature}}/g, signature || `${senderName || "PandiCRM Team"}<br/>team@pandacrm.com.ng`)
-    .replace(/{{workspaceName}}/g, "PandiCRM")
+    .replace(/{{signature}}/g, signature || `${senderName || "Pandacrm Team"}<br/>team@pandacrm.com.ng`)
+    .replace(/{{workspaceName}}/g, "Pandacrm")
     .replace(/{{unsubscribeUrl}}/g, "https://pandacrm.com.ng/unsubscribe");
 
   return (
@@ -297,7 +297,7 @@ export default function CampaignEmailEditor({
           onChange={(e) => onChange({ htmlContent, textContent, signature: e.target.value })}
           rows={3}
           className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500"
-          placeholder="Best regards,&#10;Your Name&#10;PandiCRM"
+          placeholder="Best regards,&#10;Your Name&#10;Pandacrm"
         />
         <p className="text-[10px] text-gray-400 mt-1">
           Use {`{{signature}}`} inside the email body to insert this signature automatically.

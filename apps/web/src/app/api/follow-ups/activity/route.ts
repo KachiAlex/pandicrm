@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 
+import { toCSV } from "@/lib/csv";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await requireAuth(req);
@@ -50,21 +52,28 @@ export async function GET(req: NextRequest) {
       : events;
 
     if (format === "csv") {
-      const rows = filtered.map((e) => {
-        const c = e.contact;
-        const name = c ? `${c.firstName} ${c.lastName}` : "";
-        const email = c?.email || "";
-        const account = e.account?.name || "";
-        const author = e.author?.name || "";
-        const [date, time] = e.occurredAt.toISOString().split("T");
-        const timeClean = time ? time.replace("Z", "") : "";
-        const next = c?.nextFollowUpAt ? c.nextFollowUpAt.toISOString().split("T")[0] : "";
-        const out = (e.metadata as any)?.outcome || "";
-        const cadence = (e.metadata as any)?.nextCadence || "";
-        const notes = (e.description || "").replace(/"/g, '""');
-        return `"${date} ${timeClean}","${name}","${email}","${account}","${e.type}","${out}","${cadence}","${next}","${author}","${notes}"`;
-      });
-      const csv = `Date,Contact,Email,Account,Type,Outcome,Cadence,Next Follow-up,Owner,Notes\n${rows.join("\n")}`;
+      const rows = [
+        ["Date", "Contact", "Email", "Account", "Type", "Outcome", "Cadence", "Next Follow-up", "Owner", "Notes"],
+        ...filtered.map((e) => {
+          const c = e.contact;
+          const name = c ? `${c.firstName} ${c.lastName}` : "";
+          const [date, time] = e.occurredAt.toISOString().split("T");
+          const timeClean = time ? time.replace("Z", "") : "";
+          return [
+            `${date} ${timeClean}`,
+            name,
+            c?.email || "",
+            e.account?.name || "",
+            e.type,
+            (e.metadata as any)?.outcome || "",
+            (e.metadata as any)?.nextCadence || "",
+            c?.nextFollowUpAt ? c.nextFollowUpAt.toISOString().split("T")[0] : "",
+            e.author?.name || "",
+            e.description || "",
+          ];
+        }),
+      ];
+      const csv = toCSV(rows);
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
