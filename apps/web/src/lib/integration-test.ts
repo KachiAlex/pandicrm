@@ -72,19 +72,28 @@ export async function testSmsIntegration(config: any): Promise<TestResult> {
 }
 
 export async function testCalendarIntegration(config: any): Promise<TestResult> {
-  if (!config.clientId || !config.clientSecret || !config.redirectUri) {
-    return { success: false, message: "Missing clientId, clientSecret, or redirectUri" };
+  const icsUrl = config.icsUrl;
+  if (!icsUrl) {
+    return { success: false, message: "Missing iCal / .ics feed URL" };
   }
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-    config.clientId
-  )}&redirect_uri=${encodeURIComponent(config.redirectUri)}&response_type=code&scope=${encodeURIComponent(
-    "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events"
-  )}&access_type=offline&prompt=consent`;
+  try {
+    const res = await fetch(icsUrl, { method: "GET" });
+    if (!res.ok) {
+      return { success: false, message: `Could not reach the calendar feed: ${res.status}` };
+    }
 
-  return {
-    success: true,
-    message: "Calendar config is valid. Authorize with Google to complete the connection.",
-    authUrl,
-  };
+    const text = await res.text();
+    if (!text.includes("BEGIN:VCALENDAR")) {
+      return { success: false, message: "The URL does not appear to be a valid iCal feed" };
+    }
+
+    const eventCount = text.split("BEGIN:VEVENT").length - 1;
+    return {
+      success: true,
+      message: `Connected to iCal feed (${eventCount} events found)`,
+    };
+  } catch (err: any) {
+    return { success: false, message: err.message || "Failed to read the iCal feed" };
+  }
 }
