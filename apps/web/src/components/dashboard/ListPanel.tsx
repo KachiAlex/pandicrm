@@ -275,7 +275,12 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
                         className="rounded text-pk-600"
                       />
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{c.firstName} {c.lastName}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{c.firstName} {c.lastName}</p>
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${c.status === "new" ? "bg-gray-100 text-gray-600" : c.status === "qualified" ? "bg-blue-50 text-blue-600" : c.status === "opportunity" ? "bg-pk-50 text-pk-600" : c.status === "customer" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+                        {c.status}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-gray-500">{c.email || "—"}</td>
                     <td className="px-4 py-3 text-gray-500">{c.title || "—"}</td>
                     <td className="px-4 py-3">
@@ -810,7 +815,7 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
   const [status, setStatus] = useState(contact.status || "new");
   const [accountId, setAccountId] = useState(contact.accountId || "");
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [converting, setConverting] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => { api.accounts.list(workspaceId).then((a) => setAccounts(a)).catch(() => {}); }, [workspaceId]);
 
@@ -832,18 +837,35 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
     catch (err: any) { setError(err.message || "Failed to delete contact"); setLoading(false); }
   };
 
-  const handleConvert = async () => {
-    setConverting(true);
+  const handlePrimary = async () => {
+    setProcessing(true);
     setError("");
     try {
-      await api.contacts.convertToDeal(contact.id);
+      if (contact.status === "opportunity") {
+        await api.contacts.convertToDeal(contact.id);
+      } else if (contact.status === "customer" || contact.status === "lost") {
+        await api.contacts.update(contact.id, { status: "new" });
+      } else {
+        const next = contact.status === "new" ? "qualified" : "opportunity";
+        await api.contacts.update(contact.id, { status: next as any });
+      }
       onMutated();
       onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to convert contact");
-      setConverting(false);
+      setError(err.message || "Failed to update contact");
+      setProcessing(false);
     }
   };
+
+  const statusLabel = {
+    new: "Mark as Qualified",
+    qualified: "Mark as Opportunity",
+    opportunity: "Convert to Deal",
+    customer: "Reopen as New",
+    lost: "Reopen as New",
+  }[contact.status] || "Update";
+
+  const statusSteps = ["new", "qualified", "opportunity"];
 
   const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
   const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
@@ -893,11 +915,23 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Phone</span><span className="font-medium">{contact.phone || "—"}</span></div>
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Title</span><span className="font-medium">{contact.title || "—"}</span></div>
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Department</span><span className="font-medium">{contact.department || "—"}</span></div>
-            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Status</span><span className="font-medium capitalize">{contact.status}</span></div>
             {contact.account && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Account</span><span className="font-medium">{contact.account.name}</span></div>}
-            <button onClick={handleConvert} disabled={converting} className="btn-p mt-2 text-sm py-2.5 flex items-center justify-center gap-2 disabled:opacity-60">
-              {converting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-              Convert to Deal
+            <div className="py-3 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pipeline Status</p>
+              <div className="flex items-center gap-1 text-xs">
+                {statusSteps.map((s, i) => (
+                  <>
+                    <span key={s} className={`px-2 py-1 rounded-md capitalize ${contact.status === s ? "bg-pk-600 text-white" : statusSteps.indexOf(contact.status as any) > i ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                      {s}
+                    </span>
+                    {i < statusSteps.length - 1 && <span className="text-gray-400">→</span>}
+                  </>
+                ))}
+              </div>
+            </div>
+            <button onClick={handlePrimary} disabled={processing} className="btn-p mt-2 text-sm py-2.5 flex items-center justify-center gap-2 disabled:opacity-60">
+              {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+              {statusLabel}
             </button>
           </div>
         )}
