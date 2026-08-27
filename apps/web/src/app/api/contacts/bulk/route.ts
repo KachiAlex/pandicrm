@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { ids, categoryIds, delete: shouldDelete } = validation.data;
+    const { ids, status, categoryIds, delete: shouldDelete } = validation.data;
 
     const userId = (session as any).user.id;
 
@@ -36,6 +36,14 @@ export async function POST(req: NextRequest) {
         where: { id: { in: ids }, workspaceId: first.workspaceId },
       });
       return NextResponse.json({ deleted: ids.length });
+    }
+
+    if (status !== undefined) {
+      await prisma.contact.updateMany({
+        where: { id: { in: ids }, workspaceId: first.workspaceId },
+        data: { status },
+      });
+      return NextResponse.json({ updated: ids.length });
     }
 
     if (categoryIds !== undefined) {

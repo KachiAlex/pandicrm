@@ -35,7 +35,7 @@ export const api = {
     delete: (id: string) => fetchJSON<void>(`/api/contacts/${id}`, { method: "DELETE" }),
     convertToDeal: (id: string) =>
       fetchJSON<Deal>(`/api/contacts/${id}/convert-to-deal`, { method: "POST" }),
-    bulk: (data: { ids: string[]; categoryIds?: string[]; delete?: boolean }) =>
+    bulk: (data: { ids: string[]; status?: Contact["status"]; categoryIds?: string[]; delete?: boolean }) =>
       fetchJSON<{ updated?: number; deleted?: number }>("/api/contacts/bulk", { method: "POST", body: JSON.stringify(data) }),
     import: (workspaceId: string, csvText: string, categoryIds?: string[]) =>
       fetchJSON<{ created: number; skipped: { row: number; reason: string }[]; contacts: any[] }>("/api/contacts/import", {

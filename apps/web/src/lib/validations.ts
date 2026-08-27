@@ -197,6 +197,7 @@ export const updateContactCategorySchema = z.object({
 
 export const bulkUpdateContactsSchema = z.object({
   ids: z.array(z.string()).min(1).max(1000),
+  status: z.enum(["new", "qualified", "opportunity", "customer", "lost"]).optional(),
   categoryIds: z.array(z.string()).max(50).optional(),
   delete: z.boolean().optional(),
 });
