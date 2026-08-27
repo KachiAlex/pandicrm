@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         plan: "free",
         ownerId: userId,
         members: {
-          create: { userId, role: "owner" },
+          create: { userId, role: "admin" },
         },
       },
     });

@@ -28,9 +28,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       select: { id: true, email: true, name: true, firstName: true, lastName: true },
     });
 
-    const all = [];
-    if (owner) {
-      all.push({
+    const all = workspace.members.map((m) => ({
+      id: m.id,
+      userId: m.user.id,
+      email: m.user.email,
+      name: m.user.name,
+      firstName: m.user.firstName,
+      lastName: m.user.lastName,
+      role: m.role,
+      joinedAt: m.joinedAt.toISOString(),
+    }));
+
+    const ownerInMembers = workspace.members.some((m) => m.user.id === workspace.ownerId);
+    if (owner && !ownerInMembers) {
+      all.unshift({
         id: "owner",
         userId: owner.id,
         email: owner.email,
@@ -39,18 +50,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         lastName: owner.lastName,
         role: "owner",
         joinedAt: workspace.createdAt.toISOString(),
-      });
-    }
-    for (const m of workspace.members) {
-      all.push({
-        id: m.id,
-        userId: m.user.id,
-        email: m.user.email,
-        name: m.user.name,
-        firstName: m.user.firstName,
-        lastName: m.user.lastName,
-        role: m.role,
-        joinedAt: m.joinedAt.toISOString(),
       });
     }
 
