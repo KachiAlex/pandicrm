@@ -219,8 +219,8 @@ function PricingSection() {
       <div className="max-w-[1200px] mx-auto px-6 relative z-10">
         <div className="text-center mb-16 reveal">
           <div className="pill mb-5 mx-auto" style={{ width: "fit-content" }}>Pricing</div>
-          <h2 className="font-black tracking-[-0.03em] leading-[1.07] mb-4" style={{ fontSize: "clamp(28px,4.5vw,52px)" }}>Simple pricing,<br/><span className="tg">when you're ready.</span></h2>
-          <p className="text-gray-500 max-w-lg mx-auto leading-relaxed" style={{ fontSize: 17 }}>We're in early access — join now and get exclusive founding member rates at launch.</p>
+          <h2 className="font-black tracking-[-0.03em] leading-[1.07] mb-4" style={{ fontSize: "clamp(28px,4.5vw,52px)" }}>Simple pricing,<br/><span className="tg">when you&apos;re ready.</span></h2>
+          <p className="text-gray-500 max-w-lg mx-auto leading-relaxed" style={{ fontSize: 17 }}>We&apos;re in early access — join now and get exclusive founding member rates at launch.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           <div className="pc reveal rd1">

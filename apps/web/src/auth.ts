@@ -25,7 +25,7 @@ export const {
       },
       authorize: async (credentials, req) => {
         const ip = req?.headers?.get?.("x-forwarded-for") ?? "unknown";
-        const { allowed, retryAfter } = checkRateLimit(`login:${ip}`);
+        const { allowed, retryAfter } = await checkRateLimit(`login:${ip}`);
         if (!allowed) {
           throw new Error(`Too many attempts. Try again in ${retryAfter} seconds.`);
         }
@@ -63,7 +63,7 @@ export const {
           return null;
         }
 
-        resetRateLimit(`login:${ip}`);
+        await resetRateLimit(`login:${ip}`);
 
         return {
           id: user.id,

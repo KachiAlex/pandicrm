@@ -4,6 +4,13 @@ import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "
 
 import { toCSV } from "@/lib/csv";
 
+interface FollowUpMetadata {
+  outcome?: string;
+  response?: string;
+  nextCadence?: string;
+  nextFollowUpAt?: string;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await requireAuth(req);
@@ -22,7 +29,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
     }
 
-    const userId = (session as any).user.id;
+    const userId = session.user.id!;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
     const start = from ? new Date(from) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -48,7 +55,7 @@ export async function GET(req: NextRequest) {
     });
 
     const filtered = outcome
-      ? events.filter((e) => (e.metadata as any)?.outcome === outcome)
+      ? events.filter((e) => (e.metadata as unknown as FollowUpMetadata).outcome === outcome)
       : events;
 
     if (format === "csv") {
@@ -65,8 +72,8 @@ export async function GET(req: NextRequest) {
             c?.email || "",
             e.account?.name || "",
             e.type,
-            (e.metadata as any)?.outcome || "",
-            (e.metadata as any)?.nextCadence || "",
+            (e.metadata as unknown as FollowUpMetadata).outcome || "",
+            (e.metadata as unknown as FollowUpMetadata).nextCadence || "",
             c?.nextFollowUpAt ? c.nextFollowUpAt.toISOString().split("T")[0] : "",
             e.author?.name || "",
             e.description || "",

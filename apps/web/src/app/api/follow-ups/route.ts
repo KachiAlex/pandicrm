@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
     }
 
-    const userId = (session as any).user.id;
+    const userId = session.user.id!;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
     const now = new Date();

@@ -2,8 +2,22 @@ import { auth } from "@/auth";
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jwtVerify } from "jose";
+import type { Session } from "next-auth";
 
-export async function requireAuth(req?: NextRequest) {
+interface TokenPayload {
+  id?: unknown;
+  email?: unknown;
+  name?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+  company?: unknown;
+  phone?: unknown;
+  role?: unknown;
+  image?: unknown;
+  isActive?: unknown;
+}
+
+export async function requireAuth(req?: NextRequest): Promise<Session | NextResponse> {
   if (req) {
     const authHeader = req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -11,25 +25,26 @@ export async function requireAuth(req?: NextRequest) {
       try {
         const secret = new TextEncoder().encode(process.env.AUTH_SECRET);
         const { payload } = await jwtVerify(token, secret);
-        if (payload.id && payload.email) {
-          if (payload.isActive === false) {
+        const p = payload as TokenPayload;
+        if (p.id && p.email) {
+          if (p.isActive === false) {
             return NextResponse.json({ error: "Account inactive" }, { status: 401 });
           }
           return {
             user: {
-              id: payload.id as string,
-              email: payload.email as string,
-              name: (payload.name as string) || null,
-              firstName: (payload.firstName as string) || null,
-              lastName: (payload.lastName as string) || null,
-              company: (payload.company as string) || null,
-              phone: (payload.phone as string) || null,
-              role: (payload.role as string) || "user",
-              image: (payload.image as string) || null,
-              isActive: payload.isActive as boolean ?? true,
+              id: String(p.id),
+              email: String(p.email),
+              name: p.name ? String(p.name) : null,
+              firstName: p.firstName ? String(p.firstName) : null,
+              lastName: p.lastName ? String(p.lastName) : null,
+              company: p.company ? String(p.company) : null,
+              phone: p.phone ? String(p.phone) : null,
+              role: p.role ? String(p.role) : "user",
+              image: p.image ? String(p.image) : null,
+              isActive: p.isActive !== false,
             },
             expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          } as any;
+          };
         }
       } catch {
         return NextResponse.json({ error: "Invalid token" }, { status: 401 });
@@ -38,7 +53,7 @@ export async function requireAuth(req?: NextRequest) {
   }
 
   const session = await auth();
-  if ((session as any)?.user?.isActive === false || !(session as any)?.user?.id) {
+  if (!session || session.user?.isActive === false || !session.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return session;

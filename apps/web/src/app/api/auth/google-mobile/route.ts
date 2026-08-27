@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { OAuth2Client } from "google-auth-library";
 import { SignJWT } from "jose";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit } from "@/lib/rate-limit-redis";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -49,7 +49,7 @@ async function signSessionToken(user: {
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for") || "unknown";
-    const { allowed, retryAfter } = checkRateLimit(`mobile-google:${ip}`);
+    const { allowed, retryAfter } = await checkRateLimit(`mobile-google:${ip}`);
     if (!allowed) {
       return NextResponse.json(
         { error: `Too many attempts. Try again in ${retryAfter} seconds.` },

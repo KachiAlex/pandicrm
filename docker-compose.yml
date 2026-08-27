@@ -25,10 +25,25 @@ services:
       DATABASE_URL: "${DATABASE_URL}"
       AUTH_SECRET: "${AUTH_SECRET}"
       AUTH_URL: "${AUTH_URL}"
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379}"
       NODE_ENV: "production"
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:
+  redisdata:

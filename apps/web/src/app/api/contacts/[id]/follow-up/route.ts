@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { NoteType, TimelineEventType, TaskPriority, TaskStatus } from "@prisma/client";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 
 function addDays(date: Date, days: number) {
@@ -19,6 +20,18 @@ const cadenceDays: Record<string, number> = {
   "1_month": 30,
   custom: -1,
 };
+
+interface FollowUpBody {
+  type?: string;
+  outcome?: string;
+  notes?: string;
+  response?: string;
+  occurredAt?: string;
+  nextCadence?: string;
+  customDays?: number;
+  reminder?: boolean;
+  reminderDate?: string;
+}
 
 function computeNextFollowUpAt(cadence: string, customDays?: number, from = new Date()) {
   if (cadence === "custom" && typeof customDays === "number" && customDays >= 0) {
@@ -40,10 +53,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
     if (!contact) return notFound();
 
-    const userId = (session as any).user.id;
+    const userId = session.user.id!;
     if (!(await requireWorkspaceAccess(contact.workspaceId, userId))) return unauthorized();
 
-    const body = await req.json();
+    const body = (await req.json()) as FollowUpBody;
     const {
       type = "call",
       outcome = "other",
@@ -54,18 +67,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       customDays,
       reminder,
       reminderDate,
-    } = body as any;
+    } = body;
 
-    const cadence = (nextCadence as string) || contact.followUpCadence || "3_days";
+    const cadence = nextCadence || contact.followUpCadence || "3_days";
     const now = new Date();
-    const occurred = (occurredAt as string) ? new Date(occurredAt as string) : now;
+    const occurred = occurredAt ? new Date(occurredAt) : now;
     const next = computeNextFollowUpAt(cadence, customDays, now);
     const title = `${type} - ${outcome}`;
 
-    const noteType =
+    const noteType: NoteType =
       type === "meeting" ? "meeting" :
       type === "email" ? "email" :
       type === "call" ? "call" : "manual";
+    const eventType: TimelineEventType = type as unknown as TimelineEventType;
 
     const ops: any[] = [
       prisma.contact.update({
@@ -81,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           workspaceId: contact.workspaceId,
           contactId: id,
           authorId: userId,
-          type,
+          type: eventType,
           title,
           description: notes,
           metadata: { outcome, response, nextCadence: cadence, nextFollowUpAt: next.toISOString() },
@@ -99,7 +113,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             authorId: userId,
             title,
             content: [notes, response ? `Response: ${response}` : ""].filter(Boolean).join("\n\n"),
-            type: noteType as any,
+            type: noteType,
           },
         })
       );
@@ -114,9 +128,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             assigneeId: userId,
             title: `Follow up with ${contact.firstName} ${contact.lastName}`,
             description: notes,
-            dueDate: new Date(reminderDate as string),
-            priority: "medium",
-            status: "todo",
+            dueDate: new Date(reminderDate),
+            priority: "medium" as TaskPriority,
+            status: "todo" as TaskStatus,
           },
         })
       );

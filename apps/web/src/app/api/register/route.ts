@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit } from "@/lib/rate-limit-redis";
 import { registerSchema, validateBody } from "@/lib/validations";
 import { serverError } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for") || "unknown";
-    const { allowed, retryAfter } = checkRateLimit(`register:${ip}`);
+    const { allowed, retryAfter } = await checkRateLimit(`register:${ip}`);
     if (!allowed) {
       return NextResponse.json(
         { error: `Too many attempts. Try again in ${retryAfter} seconds.` },

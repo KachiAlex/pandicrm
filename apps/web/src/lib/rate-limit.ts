@@ -3,7 +3,7 @@ const attempts = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 60 * 1000;
 const MAX_ATTEMPTS = 5;
 
-export function checkRateLimit(key: string): { allowed: boolean; retryAfter: number } {
+export async function checkRateLimit(key: string): Promise<{ allowed: boolean; retryAfter: number }> {
   const now = Date.now();
   const entry = attempts.get(key);
 
@@ -20,6 +20,6 @@ export function checkRateLimit(key: string): { allowed: boolean; retryAfter: num
   return { allowed: true, retryAfter: 0 };
 }
 
-export function resetRateLimit(key: string) {
+export async function resetRateLimit(key: string): Promise<void> {
   attempts.delete(key);
 }

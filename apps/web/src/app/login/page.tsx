@@ -205,7 +205,7 @@ export default function LoginPage() {
 
           <div className="mt-5 pt-5 border-t border-gray-100 text-center">
             <p className="text-xs text-gray-400">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 type="button"
                 onClick={() => setShowRegister(true)}

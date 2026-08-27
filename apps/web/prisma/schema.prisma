@@ -19,24 +19,10 @@ enum UserPlan {
   premium
 }
 
-enum Permission {
-  users_read
-  users_create
-  users_update
-  users_delete
-  users_manage
-  workspaces_manage
-  billing_manage
-}
-
-model RolePermission {
-  id         String     @id @default(cuid())
-  role       UserRole
-  permission Permission
-  createdAt  DateTime   @default(now()) @map("created_at")
-
-  @@unique([role, permission])
-  @@map("role_permissions")
+enum WorkspaceRole {
+  owner
+  admin
+  member
 }
 
 model User {
@@ -93,7 +79,7 @@ model WorkspaceMember {
   id          String   @id @default(cuid())
   workspaceId String   @map("workspace_id")
   userId      String   @map("user_id")
-  role        String   @default("member") // owner, admin, member
+  role        WorkspaceRole @default(member)
   joinedAt    DateTime @default(now()) @map("joined_at")
 
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

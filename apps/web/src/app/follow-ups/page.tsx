@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import CreateContactModal from "@/components/CreateContactModal";
 
+type FollowUpEventMetadata = { outcome?: string; response?: string; nextCadence?: string };
+
 const filters = ["today", "overdue", "upcoming", "all"] as const;
 
 type Filter = (typeof filters)[number];
@@ -593,8 +595,8 @@ export default function FollowUpsPage() {
                           <td className="px-4 py-3 font-medium text-gray-900">{e.contact ? `${e.contact.firstName} ${e.contact.lastName}` : "-"}</td>
                           <td className="px-4 py-3 text-gray-500">{e.account?.name || "-"}</td>
                           <td className="px-4 py-3 capitalize text-gray-700">{e.type}</td>
-                          <td className="px-4 py-3 text-gray-500 capitalize">{((e.metadata as any)?.outcome || "-").replace(/_/g, " ")}</td>
-                          <td className="px-4 py-3 text-gray-500">{(e.metadata as any)?.nextCadence || "-"}</td>
+                          <td className="px-4 py-3 text-gray-500 capitalize">{((e.metadata as unknown as FollowUpEventMetadata).outcome || "-").replace(/_/g, " ")}</td>
+                          <td className="px-4 py-3 text-gray-500">{(e.metadata as unknown as FollowUpEventMetadata).nextCadence || "-"}</td>
                           <td className="px-4 py-3 text-gray-500">{e.contact?.nextFollowUpAt ? new Date(e.contact.nextFollowUpAt).toISOString().split("T")[0] : "-"}</td>
                           <td className="px-4 py-3 text-gray-500">{e.author?.name || "-"}</td>
                           <td className="px-4 py-3 text-gray-500 max-w-xs truncate">{e.description || "-"}</td>

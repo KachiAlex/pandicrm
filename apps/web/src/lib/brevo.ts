@@ -1,6 +1,14 @@
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 
+interface SmtpConfig {
+  host?: string;
+  port?: string | number;
+  user?: string;
+  pass?: string;
+  secure?: boolean;
+}
+
 async function getTransporter(workspaceId?: string) {
   if (workspaceId) {
     const integration = await prisma.integration.findFirst({
@@ -9,9 +17,9 @@ async function getTransporter(workspaceId?: string) {
     });
 
     if (integration) {
-      const c = (integration.config as any) || {};
+      const c = (integration.config as unknown as SmtpConfig | null) ?? {};
       const host = c.host || "smtp-relay.brevo.com";
-      const port = parseInt(c.port || "587", 10);
+      const port = parseInt(String(c.port || "587"), 10);
       const user = c.user;
       const pass = c.pass;
       if (user && pass) {

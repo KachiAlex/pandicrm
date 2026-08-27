@@ -44,9 +44,7 @@ export default function IntegrationsPanel({ workspaceId }: IntegrationsPanelProp
       authToken: "",
       fromNumber: "",
       testNumber: "",
-      clientId: "",
-      clientSecret: "",
-      redirectUri: "",
+      icsUrl: "",
     } as Record<string, any>,
   });
 
@@ -72,7 +70,7 @@ export default function IntegrationsPanel({ workspaceId }: IntegrationsPanelProp
       config: {
         host: "", port: "", user: "", pass: "", secure: false,
         accountSid: "", authToken: "", fromNumber: "", testNumber: "",
-        clientId: "", clientSecret: "", redirectUri: "",
+        icsUrl: "",
       },
     });
     setMessage(null);
@@ -175,9 +173,12 @@ export default function IntegrationsPanel({ workspaceId }: IntegrationsPanelProp
 
   const renderCalendarFields = () => (
     <>
-      <input className="input" placeholder="Google Client ID" value={form.config.clientId || ""} onChange={(e) => updateConfig("clientId", e.target.value)} />
-      <input className="input" type="password" placeholder="Google Client Secret" value={form.config.clientSecret || ""} onChange={(e) => updateConfig("clientSecret", e.target.value)} />
-      <input className="input" placeholder="Redirect URI" value={form.config.redirectUri || ""} onChange={(e) => updateConfig("redirectUri", e.target.value)} />
+      <input
+        className="input"
+        placeholder="Paste the iCal / .ics feed URL (Google Calendar → Integrate calendar)"
+        value={form.config.icsUrl || ""}
+        onChange={(e) => updateConfig("icsUrl", e.target.value)}
+      />
     </>
   );
 

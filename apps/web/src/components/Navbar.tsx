@@ -45,9 +45,9 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-1">
             {navLink("/", "Home")}
-            <a href="/#features" className="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/#features" className="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">
               Features
-            </a>
+            </Link>
             <Link href="/dashboard" className="text-sm font-medium px-4 py-2 rounded-full text-gray-600 hover:text-gray-900 transition-colors">
               Dashboard
             </Link>
