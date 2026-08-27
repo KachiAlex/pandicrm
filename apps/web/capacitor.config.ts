@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "Pandacrm",
   webDir: "www",
   server: {
-    url: "https://pandacrm.com.ng",
+    url: "https://pandacrm.com.ng/login",
     cleartext: true,
   },
   android: {
@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2500,
+      launchShowDuration: 3000,
       backgroundColor: "#0d0d12",
       androidSplashResourceName: "splash",
       showSpinner: true,
