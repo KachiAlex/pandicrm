@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteMessage, setInviteMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<"profile" | "workspace" | "members" | "security">("profile");
 
   useEffect(() => {
     api.user.get().then((data) => {
@@ -155,14 +156,34 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen" style={{ background: "#f5f5f7" }}>
       <div className="max-w-2xl mx-auto px-5 py-8">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-4">
           <Link href="/dashboard" className="p-2 rounded-xl hover:bg-gray-200 transition-colors">
             <ArrowLeft className="w-4 h-4 text-gray-600" />
           </Link>
           <h1 style={{ fontSize: 18, fontWeight: 800, color: "#0d0d12" }}>Settings</h1>
         </div>
 
-        <div className="surf p-6 mb-5">
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { id: "profile", label: "Profile", icon: User },
+            { id: "workspace", label: "Workspace", icon: Building2 },
+            { id: "members", label: "Members", icon: Users },
+            { id: "security", label: "Security", icon: Lock },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                activeTab === t.id ? "bg-pk-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <t.icon className="w-3.5 h-3.5" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "profile" && (<div className="surf p-6 mb-5">
           <div className="flex items-center gap-2 mb-5">
             <User className="w-4 h-4 text-pk-600" />
             <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Profile</h2>
@@ -206,9 +227,9 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
-        </div>
+        </div>)}
 
-        <div className="surf p-6 mb-5">
+        {activeTab === "workspace" && (<div className="surf p-6 mb-5">
           <div className="flex items-center gap-2 mb-5">
             <Building2 className="w-4 h-4 text-pk-600" />
             <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Workspace</h2>
@@ -251,9 +272,9 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
-        </div>
+        </div>)}
 
-        <div className="surf p-6 mb-5">
+        {activeTab === "members" && (<div className="surf p-6 mb-5">
           <div className="flex items-center gap-2 mb-5">
             <Users className="w-4 h-4 text-pk-600" />
             <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Workspace Members</h2>
@@ -334,9 +355,9 @@ export default function SettingsPage() {
               ))}
             </div>
           )}
-        </div>
+        </div>)}
 
-        <div className="surf p-6">
+        {activeTab === "security" && (<div className="surf p-6">
           <div className="flex items-center gap-2 mb-5">
             <Lock className="w-4 h-4 text-pk-600" />
             <h2 style={{ fontSize: 13.5, fontWeight: 700, color: "#1f2937" }}>Change Password</h2>
@@ -365,7 +386,8 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
-        </div>
+        </div>)}
+
       </div>
     </div>
   );
