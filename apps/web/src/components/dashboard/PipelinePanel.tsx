@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Loader2, X, DollarSign, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Loader2, X, DollarSign, Pencil, Trash2, Search, ArrowRight } from "lucide-react";
 import { api, Deal, DealStage, Account, Contact } from "@/lib/api";
 
 const STAGES: { key: DealStage; label: string; dot: string }[] = [
@@ -13,8 +13,23 @@ const STAGES: { key: DealStage; label: string; dot: string }[] = [
   { key: "lost", label: "Lost", dot: "#ef4444" },
 ];
 
+const PIPELINE_STAGES: { key: string; label: string; dot: string; type: "contact" | "deal" }[] = [
+  { key: "new", label: "New", dot: "#9ca3af", type: "contact" },
+  { key: "qualified", label: "Qualified", dot: "#3b82f6", type: "contact" },
+  { key: "opportunity", label: "Opportunity", dot: "#ff1a97", type: "contact" },
+  { key: "lead", label: "Lead", dot: "#9ca3af", type: "deal" },
+  { key: "qualify", label: "Qualify", dot: "#ffadd9", type: "deal" },
+  { key: "propose", label: "Propose", dot: "#f59e0b", type: "deal" },
+  { key: "negotiate", label: "Negotiate", dot: "#a78bfa", type: "deal" },
+  { key: "won", label: "Won", dot: "#4ade80", type: "deal" },
+  { key: "lost", label: "Lost", dot: "#ef4444", type: "deal" },
+];
+
+const ACTIVE_CONTACT_STATUSES = ["new", "qualified", "opportunity"];
+
 export default function PipelinePanel({ workspaceId }: { workspaceId: string }) {
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -25,8 +40,12 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
   useEffect(() => {
     if (!workspaceId) return;
     setLoading(true);
-    api.deals.list(workspaceId).then((data) => {
-      setDeals(data);
+    Promise.all([
+      api.deals.list(workspaceId).catch(() => []),
+      api.contacts.list(workspaceId).catch(() => []),
+    ]).then(([d, c]) => {
+      setDeals(d);
+      setContacts(c);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [workspaceId, refreshKey]);
@@ -39,8 +58,18 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
     );
   }
 
+  const q = search.toLowerCase();
+  const filteredContacts = contacts
+    .filter((c) => ACTIVE_CONTACT_STATUSES.includes(c.status))
+    .filter((c) => {
+      if (!search) return true;
+      const name = `${c.firstName} ${c.lastName}`.toLowerCase();
+      return name.includes(q) || (c.email || "").toLowerCase().includes(q) || (c.title || "").toLowerCase().includes(q);
+    })
+    .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+
   const filteredDeals = deals.filter((d) => {
-    const matchesSearch = !search || d.name.toLowerCase().includes(search.toLowerCase()) || (d.description || "").toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || d.name.toLowerCase().includes(q) || (d.description || "").toLowerCase().includes(q);
     return matchesSearch;
   }).sort((a, b) => {
     if (sortBy === "valueDesc") return Number(b.value) - Number(a.value);
@@ -68,7 +97,7 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
             <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            <input type="text" placeholder="Search deals..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+            <input type="text" placeholder="Search pipeline..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
           </div>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="bg-white border border-gray-200 rounded-xl text-xs text-gray-600 px-2.5 py-1.5 outline-none focus:border-pk-500" style={{ height: 33 }}>
             <option value="valueDesc">Sort: Value ↓</option>
@@ -80,18 +109,25 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
         </div>
       </div>
       <div className="flex gap-3 overflow-x-auto noscroll pb-3">
-        {STAGES.map((stage) => {
-          const items = filteredDeals.filter((d) => d.stage === stage.key);
-          const stageTotal = items.reduce((sum, d) => sum + Number(d.value), 0);
+        {PIPELINE_STAGES.map((stage) => {
+          const isContact = stage.type === "contact";
+          const cItems = isContact ? filteredContacts.filter((c) => c.status === stage.key) : [];
+          const dItems = isContact ? [] : filteredDeals.filter((d) => d.stage === stage.key as DealStage);
+          const stageTotal = dItems.reduce((sum, d) => sum + Number(d.value), 0);
           const won = stage.key === "won";
           return (
             <div key={stage.key} style={{ minWidth: 155, flexShrink: 0 }}>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <div className="w-2 h-2 rounded-full" style={{ background: stage.dot }} />
                 <p style={{ fontSize: 9.5, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".05em" }}>{stage.label}</p>
-                <span className="ml-auto" style={{ fontSize: 9, color: won ? "#16a34a" : "#9ca3af", fontWeight: won ? 600 : 400 }}>${(stageTotal / 1000).toFixed(0)}K</span>
+                <span className="ml-auto" style={{ fontSize: 9, color: won ? "#16a34a" : "#9ca3af", fontWeight: won ? 600 : 400 }}>
+                  {isContact ? `${cItems.length}` : `$${(stageTotal / 1000).toFixed(0)}K`}
+                </span>
               </div>
-              {items.map((item) => {
+              {cItems.map((c) => (
+                <ContactPipelineCard key={c.id} contact={c} onMutated={() => setRefreshKey((k) => k + 1)} />
+              ))}
+              {dItems.map((item) => {
                 const hot = item.probability >= 50 && item.stage !== "won" && item.stage !== "lost";
                 return (
                   <div key={item.id} className={`pkc cursor-pointer hover:shadow-md transition-shadow ${won ? "border-green-100" : ""}`} style={hot ? { borderColor: "rgba(255,26,151,0.18)" } : {}} onClick={() => setSelectedDeal(item)}>
@@ -102,8 +138,8 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
                   </div>
                 );
               })}
-              {items.length === 0 && (
-                <div className="pkc text-center text-gray-400 text-xs py-2">No deals</div>
+              {cItems.length === 0 && dItems.length === 0 && (
+                <div className="pkc text-center text-gray-400 text-xs py-2">No items</div>
               )}
             </div>
           );
@@ -113,6 +149,47 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
       {showCreate && <CreateDealModal workspaceId={workspaceId} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
       {selectedDeal && <DealDetailModal deal={selectedDeal} workspaceId={workspaceId} onClose={() => setSelectedDeal(null)} onMutated={() => setRefreshKey((k) => k + 1)} />}
     </>
+  );
+}
+
+function ContactPipelineCard({ contact, onMutated }: { contact: Contact; onMutated: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAction = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (contact.status === "opportunity") {
+        await api.contacts.convertToDeal(contact.id);
+      } else {
+        const next = contact.status === "new" ? "qualified" : "opportunity";
+        await api.contacts.update(contact.id, { status: next as any });
+      }
+      onMutated();
+    } catch (err: any) {
+      setError(err.message || "Failed to move contact");
+      setLoading(false);
+    }
+  };
+
+  const labels: Record<string, string> = {
+    new: "Mark as Qualified",
+    qualified: "Mark as Opportunity",
+    opportunity: "Convert to Deal",
+  };
+
+  return (
+    <div className="pkc mb-2">
+      <p style={{ fontWeight: 600, fontSize: 11, color: "#1f2937" }}>{contact.firstName} {contact.lastName}</p>
+      {contact.title && <p className="text-[10px] text-gray-500">{contact.title}</p>}
+      {contact.email && <p className="text-[10px] text-gray-400 truncate">{contact.email}</p>}
+      {error && <p className="text-[10px] text-red-600 mt-1">{error}</p>}
+      <button onClick={handleAction} disabled={loading} className="w-full mt-2 text-[10px] py-1.5 rounded-lg border border-pk-200 text-pk-700 bg-pk-50 hover:bg-pk-100 flex items-center justify-center gap-1 disabled:opacity-60">
+        {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRight className="w-3 h-3" />}
+        {labels[contact.status]}
+      </button>
+    </div>
   );
 }
 
