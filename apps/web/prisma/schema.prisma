@@ -121,6 +121,14 @@ model Account {
   @@map("accounts")
 }
 
+enum ContactStatus {
+  new
+  qualified
+  opportunity
+  customer
+  lost
+}
+
 model Contact {
   id          String   @id @default(cuid())
   workspaceId String   @map("workspace_id")
@@ -136,6 +144,7 @@ model Contact {
   linkedin    String?
   avatar      String?
   isPrimary   Boolean  @default(false) @map("is_primary")
+  status      ContactStatus @default(new) @map("status")
   customFields Json?   @map("custom_fields")
   categoryIds String[] @default([]) @map("category_ids")
   createdAt   DateTime @default(now()) @map("created_at")

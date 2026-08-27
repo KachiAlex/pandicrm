@@ -33,6 +33,8 @@ export const api = {
     update: (id: string, data: Partial<Contact>) =>
       fetchJSON<Contact>(`/api/contacts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/contacts/${id}`, { method: "DELETE" }),
+    convertToDeal: (id: string) =>
+      fetchJSON<Deal>(`/api/contacts/${id}/convert-to-deal`, { method: "POST" }),
     bulk: (data: { ids: string[]; categoryIds?: string[]; delete?: boolean }) =>
       fetchJSON<{ updated?: number; deleted?: number }>("/api/contacts/bulk", { method: "POST", body: JSON.stringify(data) }),
     import: (workspaceId: string, csvText: string, categoryIds?: string[]) =>
@@ -211,6 +213,7 @@ export interface Contact {
   linkedin?: string;
   avatar?: string;
   isPrimary: boolean;
+  status: "new" | "qualified" | "opportunity" | "customer" | "lost";
   categoryIds: string[];
   createdAt: string;
   updatedAt: string;

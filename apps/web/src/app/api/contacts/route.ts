@@ -47,13 +47,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, categoryIds } = validation.data;
+    const { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, status, categoryIds } = validation.data;
 
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
     const contact = await prisma.contact.create({
-      data: { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, categoryIds },
+      data: { workspaceId, accountId, firstName, lastName, email, phone, title, department, linkedin, status, categoryIds },
     });
 
     return NextResponse.json(contact, { status: 201 });

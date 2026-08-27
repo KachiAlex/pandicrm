@@ -31,6 +31,7 @@ export const createContactSchema = z.object({
   title: z.string().max(100).optional(),
   department: z.string().max(100).optional(),
   linkedin: z.string().url().max(500).optional().or(z.literal("")),
+  status: z.enum(["new", "qualified", "opportunity", "customer", "lost"]).optional(),
   categoryIds: z.array(z.string()).max(50).optional(),
 });
 
@@ -43,6 +44,7 @@ export const updateContactSchema = z.object({
   department: z.string().max(100).optional(),
   linkedin: z.string().url().max(500).optional().or(z.literal("")),
   accountId: z.string().optional(),
+  status: z.enum(["new", "qualified", "opportunity", "customer", "lost"]).optional(),
   categoryIds: z.array(z.string()).max(50).optional(),
 });
 

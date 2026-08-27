@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload, Filter, ChevronDown, FolderOpen } from "lucide-react";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload, Filter, ChevronDown, FolderOpen, ArrowRight } from "lucide-react";
 import { api, Account, Contact, Deal, ContactCategory } from "@/lib/api";
 import { exportAccounts, exportContacts, exportDeals } from "@/lib/csv";
 
@@ -807,8 +807,10 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
   const [phone, setPhone] = useState(contact.phone || "");
   const [title, setTitle] = useState(contact.title || "");
   const [department, setDepartment] = useState(contact.department || "");
+  const [status, setStatus] = useState(contact.status || "new");
   const [accountId, setAccountId] = useState(contact.accountId || "");
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => { api.accounts.list(workspaceId).then((a) => setAccounts(a)).catch(() => {}); }, [workspaceId]);
 
@@ -818,7 +820,7 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
     if (!firstName.trim() || !lastName.trim()) { setError("First and last name are required"); return; }
     setLoading(true);
     try {
-      await api.contacts.update(contact.id, { firstName, lastName, email: email || undefined, phone: phone || undefined, title: title || undefined, department: department || undefined, accountId: accountId || undefined });
+      await api.contacts.update(contact.id, { firstName, lastName, email: email || undefined, phone: phone || undefined, title: title || undefined, department: department || undefined, accountId: accountId || undefined, status: status as any });
       setEditMode(false);
       onMutated();
     } catch (err: any) { setError(err.message || "Failed to update contact"); setLoading(false); }
@@ -828,6 +830,19 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
     setLoading(true);
     try { await api.contacts.delete(contact.id); onClose(); onMutated(); }
     catch (err: any) { setError(err.message || "Failed to delete contact"); setLoading(false); }
+  };
+
+  const handleConvert = async () => {
+    setConverting(true);
+    setError("");
+    try {
+      await api.contacts.convertToDeal(contact.id);
+      onMutated();
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to convert contact");
+      setConverting(false);
+    }
   };
 
   const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
@@ -866,6 +881,7 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
             </div>
             <div><label className={labelClass}>Department</label><input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} className={selClass} /></div>
             <div><label className={labelClass}>Account</label><select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selClass}><option value="">None</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+            <div><label className={labelClass}>Status</label><select value={status} onChange={(e) => setStatus(e.target.value as any)} className={selClass}>{["new", "qualified", "opportunity", "customer", "lost"].map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
             <div className="flex gap-3">
               <button type="button" onClick={() => setEditMode(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
               <button type="submit" disabled={loading} className="flex-1 btn-p justify-center py-2.5 text-sm disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
@@ -877,7 +893,12 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Phone</span><span className="font-medium">{contact.phone || "—"}</span></div>
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Title</span><span className="font-medium">{contact.title || "—"}</span></div>
             <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Department</span><span className="font-medium">{contact.department || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Status</span><span className="font-medium capitalize">{contact.status}</span></div>
             {contact.account && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Account</span><span className="font-medium">{contact.account.name}</span></div>}
+            <button onClick={handleConvert} disabled={converting} className="btn-p mt-2 text-sm py-2.5 flex items-center justify-center gap-2 disabled:opacity-60">
+              {converting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+              Convert to Deal
+            </button>
           </div>
         )}
       </div>
