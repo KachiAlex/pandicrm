@@ -102,20 +102,20 @@ export const {
       }
       return true;
     },
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.id = user.id;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.company = user.company;
-        token.phone = user.phone;
-        token.role = user.role;
-      }
-
-      if (token.email && (!token.id || token.role == null)) {
+    jwt: async ({ token }) => {
+      if (token.email) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
+          where: { email: token.email as string },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+            phone: true,
+            role: true,
+          },
         });
+
         if (dbUser) {
           token.id = dbUser.id;
           token.firstName = dbUser.firstName;
