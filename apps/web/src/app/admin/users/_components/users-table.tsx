@@ -96,7 +96,7 @@ export default function UsersTable({
                 />
               </td>
               <td className="px-4 py-3 text-gray-500">
-                {new Date(user.createdAt).toLocaleDateString()}
+                {new Date(user.createdAt).toISOString().split("T")[0]}
               </td>
             </tr>
           ))}
