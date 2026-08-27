@@ -13,10 +13,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 2500,
       backgroundColor: "#0d0d12",
       androidSplashResourceName: "splash",
-      showSpinner: false,
+      showSpinner: true,
+      spinnerColor: "#E8286E",
     },
     GoogleAuth: {
       forceCodeForRefreshToken: true,
