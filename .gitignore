@@ -10,3 +10,10 @@ dist
 .vercel
 .env*
 !.env.example
+
+*.keystore
+*.jks
+*.apk
+*.tar.gz
+pandacrm-web.tar.gz
+pandicrm-web.tar.gz
