@@ -27,7 +27,7 @@ export default async function AdminLayout({
     <div className="min-h-screen flex bg-gray-50">
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
         <div className="p-6 border-b border-gray-100">
-          <Logo className="h-7 w-auto" />
+          <Logo mode="icon" className="h-8 w-auto" />
           <h1 className="mt-2 text-lg font-bold text-gray-900">Superadmin</h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">
