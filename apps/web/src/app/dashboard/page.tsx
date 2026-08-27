@@ -7,7 +7,7 @@ import {
   Mic, CheckSquare, GitBranch, BarChart2, Clock, Search, Bell, HelpCircle,
   ChevronDown, Settings, Plug, Users, Tag, FileText, Phone,
   Loader2, Check, X, Mail, FileText as FileIcon, CheckCircle, DollarSign,
-  Menu, Send, Lock
+  Menu, Send
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { api, Notification } from "@/lib/api";
@@ -21,8 +21,6 @@ import TimelinePanel from "@/components/dashboard/TimelinePanel";
 import ListPanel from "@/components/dashboard/ListPanel";
 import CampaignsPanel from "@/components/dashboard/CampaignsPanel";
 import IntegrationsPanel from "@/components/dashboard/IntegrationsPanel";
-import ChangePasswordModal from "@/components/ChangePasswordModal";
-
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("notes");
   const { workspace, loading: loadingWorkspace } = useWorkspace();
@@ -32,7 +30,6 @@ export default function DashboardPage() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -181,16 +178,6 @@ export default function DashboardPage() {
                   <Settings className="w-3.5 h-3.5 flex-shrink-0" />
                   Settings
                 </Link>
-                <button
-                  onClick={() => { setShowUserMenu(false); setShowChangePassword(true); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs"
-                  style={{ color: "rgba(255,255,255,0.8)", transition: "background .14s" }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-                >
-                  <Lock className="w-3.5 h-3.5 flex-shrink-0" />
-                  Change Password
-                </button>
                 <button
                   onClick={() => signOut({ callbackUrl: "/login" })}
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-xs"
@@ -360,8 +347,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-
-      <ChangePasswordModal isOpen={showChangePassword} onClose={() => setShowChangePassword(false)} />
     </div>
   );
 }
