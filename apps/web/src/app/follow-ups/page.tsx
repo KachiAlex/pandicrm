@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { api, Contact, TimelineEvent } from "@/lib/api";
+import { api, Contact, ContactCategory, TimelineEvent } from "@/lib/api";
 import {
   ArrowLeft,
   Loader2,
@@ -18,7 +18,11 @@ import {
   Building2,
   Clock,
   X,
+  Plus,
+  Search,
+  UserPlus,
 } from "lucide-react";
+import CreateContactModal from "@/components/CreateContactModal";
 
 const filters = ["today", "overdue", "upcoming", "all"] as const;
 
@@ -28,6 +32,8 @@ type LogForm = {
   type: string;
   outcome: string;
   notes: string;
+  response: string;
+  occurredAt: string;
   nextCadence: string;
   customDays: number;
   reminder: boolean;
@@ -72,11 +78,17 @@ export default function FollowUpsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [selected, setSelected] = useState<Contact | null>(null);
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [showCreate, setShowCreate] = useState(false);
 
   const [form, setForm] = useState<LogForm>({
     type: "call",
     outcome: "other",
     notes: "",
+    response: "",
+    occurredAt: new Date().toISOString().slice(0, 16),
     nextCadence: "3_days",
     customDays: 3,
     reminder: false,
@@ -109,6 +121,7 @@ export default function FollowUpsPage() {
     if (!workspaceId) return;
     loadContacts();
     api.contacts.list(workspaceId).then(setAllContacts).catch(() => {});
+    api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
   }, [workspaceId, filter]);
 
   useEffect(() => {
@@ -152,6 +165,8 @@ export default function FollowUpsPage() {
       type,
       outcome: "other",
       notes: "",
+      response: "",
+      occurredAt: new Date().toISOString().slice(0, 16),
       nextCadence: contact.followUpCadence || "3_days",
       customDays: 3,
       reminder: false,
@@ -168,6 +183,8 @@ export default function FollowUpsPage() {
         type: form.type,
         outcome: form.outcome,
         notes: form.notes,
+        response: form.response,
+        occurredAt: form.occurredAt,
         nextCadence: form.nextCadence,
         customDays: form.nextCadence === "custom" ? Number(form.customDays) : undefined,
         reminder: form.reminder,
@@ -282,6 +299,87 @@ export default function FollowUpsPage() {
                   {f[0].toUpperCase() + f.slice(1)}
                 </button>
               ))}
+            </div>
+
+            <div className="surf p-4 mb-6">
+              <h2 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-pk-600" />
+                Start a follow-up
+              </h2>
+              <div className="flex flex-wrap gap-3 items-end mb-4">
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-1">Category</label>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none min-w-[160px]"
+                  >
+                    <option value="">All categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-1">Find contact</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search by name or email"
+                      className="bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs outline-none w-56"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="btn-p text-xs px-3 py-2.5 flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New contact
+                </button>
+              </div>
+              {(() => {
+                const candidates = allContacts
+                  .filter((c) => {
+                    const matchesCategory = !categoryId || (c.categoryIds || []).includes(categoryId);
+                    const q = search.trim().toLowerCase();
+                    const matchesSearch =
+                      !q ||
+                      `${c.firstName} ${c.lastName}`.toLowerCase().includes(q) ||
+                      (c.email || "").toLowerCase().includes(q);
+                    return matchesCategory && matchesSearch;
+                  })
+                  .slice(0, 6);
+                return candidates.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {candidates.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {c.firstName} {c.lastName}
+                          </p>
+                          <p className="text-[11px] text-gray-500 truncate">{c.email || c.phone || "-"}</p>
+                        </div>
+                        <button
+                          onClick={() => openLog(c, "call")}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 hover:border-pk-500 hover:text-pk-600"
+                        >
+                          Log
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : search || categoryId ? (
+                  <p className="text-xs text-gray-500">No matching contacts.</p>
+                ) : (
+                  <p className="text-xs text-gray-500">Select a category or search to find a contact to follow up.</p>
+                );
+              })()}
             </div>
 
             {loading ? (
@@ -506,13 +604,33 @@ export default function FollowUpsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Notes</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Date & time</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={form.occurredAt}
+                  onChange={(e) => setForm((f) => ({ ...f, occurredAt: e.target.value }))}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Observation / notes</label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                   rows={3}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none"
                   placeholder="What happened?"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Response from contact</label>
+                <textarea
+                  value={form.response}
+                  onChange={(e) => setForm((f) => ({ ...f, response: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  placeholder="What did the contact say?"
                 />
               </div>
               <div>
@@ -581,6 +699,19 @@ export default function FollowUpsPage() {
             </form>
           </div>
         </div>
+      )}
+      {showCreate && workspaceId && (
+        <CreateContactModal
+          workspaceId={workspaceId}
+          onClose={() => setShowCreate(false)}
+          onCreated={(contact) => {
+            setShowCreate(false);
+            if (contact) {
+              setAllContacts((prev) => [contact, ...prev]);
+              openLog(contact, "call");
+            }
+          }}
+        />
       )}
     </div>
   );

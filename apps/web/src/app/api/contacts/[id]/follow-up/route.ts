@@ -48,6 +48,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       type = "call",
       outcome = "other",
       notes = "",
+      response = "",
+      occurredAt,
       nextCadence,
       customDays,
       reminder,
@@ -55,8 +57,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     } = body as any;
 
     const cadence = (nextCadence as string) || contact.followUpCadence || "3_days";
-    const next = computeNextFollowUpAt(cadence, customDays);
     const now = new Date();
+    const occurred = (occurredAt as string) ? new Date(occurredAt as string) : now;
+    const next = computeNextFollowUpAt(cadence, customDays, now);
     const title = `${type} - ${outcome}`;
 
     const noteType =
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       prisma.contact.update({
         where: { id },
         data: {
-          lastFollowUpAt: now,
+          lastFollowUpAt: occurred,
           nextFollowUpAt: next,
           followUpCadence: cadence,
         },
@@ -81,13 +84,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           type,
           title,
           description: notes,
-          metadata: { outcome, nextCadence: cadence, nextFollowUpAt: next.toISOString() },
-          occurredAt: now,
+          metadata: { outcome, response, nextCadence: cadence, nextFollowUpAt: next.toISOString() },
+          occurredAt: occurred,
         },
       }),
     ];
 
-    if (notes.trim()) {
+    if (notes.trim() || response.trim()) {
       ops.push(
         prisma.note.create({
           data: {
@@ -95,7 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             contactId: id,
             authorId: userId,
             title,
-            content: notes,
+            content: [notes, response ? `Response: ${response}` : ""].filter(Boolean).join("\n\n"),
             type: noteType as any,
           },
         })
