@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
+import { X, Mail, Phone, Briefcase, Loader2, Plus, Check } from "lucide-react";
 import { api, Account, Contact, ContactCategory } from "@/lib/api";
 
 interface CreateContactModalProps {
@@ -24,6 +24,10 @@ export default function CreateContactModal({ workspaceId, onClose, onCreated }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(true);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState("#ff1a97");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -56,7 +60,7 @@ export default function CreateContactModal({ workspaceId, onClose, onCreated }: 
         title: title || undefined,
         department: department || undefined,
         accountId: accountId || undefined,
-        categoryIds: selectedCategoryIds,
+        categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
       });
       onCreated?.(contact);
     } catch (err: any) {
@@ -175,23 +179,100 @@ export default function CreateContactModal({ workspaceId, onClose, onCreated }: 
               </select>
             </div>
             <div>
-              <label className={labelClass}>Categories</label>
-              <select
-                multiple
-                value={selectedCategoryIds}
-                onChange={(e) => {
-                  const opts = Array.from(e.target.selectedOptions).map((o) => o.value);
-                  setSelectedCategoryIds(opts);
-                }}
-                className={selClass}
-                style={{ minHeight: 80 }}
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <label className={labelClass}>Categories <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {categories.map((cat) => {
+                    const selected = selectedCategoryIds.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategoryIds((prev) =>
+                            prev.includes(cat.id)
+                              ? prev.filter((id) => id !== cat.id)
+                              : [...prev, cat.id]
+                          );
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          selected
+                            ? "text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
+                        style={selected ? { backgroundColor: cat.color || "#ff1a97" } : undefined}
+                      >
+                        {selected && <Check className="w-3 h-3" />}
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {showNewCategory ? (
+                <div className="flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Category name"
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:border-pk-500"
+                    />
+                    <input
+                      type="color"
+                      value={newCategoryColor}
+                      onChange={(e) => setNewCategoryColor(e.target.value)}
+                      className="w-10 h-9 rounded-lg border border-gray-200 cursor-pointer bg-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={creatingCategory || !newCategoryName.trim()}
+                      onClick={async () => {
+                        setCreatingCategory(true);
+                        try {
+                          const cat = await api.contactCategories.create({
+                            workspaceId,
+                            name: newCategoryName.trim(),
+                            color: newCategoryColor,
+                          });
+                          setCategories((prev) => [...prev, cat]);
+                          setSelectedCategoryIds((prev) => [...prev, cat.id]);
+                          setNewCategoryName("");
+                          setShowNewCategory(false);
+                        } catch (err: any) {
+                          setError(err.message || "Failed to create category");
+                        }
+                        setCreatingCategory(false);
+                      }}
+                      className="btn-p px-3 py-1.5 text-xs disabled:opacity-60"
+                    >
+                      {creatingCategory ? "Adding..." : "Add Category"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewCategory(false);
+                        setNewCategoryName("");
+                      }}
+                      className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategory(true)}
+                  className="inline-flex items-center gap-1.5 text-xs text-pk-600 hover:text-pk-700 font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create new category
+                </button>
+              )}
             </div>
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
               {loading ? "Creating..." : "Create Contact"}
