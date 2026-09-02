@@ -27,6 +27,7 @@ services:
       AUTH_URL: "${AUTH_URL}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379}"
       NODE_ENV: "production"
+    env_file: .env
     depends_on:
       db:
         condition: service_healthy
