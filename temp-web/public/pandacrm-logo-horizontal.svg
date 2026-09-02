@@ -1,0 +1,29 @@
+<svg width="440" height="120" viewBox="0 0 440 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pandaGrad3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E8286E"/>
+      <stop offset="100%" stop-color="#FF6FA5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- icon, scaled and translated -->
+  <g transform="translate(10,10) scale(0.5)">
+    <circle cx="54" cy="60" r="27" fill="url(#pandaGrad3)"/>
+    <circle cx="146" cy="60" r="27" fill="url(#pandaGrad3)"/>
+    <circle cx="100" cy="114" r="60" fill="url(#pandaGrad3)"/>
+    <ellipse cx="72" cy="112" rx="21" ry="27" fill="#241A22" transform="rotate(-18 72 112)"/>
+    <ellipse cx="128" cy="112" rx="21" ry="27" fill="#241A22" transform="rotate(18 128 112)"/>
+    <circle cx="78" cy="106" r="7.5" fill="#FFFFFF"/>
+    <circle cx="122" cy="106" r="7.5" fill="#FFFFFF"/>
+    <circle cx="80.5" cy="108" r="3.2" fill="#241A22"/>
+    <circle cx="124.5" cy="108" r="3.2" fill="#241A22"/>
+    <ellipse cx="100" cy="144" rx="8" ry="5.5" fill="#241A22"/>
+    <path d="M100 150 Q100 158 90 160 M100 150 Q100 158 110 160" stroke="#241A22" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="122" y="63" font-family="'Space Grotesk', sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5">
+    <tspan fill="#E8286E">P</tspan><tspan fill="#241A22">andacrm</tspan>
+  </text>
+  <text x="123" y="84" font-family="'JetBrains Mono', monospace" font-size="12" letter-spacing="1.5" fill="#A697A0">AI BUSINESS OS</text>
+</svg>

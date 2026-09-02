@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Mail, Plus, Loader2, Send, BarChart3, Trash2, CheckCircle, XCircle, Clock, Eye, MousePointerClick } from "lucide-react";
+import { Mail, Plus, Loader2, Send, BarChart3, Trash2, CheckCircle, XCircle, Clock, Eye, MousePointerClick, AlertTriangle, UserX } from "lucide-react";
 import { api, EmailCampaign, CampaignStats } from "@/lib/api";
 import CampaignEmailEditor from "./CampaignEmailEditor";
 
@@ -474,14 +474,28 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
       {success && <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700">{success}</div>}
 
-      {stats && campaign.status === "sent" && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-          <StatCard icon={<CheckCircle className="w-4 h-4 text-green-600" />} label="Sent" value={stats.sentCount} bg="#d1fae5" />
-          <StatCard icon={<XCircle className="w-4 h-4 text-red-500" />} label="Failed" value={stats.failedCount} bg="#fee2e2" />
-          <StatCard icon={<Eye className="w-4 h-4 text-blue-600" />} label="Opened" value={stats.openCount} bg="#dbeafe" />
-          <StatCard icon={<MousePointerClick className="w-4 h-4 text-purple-600" />} label="Clicked" value={stats.clickCount} bg="#f3e8ff" />
-        </div>
-      )}
+      {stats && campaign.status === "sent" && (() => {
+        const deliveryRate = campaign.totalRecipients ? Math.round((stats.sentCount / campaign.totalRecipients) * 100) : 0;
+        const openRate = stats.sentCount ? Math.round((stats.openCount / stats.sentCount) * 100) : 0;
+        const clickRate = stats.sentCount ? Math.round((stats.clickCount / stats.sentCount) * 100) : 0;
+        return (
+          <div className="space-y-3 mb-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <StatCard icon={<CheckCircle className="w-4 h-4 text-green-600" />} label="Sent" value={stats.sentCount} bg="#d1fae5" />
+              <StatCard icon={<XCircle className="w-4 h-4 text-red-500" />} label="Failed" value={stats.failedCount} bg="#fee2e2" />
+              <StatCard icon={<AlertTriangle className="w-4 h-4 text-yellow-600" />} label="Bounced" value={stats.bounceCount} bg="#fef3c7" />
+              <StatCard icon={<UserX className="w-4 h-4 text-pink-600" />} label="Unsubscribed" value={stats.unsubscribeCount} bg="#fce7f3" />
+              <StatCard icon={<Eye className="w-4 h-4 text-blue-600" />} label="Opened" value={stats.openCount} bg="#dbeafe" />
+              <StatCard icon={<MousePointerClick className="w-4 h-4 text-purple-600" />} label="Clicked" value={stats.clickCount} bg="#f3e8ff" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">Delivery {deliveryRate}%</span>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700">Open {openRate}%</span>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700">Click {clickRate}%</span>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="surf p-5 space-y-3">
         <DetailRow label="Subject" value={campaign.subject} />

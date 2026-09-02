@@ -1,0 +1,915 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Loader2, Plus, X, Building2, Mail, Phone, Globe, Users, Tag, Briefcase, Pencil, Trash2, Search, ArrowUpDown, Download, Upload, Filter, ChevronDown, FolderOpen, ArrowRight } from "lucide-react";
+import { api, Account, Contact, Deal, ContactCategory } from "@/lib/api";
+import { exportAccounts, exportContacts, exportDeals } from "@/lib/csv";
+import CreateContactModal from "@/components/CreateContactModal";
+
+export default function ListPanel({ workspaceId, type }: { workspaceId: string; type: "accounts" | "contacts" | "deals" }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<string>("");
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  useEffect(() => {
+    if (!workspaceId) return;
+    setLoading(true);
+    const fetcher =
+      type === "accounts" ? api.accounts.list(workspaceId) :
+      type === "contacts" ? api.contacts.list(workspaceId, selectedCategory || undefined) :
+      api.deals.list(workspaceId);
+    fetcher.then((data) => {
+      setItems(data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+
+    if (type === "contacts") {
+      api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
+    }
+  }, [workspaceId, type, refreshKey, selectedCategory]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-pk-600" />
+      </div>
+    );
+  }
+
+  const headers =
+    type === "accounts" ? ["Name", "Industry", "Size", "Domain"] :
+    type === "contacts" ? ["", "Name", "Email", "Title", "Account"] :
+    ["Name", "Stage", "Value", "Probability"];
+
+  const typeLabel = type === "accounts" ? "Account" : type === "contacts" ? "Contact" : "Deal";
+
+  const handleSort = (col: string) => {
+    if (sortColumn === col) { setSortDir((d) => d === "asc" ? "desc" : "asc"); }
+    else { setSortColumn(col); setSortDir("asc"); }
+  };
+
+  const filteredItems = items.filter((item) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    if (type === "accounts") return (item as Account).name.toLowerCase().includes(q) || ((item as Account).industry || "").toLowerCase().includes(q);
+    if (type === "contacts") return `${(item as Contact).firstName} ${(item as Contact).lastName}`.toLowerCase().includes(q) || ((item as Contact).email || "").toLowerCase().includes(q) || ((item as Contact).title || "").toLowerCase().includes(q);
+    return (item as Deal).name.toLowerCase().includes(q) || ((item as Deal).description || "").toLowerCase().includes(q);
+  }).sort((a: any, b: any) => {
+    if (!sortColumn) return 0;
+    let cmp = 0;
+    if (type === "accounts") {
+      if (sortColumn === "Name") cmp = a.name.localeCompare(b.name);
+      else if (sortColumn === "Industry") cmp = (a.industry || "").localeCompare(b.industry || "");
+      else if (sortColumn === "Size") cmp = (a.size || "").localeCompare(b.size || "");
+      else if (sortColumn === "Domain") cmp = (a.domain || "").localeCompare(b.domain || "");
+    } else if (type === "contacts") {
+      if (sortColumn === "Name") cmp = `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      else if (sortColumn === "Email") cmp = (a.email || "").localeCompare(b.email || "");
+      else if (sortColumn === "Title") cmp = (a.title || "").localeCompare(b.title || "");
+      else if (sortColumn === "Account") cmp = (a.account?.name || "").localeCompare(b.account?.name || "");
+    } else {
+      if (sortColumn === "Name") cmp = a.name.localeCompare(b.name);
+      else if (sortColumn === "Stage") cmp = a.stage.localeCompare(b.stage);
+      else if (sortColumn === "Value") cmp = Number(a.value) - Number(b.value);
+      else if (sortColumn === "Probability") cmp = Number(a.probability) - Number(b.probability);
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const visible = filteredItems.map((c) => c.id);
+    const allSelected = visible.every((id) => selectedIds.has(id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of visible) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkAction = async () => {
+    if (selectedIds.size === 0 || !bulkAction) return;
+    setBulkLoading(true);
+    try {
+      if (bulkAction === "delete") {
+        await api.contacts.bulk({ ids: Array.from(selectedIds), delete: true });
+      } else if (bulkAction.startsWith("cat:")) {
+        const categoryId = bulkAction.split(":")[1];
+        await api.contacts.bulk({ ids: Array.from(selectedIds), categoryIds: [categoryId] });
+      }
+      setSelectedIds(new Set());
+      setBulkAction("");
+      setRefreshKey((k) => k + 1);
+    } catch (err: any) {
+      alert(err.message || "Bulk action failed");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1f2937" }}>
+          {type.charAt(0).toUpperCase() + type.slice(1)}
+        </h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-1.5 border border-gray-200" style={{ maxWidth: 200 }}>
+            <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <input type="text" placeholder={`Search ${type}...`} value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none flex-1 min-w-0" style={{ color: "#374151" }} />
+          </div>
+          {type === "contacts" && (
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-2 outline-none focus:border-pk-500 cursor-pointer appearance-none"
+              >
+                <option value="">All categories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <Filter className="w-3 h-3 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          )}
+          {type === "contacts" && (
+            <button
+              onClick={() => {
+                const name = prompt("New category name");
+                if (!name) return;
+                api.contactCategories.create({ workspaceId, name }).then((cat) => setCategories((prev) => [...prev, cat])).catch(() => {});
+              }}
+              className="text-xs font-medium text-pk-600 px-2 py-2 rounded-lg border border-pk-200 hover:bg-pink-50 transition-colors"
+              title="Create category"
+            >
+              + Category
+            </button>
+          )}
+          {type !== "deals" && (
+            <button className="btn-p text-xs px-3.5 py-2" onClick={() => setShowCreate(true)}>
+              <Plus className="w-3.5 h-3.5" />New {typeLabel}
+            </button>
+          )}
+          {type === "contacts" && (
+            <button
+              className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
+              onClick={() => setShowImport(true)}
+              title="Import contacts from CSV"
+            >
+              <Upload className="w-3.5 h-3.5" />Import
+            </button>
+          )}
+          <button
+            className="text-xs font-medium text-gray-500 px-3 py-2 rounded-lg border border-gray-200 hover:border-pk-500 hover:text-pk-700 transition-colors flex items-center gap-1.5"
+            onClick={() => {
+              if (type === "accounts") exportAccounts(filteredItems);
+              else if (type === "contacts") exportContacts(filteredItems);
+              else exportDeals(filteredItems);
+            }}
+            title="Export to CSV"
+          >
+            <Download className="w-3.5 h-3.5" />Export
+          </button>
+        </div>
+      </div>
+
+      {type === "contacts" && selectedIds.size > 0 && (
+        <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-pink-50 border border-pink-100">
+          <span className="text-xs font-medium text-pk-700">{selectedIds.size} selected</span>
+          <div className="flex-1" />
+          <select
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            className="text-xs bg-white border border-gray-200 rounded-lg px-2 py-1.5 outline-none"
+          >
+            <option value="">Action...</option>
+            <option value="delete">Delete</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={`cat:${cat.id}`}>Add to {cat.name}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleBulkAction}
+            disabled={!bulkAction || bulkLoading}
+            className="btn-p text-xs px-3 py-1.5 disabled:opacity-60"
+          >
+            {bulkLoading ? "Applying..." : "Apply"}
+          </button>
+        </div>
+      )}
+      <div className="surf overflow-x-auto">
+        <table className="w-full text-sm min-w-[500px]">
+          <thead>
+            <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+              {type === "contacts" && (
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={filteredItems.length > 0 && filteredItems.every((c) => selectedIds.has(c.id))}
+                    onChange={toggleAll}
+                    className="rounded text-pk-600"
+                  />
+                </th>
+              )}
+              {headers.filter(Boolean).map((h) => (
+                <th key={h} onClick={() => handleSort(h)} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-pk-600 transition-colors">
+                  <div className="flex items-center gap-1">
+                    {h}
+                    <ArrowUpDown className="w-3 h-3 opacity-40" />
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredItems.length === 0 && (
+              <tr>
+                <td colSpan={headers.length} className="px-4 py-8 text-center text-gray-400">{items.length === 0 ? `No ${type} yet.` : "No matches found."}</td>
+              </tr>
+            )}
+            {filteredItems.map((item) => {
+              if (type === "accounts") {
+                const a = item as Account;
+                return (
+                  <tr key={a.id} className="hover:bg-gray-50 transition-colors cursor-pointer" style={{ borderBottom: "1px solid #f9fafb" }} onClick={() => setSelectedItem(a)}>
+                    <td className="px-4 py-3 font-medium text-gray-900">{a.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{a.industry || "—"}</td>
+                    <td className="px-4 py-3 text-gray-500">{a.size || "—"}</td>
+                    <td className="px-4 py-3 text-gray-500">{a.domain || "—"}</td>
+                  </tr>
+                );
+              }
+              if (type === "contacts") {
+                const c = item as Contact;
+                const cats = categories.filter((cat) => c.categoryIds?.includes(cat.id));
+                return (
+                  <tr key={c.id} className="hover:bg-gray-50 transition-colors cursor-pointer" style={{ borderBottom: "1px solid #f9fafb" }} onClick={() => setSelectedItem(c)}>
+                    <td className="px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(c.id)}
+                        onClick={(e) => { e.stopPropagation(); toggleSelection(c.id); }}
+                        onChange={() => {}}
+                        className="rounded text-pk-600"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{c.firstName} {c.lastName}</p>
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium capitalize ${c.status === "new" ? "bg-gray-100 text-gray-600" : c.status === "qualified" ? "bg-blue-50 text-blue-600" : c.status === "opportunity" ? "bg-pk-50 text-pk-600" : c.status === "customer" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{c.email || "—"}</td>
+                    <td className="px-4 py-3 text-gray-500">{c.title || "—"}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1 max-w-[180px]">
+                        {cats.map((cat) => (
+                          <span key={cat.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium" style={{ background: (cat.color || "#ff1a97") + "20", color: cat.color || "#ff1a97" }}>
+                            {cat.name}
+                          </span>
+                        ))}
+                        {cats.length === 0 && <span className="text-gray-400 text-xs">—</span>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{c.account?.name || "—"}</td>
+                  </tr>
+                );
+              }
+              const d = item as Deal;
+              return (
+                <tr key={d.id} className="hover:bg-gray-50 transition-colors cursor-pointer" style={{ borderBottom: "1px solid #f9fafb" }} onClick={() => setSelectedItem(d)}>
+                  <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
+                  <td className="px-4 py-3 text-gray-500 capitalize">{d.stage}</td>
+                  <td className="px-4 py-3 text-gray-500">${Number(d.value).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-gray-500">{d.probability}%</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {showCreate && type === "accounts" && (
+        <CreateAccountModal workspaceId={workspaceId} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />
+      )}
+      {showCreate && type === "contacts" && (
+        <CreateContactModal workspaceId={workspaceId} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />
+      )}
+      {showImport && type === "contacts" && (
+        <ImportContactsModal workspaceId={workspaceId} onClose={() => setShowImport(false)} onImported={() => { setShowImport(false); setRefreshKey((k) => k + 1); }} />
+      )}
+      {selectedItem && type === "accounts" && (
+        <AccountDetailModal account={selectedItem as Account} onClose={() => setSelectedItem(null)} onMutated={() => setRefreshKey((k) => k + 1)} />
+      )}
+      {selectedItem && type === "contacts" && (
+        <ContactDetailModal contact={selectedItem as Contact} workspaceId={workspaceId} onClose={() => setSelectedItem(null)} onMutated={() => setRefreshKey((k) => k + 1)} />
+      )}
+      {selectedItem && type === "deals" && (
+        <DealDetailModal deal={selectedItem as Deal} workspaceId={workspaceId} onClose={() => setSelectedItem(null)} onMutated={() => setRefreshKey((k) => k + 1)} />
+      )}
+    </>
+  );
+}
+
+function CreateAccountModal({ workspaceId, onClose, onCreated }: { workspaceId: string; onClose: () => void; onCreated: () => void }) {
+  const [name, setName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [size, setSize] = useState("");
+  const [domain, setDomain] = useState("");
+  const [website, setWebsite] = useState("");
+  const [phone, setPhone] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!name.trim()) { setError("Company name is required"); return; }
+    setLoading(true);
+    try {
+      await api.accounts.create({
+        workspaceId,
+        name,
+        industry: industry || undefined,
+        size: size || undefined,
+        domain: domain || undefined,
+        website: website || undefined,
+        phone: phone || undefined,
+        description: description || undefined,
+      });
+      onCreated();
+    } catch (err: any) {
+      setError(err.message || "Failed to create account");
+      setLoading(false);
+    }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">New Account</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+        </div>
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className={labelClass}>Company Name *</label>
+            <div className="relative">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." className={`${selClass} pl-10`} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Industry</label>
+              <input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="SaaS" className={selClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Size</label>
+              <select value={size} onChange={(e) => setSize(e.target.value)} className={selClass}>
+                <option value="">Select size</option>
+                <option value="1-10">1-10</option>
+                <option value="11-50">11-50</option>
+                <option value="51-200">51-200</option>
+                <option value="201-500">201-500</option>
+                <option value="500+">500+</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Domain</label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" className={`${selClass} pl-10`} />
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Phone</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 000 0000" className={`${selClass} pl-10`} />
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Website</label>
+            <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://acme.com" className={selClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description..." rows={3} className={selClass} />
+          </div>
+          <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
+            {loading ? "Creating..." : "Create Account"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ImportContactsModal({ workspaceId, onClose, onImported }: { workspaceId: string; onClose: () => void; onImported: () => void }) {
+  const [csvText, setCsvText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<{ created: number; skipped: { row: number; reason: string }[] } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [categories, setCategories] = useState<ContactCategory[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
+  }, [workspaceId]);
+
+  const handleFile = (file: File) => {
+    if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+      setError("Please upload a CSV file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = String(e.target?.result || "");
+      setCsvText(text);
+      setError("");
+      setResult(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!csvText.trim()) { setError("Please paste or upload a CSV file"); return; }
+    setLoading(true);
+    try {
+      const data = await api.contacts.import(workspaceId, csvText, selectedCategoryIds);
+      setResult(data);
+      if (data.created > 0) {
+        setTimeout(() => onImported(), 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || "Import failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">Import Contacts</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+        </div>
+
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+
+        {result ? (
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+              <p className="font-semibold">Import complete</p>
+              <p>{result.created} contact(s) created</p>
+              {result.skipped.length > 0 && <p>{result.skipped.length} row(s) skipped</p>}
+            </div>
+            {result.skipped.length > 0 && (
+              <div className="max-h-[200px] overflow-y-auto space-y-1">
+                {result.skipped.map((s, i) => (
+                  <div key={i} className="text-xs text-gray-500">Row {s.row}: {s.reason}</div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Close</button>
+              <button onClick={() => { setResult(null); setCsvText(""); }} className="flex-1 btn-p justify-center py-2.5 text-sm">Import Another</button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div
+              className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${dragOver ? "border-pk-500 bg-pk-50" : "border-gray-200 bg-gray-50"}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setDragOver(false); const file = e.dataTransfer.files[0]; if (file) handleFile(file); }}
+            >
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-1">Drag and drop a CSV file here</p>
+              <p className="text-xs text-gray-400 mb-2">or</p>
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs font-medium text-gray-600 hover:border-pk-500 cursor-pointer transition-colors">
+                Browse files
+                <input type="file" accept=".csv" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFile(file); }} />
+              </label>
+            </div>
+
+            <div className="relative">
+              <textarea
+                value={csvText}
+                onChange={(e) => { setCsvText(e.target.value); setError(""); }}
+                placeholder={`First Name,Last Name,Email,Phone,Company,Position,Website\nJohn,Doe,john@acme.com,+1234567890,Acme Inc,CEO,acme.com`}
+                rows={8}
+                className={`${selClass} font-mono text-xs resize-y`}
+              />
+              {csvText && (
+                <button type="button" onClick={() => setCsvText("")} className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-100 text-gray-400">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Assign to Category (optional)</label>
+              <select
+                value={selectedCategoryIds[0] || ""}
+                onChange={(e) => setSelectedCategoryIds(e.target.value ? [e.target.value] : [])}
+                className={selClass}
+              >
+                <option value="">No category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <a
+              href="/sample-contacts.csv"
+              download
+              className="text-xs text-pk-600 hover:text-pk-700 underline"
+            >
+              Download sample CSV
+            </a>
+
+            <button type="submit" disabled={loading || !csvText.trim()} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
+              {loading ? "Importing..." : "Import Contacts"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AccountDetailModal({ account, onClose, onMutated }: { account: Account; onClose: () => void; onMutated: () => void }) {
+  const [editMode, setEditMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [name, setName] = useState(account.name);
+  const [industry, setIndustry] = useState(account.industry || "");
+  const [size, setSize] = useState(account.size || "");
+  const [domain, setDomain] = useState(account.domain || "");
+  const [website, setWebsite] = useState(account.website || "");
+  const [phone, setPhone] = useState(account.phone || "");
+  const [description, setDescription] = useState(account.description || "");
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!name.trim()) { setError("Company name is required"); return; }
+    setLoading(true);
+    try {
+      await api.accounts.update(account.id, { name, industry: industry || undefined, size: size || undefined, domain: domain || undefined, website: website || undefined, phone: phone || undefined, description: description || undefined });
+      setEditMode(false);
+      onMutated();
+    } catch (err: any) { setError(err.message || "Failed to update account"); setLoading(false); }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try { await api.accounts.delete(account.id); onClose(); onMutated(); }
+    catch (err: any) { setError(err.message || "Failed to delete account"); setLoading(false); }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">{editMode ? "Edit Account" : account.name}</h2>
+          <div className="flex items-center gap-1">
+            {!editMode && (<><button onClick={() => setEditMode(true)} className="p-2 rounded-full hover:bg-gray-100 text-gray-500" title="Edit"><Pencil className="w-4 h-4" /></button><button onClick={() => setConfirmDelete(true)} className="p-2 rounded-full hover:bg-red-50 text-red-500" title="Delete"><Trash2 className="w-4 h-4" /></button></>)}
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+        {confirmDelete ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this account? This cannot be undone.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setConfirmDelete(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleDelete} disabled={loading} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">Delete</button>
+            </div>
+          </div>
+        ) : editMode ? (
+          <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+            <div><label className={labelClass}>Company Name *</label><input type="text" required value={name} onChange={(e) => setName(e.target.value)} className={selClass} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>Industry</label><input type="text" value={industry} onChange={(e) => setIndustry(e.target.value)} className={selClass} /></div>
+              <div><label className={labelClass}>Size</label><select value={size} onChange={(e) => setSize(e.target.value)} className={selClass}><option value="">Select size</option><option value="1-10">1-10</option><option value="11-50">11-50</option><option value="51-200">51-200</option><option value="201-500">201-500</option><option value="500+">500+</option></select></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>Domain</label><input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} className={selClass} /></div>
+              <div><label className={labelClass}>Phone</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={selClass} /></div>
+            </div>
+            <div><label className={labelClass}>Website</label><input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} className={selClass} /></div>
+            <div><label className={labelClass}>Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={selClass} /></div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditMode(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={loading} className="flex-1 btn-p justify-center py-2.5 text-sm disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Industry</span><span className="font-medium">{account.industry || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Size</span><span className="font-medium">{account.size || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Domain</span><span className="font-medium">{account.domain || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Website</span><span className="font-medium">{account.website || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Phone</span><span className="font-medium">{account.phone || "—"}</span></div>
+            {account.description && <div className="py-2"><span className="text-gray-500 block mb-1">Description</span><p className="text-gray-800">{account.description}</p></div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { contact: Contact; workspaceId: string; onClose: () => void; onMutated: () => void }) {
+  const [editMode, setEditMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [firstName, setFirstName] = useState(contact.firstName);
+  const [lastName, setLastName] = useState(contact.lastName);
+  const [email, setEmail] = useState(contact.email || "");
+  const [phone, setPhone] = useState(contact.phone || "");
+  const [title, setTitle] = useState(contact.title || "");
+  const [department, setDepartment] = useState(contact.department || "");
+  const [status, setStatus] = useState(contact.status || "new");
+  const [accountId, setAccountId] = useState(contact.accountId || "");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [processing, setProcessing] = useState(false);
+
+  useEffect(() => { api.accounts.list(workspaceId).then((a) => setAccounts(a)).catch(() => {}); }, [workspaceId]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!firstName.trim() || !lastName.trim()) { setError("First and last name are required"); return; }
+    setLoading(true);
+    try {
+      await api.contacts.update(contact.id, { firstName, lastName, email: email || undefined, phone: phone || undefined, title: title || undefined, department: department || undefined, accountId: accountId || undefined, status: status as any });
+      setEditMode(false);
+      onMutated();
+    } catch (err: any) { setError(err.message || "Failed to update contact"); setLoading(false); }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try { await api.contacts.delete(contact.id); onClose(); onMutated(); }
+    catch (err: any) { setError(err.message || "Failed to delete contact"); setLoading(false); }
+  };
+
+  const handlePrimary = async () => {
+    setProcessing(true);
+    setError("");
+    try {
+      if (contact.status === "opportunity") {
+        await api.contacts.convertToDeal(contact.id);
+      } else if (contact.status === "customer" || contact.status === "lost") {
+        await api.contacts.update(contact.id, { status: "new" });
+      } else {
+        const next = contact.status === "new" ? "qualified" : "opportunity";
+        await api.contacts.update(contact.id, { status: next as any });
+      }
+      onMutated();
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to update contact");
+      setProcessing(false);
+    }
+  };
+
+  const statusLabel = {
+    new: "Mark as Qualified",
+    qualified: "Mark as Opportunity",
+    opportunity: "Convert to Deal",
+    customer: "Reopen as New",
+    lost: "Reopen as New",
+  }[contact.status] || "Update";
+
+  const statusSteps = ["new", "qualified", "opportunity"];
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">{editMode ? "Edit Contact" : `${contact.firstName} ${contact.lastName}`}</h2>
+          <div className="flex items-center gap-1">
+            {!editMode && (<><button onClick={() => setEditMode(true)} className="p-2 rounded-full hover:bg-gray-100 text-gray-500" title="Edit"><Pencil className="w-4 h-4" /></button><button onClick={() => setConfirmDelete(true)} className="p-2 rounded-full hover:bg-red-50 text-red-500" title="Delete"><Trash2 className="w-4 h-4" /></button></>)}
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+        {confirmDelete ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this contact? This cannot be undone.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setConfirmDelete(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleDelete} disabled={loading} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">Delete</button>
+            </div>
+          </div>
+        ) : editMode ? (
+          <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>First Name *</label><input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className={selClass} /></div>
+              <div><label className={labelClass}>Last Name *</label><input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} className={selClass} /></div>
+            </div>
+            <div><label className={labelClass}>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={selClass} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>Phone</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={selClass} /></div>
+              <div><label className={labelClass}>Title</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={selClass} /></div>
+            </div>
+            <div><label className={labelClass}>Department</label><input type="text" value={department} onChange={(e) => setDepartment(e.target.value)} className={selClass} /></div>
+            <div><label className={labelClass}>Account</label><select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selClass}><option value="">None</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+            <div><label className={labelClass}>Status</label><select value={status} onChange={(e) => setStatus(e.target.value as any)} className={selClass}>{["new", "qualified", "opportunity", "customer", "lost"].map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditMode(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={loading} className="flex-1 btn-p justify-center py-2.5 text-sm disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Email</span><span className="font-medium">{contact.email || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Phone</span><span className="font-medium">{contact.phone || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Title</span><span className="font-medium">{contact.title || "—"}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Department</span><span className="font-medium">{contact.department || "—"}</span></div>
+            {contact.account && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Account</span><span className="font-medium">{contact.account.name}</span></div>}
+            <div className="py-3 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pipeline Status</p>
+              <div className="flex items-center gap-1 text-xs">
+                {statusSteps.map((s, i) => (
+                  <>
+                    <span key={s} className={`px-2 py-1 rounded-md capitalize ${contact.status === s ? "bg-pk-600 text-white" : statusSteps.indexOf(contact.status as any) > i ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                      {s}
+                    </span>
+                    {i < statusSteps.length - 1 && <span className="text-gray-400">→</span>}
+                  </>
+                ))}
+              </div>
+            </div>
+            <button onClick={handlePrimary} disabled={processing} className="btn-p mt-2 text-sm py-2.5 flex items-center justify-center gap-2 disabled:opacity-60">
+              {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+              {statusLabel}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DealDetailModal({ deal, workspaceId, onClose, onMutated }: { deal: Deal; workspaceId: string; onClose: () => void; onMutated: () => void }) {
+  const [editMode, setEditMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const [name, setName] = useState(deal.name);
+  const [stage, setStage] = useState(deal.stage);
+  const [value, setValue] = useState(String(deal.value));
+  const [probability, setProbability] = useState(String(deal.probability));
+  const [closeDate, setCloseDate] = useState(deal.closeDate ? deal.closeDate.slice(0, 10) : "");
+  const [description, setDescription] = useState(deal.description || "");
+  const [accountId, setAccountId] = useState(deal.accountId || "");
+  const [contactId, setContactId] = useState(deal.contactId || "");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+
+  useEffect(() => {
+    Promise.all([api.accounts.list(workspaceId).catch(() => []), api.contacts.list(workspaceId).catch(() => [])]).then(([a, c]) => { setAccounts(a); setContacts(c); });
+  }, [workspaceId]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await api.deals.update(deal.id, { name, stage, value: value ? Number(value) : 0, probability: probability ? Number(probability) : 0, closeDate: closeDate || undefined, description: description || undefined, accountId: accountId || undefined, contactId: contactId || undefined });
+      setEditMode(false);
+      onMutated();
+    } catch (err: any) { setError(err.message || "Failed to update deal"); setLoading(false); }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try { await api.deals.delete(deal.id); onClose(); onMutated(); }
+    catch (err: any) { setError(err.message || "Failed to delete deal"); setLoading(false); }
+  };
+
+  const selClass = "w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-pk-500 focus:ring-1 focus:ring-pk-500 transition-colors bg-white";
+  const labelClass = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
+
+  const stageOptions = [
+    { key: "lead", label: "Lead" },
+    { key: "qualify", label: "Qualify" },
+    { key: "propose", label: "Propose" },
+    { key: "negotiate", label: "Negotiate" },
+    { key: "won", label: "Won" },
+    { key: "lost", label: "Lost" },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg text-gray-900">{editMode ? "Edit Deal" : deal.name}</h2>
+          <div className="flex items-center gap-1">
+            {!editMode && (<><button onClick={() => setEditMode(true)} className="p-2 rounded-full hover:bg-gray-100 text-gray-500" title="Edit"><Pencil className="w-4 h-4" /></button><button onClick={() => setConfirmDelete(true)} className="p-2 rounded-full hover:bg-red-50 text-red-500" title="Delete"><Trash2 className="w-4 h-4" /></button></>)}
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-500"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+        {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+        {confirmDelete ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-700 mb-4">Are you sure you want to delete this deal? This cannot be undone.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setConfirmDelete(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button onClick={handleDelete} disabled={loading} className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">Delete</button>
+            </div>
+          </div>
+        ) : editMode ? (
+          <form onSubmit={handleUpdate} className="flex flex-col gap-4">
+            <div><label className={labelClass}>Deal Name *</label><input type="text" required value={name} onChange={(e) => setName(e.target.value)} className={selClass} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>Stage</label><select value={stage} onChange={(e) => setStage(e.target.value as any)} className={selClass}>{stageOptions.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select></div>
+              <div><label className={labelClass}>Value</label><input type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} className={selClass} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className={labelClass}>Probability (%)</label><input type="number" min="0" max="100" value={probability} onChange={(e) => setProbability(e.target.value)} className={selClass} /></div>
+              <div><label className={labelClass}>Close Date</label><input type="date" value={closeDate} onChange={(e) => setCloseDate(e.target.value)} className={selClass} /></div>
+            </div>
+            <div><label className={labelClass}>Account</label><select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={selClass}><option value="">None</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+            <div><label className={labelClass}>Contact</label><select value={contactId} onChange={(e) => setContactId(e.target.value)} className={selClass}><option value="">None</option>{contacts.map((c) => <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>)}</select></div>
+            <div><label className={labelClass}>Description</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={selClass} /></div>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setEditMode(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+              <button type="submit" disabled={loading} className="flex-1 btn-p justify-center py-2.5 text-sm disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-3 text-sm">
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Stage</span><span className="font-medium capitalize">{deal.stage}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Value</span><span className="font-medium">${Number(deal.value).toLocaleString()}</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Probability</span><span className="font-medium">{deal.probability}%</span></div>
+            <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Close Date</span><span className="font-medium">{deal.closeDate ? new Date(deal.closeDate).toLocaleDateString() : "—"}</span></div>
+            {deal.account && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Account</span><span className="font-medium">{deal.account.name}</span></div>}
+            {deal.contact && <div className="flex justify-between py-2 border-b border-gray-100"><span className="text-gray-500">Contact</span><span className="font-medium">{deal.contact.firstName} {deal.contact.lastName}</span></div>}
+            {deal.description && <div className="py-2"><span className="text-gray-500 block mb-1">Description</span><p className="text-gray-800">{deal.description}</p></div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

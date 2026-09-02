@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
-import { sendTransactionalEmail, replaceTemplateVariables } from "@/lib/brevo";
+import { sendTransactionalEmail, replaceTemplateVariables, addTracking } from "@/lib/brevo";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -66,6 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       };
 
       const personalizedHtml = replaceTemplateVariables(campaign.htmlContent, variables);
+      const trackedHtml = addTracking(personalizedHtml, campaign.id, recipient.id, variables.unsubscribeUrl);
       const personalizedText = campaign.textContent
         ? replaceTemplateVariables(campaign.textContent, variables)
         : undefined;
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         sender: { name: campaign.senderName, email: campaign.senderEmail },
         to: [{ email: recipient.email, name: `${contact.firstName} ${contact.lastName}`.trim() }],
         subject: personalizedSubject,
-        htmlContent: personalizedHtml,
+        htmlContent: trackedHtml,
         textContent: personalizedText,
         replyTo: campaign.replyTo ? { email: campaign.replyTo } : undefined,
         tags: [`campaign:${campaign.id}`],
