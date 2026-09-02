@@ -348,7 +348,9 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
   const [stats, setStats] = useState<CampaignStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const load = async () => {
     try {
@@ -387,9 +389,11 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
     if (!confirm(`Resend this campaign to ${campaign?.failedCount} failed recipient(s)?`)) return;
     setSending(true);
     setError("");
+    setSuccess("");
     try {
-      await api.campaigns.resend(campaignId);
+      const result = await api.campaigns.resend(campaignId);
       await load();
+      setSuccess(`Resent to ${result.sent} of ${result.total} failed recipients`);
     } catch (err: any) {
       setError(err.message || "Failed to resend campaign");
     } finally {
@@ -400,16 +404,20 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
   const handleTest = async () => {
     const email = prompt("Enter a test email address");
     if (!email) return;
+    setTesting(true);
     setError("");
+    setSuccess("");
     try {
       const result = await api.campaigns.test(campaignId, email);
       if (result.success) {
-        alert(`Test email sent to ${email}`);
+        setSuccess(`Test email sent to ${email}`);
       } else {
         setError(result.error || "Failed to send test email");
       }
     } catch (err: any) {
       setError(err.message || "Failed to send test email");
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -453,8 +461,9 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
               {sending ? "Resending..." : `Resend ${campaign.failedCount} failed`}
             </button>
           )}
-          <button onClick={handleTest} className="btn-outline text-xs px-3 py-2 flex items-center gap-1.5" title="Send test email">
-            <Mail className="w-3.5 h-3.5" /> Test
+          <button onClick={handleTest} disabled={testing} className="btn-outline text-xs px-3 py-2 flex items-center gap-1.5" title="Send test email">
+            {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+            {testing ? "Sending..." : "Test"}
           </button>
           <button onClick={handleDelete} className="p-2 rounded-xl hover:bg-red-50 text-red-500 transition-colors">
             <Trash2 className="w-4 h-4" />
@@ -463,6 +472,7 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
       </div>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">{error}</div>}
+      {success && <div className="mb-4 p-3 rounded-xl bg-green-50 border border-green-200 text-sm text-green-700">{success}</div>}
 
       {stats && campaign.status === "sent" && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
