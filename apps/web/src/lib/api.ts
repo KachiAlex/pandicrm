@@ -130,6 +130,10 @@ export const api = {
     delete: (id: string) => fetchJSON<void>(`/api/campaigns/${id}`, { method: "DELETE" }),
     send: (id: string) =>
       fetchJSON<{ sent: number; failed: number; total: number }>(`/api/campaigns/${id}/send`, { method: "POST", body: JSON.stringify({}) }),
+    resend: (id: string) =>
+      fetchJSON<{ sent: number; failed: number; total: number }>(`/api/campaigns/${id}/resend`, { method: "POST", body: JSON.stringify({}) }),
+    test: (id: string, email: string) =>
+      fetchJSON<{ success: boolean; messageId?: string; error?: string }>(`/api/campaigns/${id}/test`, { method: "POST", body: JSON.stringify({ email }) }),
     stats: (id: string) => fetchJSON<CampaignStats>(`/api/campaigns/${id}/stats`),
   },
   emailTemplates: {

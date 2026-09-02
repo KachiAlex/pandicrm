@@ -383,6 +383,36 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
     }
   };
 
+  const handleResend = async () => {
+    if (!confirm(`Resend this campaign to ${campaign?.failedCount} failed recipient(s)?`)) return;
+    setSending(true);
+    setError("");
+    try {
+      await api.campaigns.resend(campaignId);
+      await load();
+    } catch (err: any) {
+      setError(err.message || "Failed to resend campaign");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleTest = async () => {
+    const email = prompt("Enter a test email address");
+    if (!email) return;
+    setError("");
+    try {
+      const result = await api.campaigns.test(campaignId, email);
+      if (result.success) {
+        alert(`Test email sent to ${email}`);
+      } else {
+        setError(result.error || "Failed to send test email");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to send test email");
+    }
+  };
+
   const handleDelete = async () => {
     if (!confirm("Delete this campaign? This cannot be undone.")) return;
     try {
@@ -417,6 +447,15 @@ function CampaignDetail({ campaignId, workspaceId, onBack }: { campaignId: strin
               {sending ? "Sending..." : "Send Now"}
             </button>
           )}
+          {campaign.status === "sent" && campaign.failedCount > 0 && (
+            <button onClick={handleResend} disabled={sending} className="btn-p text-xs px-3 py-2 flex items-center gap-1.5">
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+              {sending ? "Resending..." : `Resend ${campaign.failedCount} failed`}
+            </button>
+          )}
+          <button onClick={handleTest} className="btn-outline text-xs px-3 py-2 flex items-center gap-1.5" title="Send test email">
+            <Mail className="w-3.5 h-3.5" /> Test
+          </button>
           <button onClick={handleDelete} className="p-2 rounded-xl hover:bg-red-50 text-red-500 transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
