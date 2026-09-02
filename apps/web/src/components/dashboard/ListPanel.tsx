@@ -447,7 +447,10 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
   const [accountId, setAccountId] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<ContactCategory[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [categoryId, setCategoryId] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState("#ff1a97");
+  const [creatingCategory, setCreatingCategory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fetching, setFetching] = useState(true);
@@ -474,7 +477,7 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
         title: title || undefined,
         department: department || undefined,
         accountId: accountId || undefined,
-        categoryIds: selectedCategoryIds,
+        categoryIds: categoryId ? [categoryId] : undefined,
       });
       onCreated();
     } catch (err: any) {
@@ -544,21 +547,76 @@ function CreateContactModal({ workspaceId, onClose, onCreated }: { workspaceId: 
               </select>
             </div>
             <div>
-              <label className={labelClass}>Categories</label>
+              <label className={labelClass}>Category <span className="text-gray-400 normal-case font-normal">(optional)</span></label>
               <select
-                multiple
-                value={selectedCategoryIds}
+                value={categoryId}
                 onChange={(e) => {
-                  const opts = Array.from(e.target.selectedOptions).map((o) => o.value);
-                  setSelectedCategoryIds(opts);
+                  const value = e.target.value;
+                  if (value === "__new__") {
+                    setNewCategoryName("");
+                    setNewCategoryColor("#ff1a97");
+                  }
+                  setCategoryId(value);
                 }}
                 className={selClass}
-                style={{ minHeight: 80 }}
               >
+                <option value="">No category (optional)</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
+                <option value="__new__">+ Add new category</option>
               </select>
+              {categoryId === "__new__" && (
+                <div className="mt-2 flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="Category name"
+                      className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:border-pk-500"
+                    />
+                    <input
+                      type="color"
+                      value={newCategoryColor}
+                      onChange={(e) => setNewCategoryColor(e.target.value)}
+                      className="w-10 h-9 rounded-lg border border-gray-200 cursor-pointer bg-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={creatingCategory || !newCategoryName.trim()}
+                      onClick={async () => {
+                        setCreatingCategory(true);
+                        try {
+                          const cat = await api.contactCategories.create({
+                            workspaceId,
+                            name: newCategoryName.trim(),
+                            color: newCategoryColor,
+                          });
+                          setCategories((prev) => [...prev, cat]);
+                          setCategoryId(cat.id);
+                          setNewCategoryName("");
+                        } catch (err: any) {
+                          setError(err.message || "Failed to create category");
+                        }
+                        setCreatingCategory(false);
+                      }}
+                      className="btn-p px-3 py-1.5 text-xs disabled:opacity-60"
+                    >
+                      {creatingCategory ? "Adding..." : "Add Category"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setCategoryId(""); setNewCategoryName(""); }}
+                      className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <button type="submit" disabled={loading} className="btn-p w-full justify-center py-3 text-sm disabled:opacity-60">
               {loading ? "Creating..." : "Create Contact"}
