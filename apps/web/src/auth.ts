@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit-redis";
 
 export const {
   handlers,
