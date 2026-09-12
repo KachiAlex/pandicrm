@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { createCampaignSchema, validateBody } from "@/lib/validations";
+import { assertWorkspaceSenderAllowed, getWorkspaceDefaultSender } from "@/lib/sender-guard";
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,6 +50,35 @@ export async function POST(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
+    // Resolve sender defaults: if caller omitted senderEmail/senderName, use workspace default identity
+    let resolvedSenderEmail = senderEmail;
+    let resolvedSenderName = senderName;
+    let resolvedReplyTo = replyTo;
+    if (!resolvedSenderEmail || !resolvedSenderName) {
+      const def = await getWorkspaceDefaultSender(workspaceId);
+      if (def) {
+        if (!resolvedSenderEmail) resolvedSenderEmail = def.email;
+        if (!resolvedSenderName) resolvedSenderName = def.name;
+        if (!resolvedReplyTo && def.replyTo) resolvedReplyTo = def.replyTo;
+      }
+    }
+    if (!resolvedSenderEmail) {
+      return NextResponse.json(
+        {
+          error: "No sender email provided and no default sender is configured.",
+          hint: "Either add and verify a sender identity under Settings → Sending Domains, or ask your admin to set DEFAULT_SENDER_EMAIL, DEFAULT_SENDER_NAME and DEFAULT_SENDER_DOMAIN in the server environment.",
+        },
+        { status: 422 }
+      );
+    }
+    const senderCheck = await assertWorkspaceSenderAllowed(workspaceId, resolvedSenderEmail);
+    if (!senderCheck.ok) {
+      return NextResponse.json(
+        { error: senderCheck.error, ...(senderCheck.hint ? { hint: senderCheck.hint } : {}) },
+        { status: 422 }
+      );
+    }
+
     const contactWhere: any = { workspaceId, email: { not: null } };
     if (contactIds && contactIds.length > 0) {
       contactWhere.id = { in: contactIds };
@@ -81,9 +111,9 @@ export async function POST(req: NextRequest) {
         subject,
         htmlContent,
         textContent: textContent || null,
-        senderName,
-        senderEmail,
-        replyTo: replyTo || null,
+        senderName: resolvedSenderName || "PandaCRM",
+        senderEmail: resolvedSenderEmail,
+        replyTo: resolvedReplyTo || null,
         status: "draft",
         totalRecipients: uniqueContacts.length,
         recipients: {

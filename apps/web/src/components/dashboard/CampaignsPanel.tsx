@@ -118,6 +118,9 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const [replyTo, setReplyTo] = useState("");
   const [htmlContent, setHtmlContent] = useState("<p>Hello {{firstName}},</p>\n<p>This is a test email from Pandacrm.</p>\n<p>Best regards,<br/>{{senderName}}</p>");
   const [textContent, setTextContent] = useState("");
+  const [senders, setSenders] = useState<{ id: string; name: string; email: string; replyTo?: string | null; isDefault: boolean; isVerified: boolean; domain?: { status: string; domain: string } | null }[]>([]);
+  const [selectedSenderId, setSelectedSenderId] = useState("");
+  const [useCustomSender, setUseCustomSender] = useState(false);
   const [signature, setSignature] = useState("Best regards,\nPandacrm Team");
   const [contacts, setContacts] = useState<{ id: string; firstName: string; lastName: string; email?: string; categoryIds?: string[] }[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
@@ -134,7 +137,28 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
     }).catch(() => {});
     api.emailTemplates.list(workspaceId).then(setTemplates).catch(() => {});
     api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
+    api.senderIdentities.list(workspaceId).then((list) => {
+      const verified = list.filter((s) => s.isVerified && s.domain?.status === "verified");
+      setSenders(verified as any);
+      const def = verified.find((s) => s.isDefault) || verified[0];
+      if (def) {
+        setSelectedSenderId(def.id);
+        setSenderName(def.name);
+        setSenderEmail(def.email);
+        setReplyTo(def.replyTo || "");
+      }
+    }).catch(() => {});
   }, [workspaceId]);
+
+  const applySender = (id: string) => {
+    setSelectedSenderId(id);
+    const s = senders.find((x) => x.id === id);
+    if (s) {
+      setSenderName(s.name);
+      setSenderEmail(s.email);
+      setReplyTo(s.replyTo || "");
+    }
+  };
 
   const toggleContact = (id: string) => {
     setSelectedContacts((prev) => {
@@ -179,8 +203,12 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const signatureToHtml = (sig: string) => escapeHtmlEntities(sig).replace(/\n/g, "<br/>");
 
   const handleSubmit = async () => {
-    if (!name || !subject || !senderName || !senderEmail || (selectedContacts.size === 0 && selectedCategories.size === 0)) {
-      setError("Please fill in all required fields and select at least one contact or category");
+    if (!name || !subject || (selectedContacts.size === 0 && selectedCategories.size === 0)) {
+      setError("Please fill in the campaign name, subject and select at least one contact or category");
+      return;
+    }
+    if (useCustomSender && (!senderName || !senderEmail)) {
+      setError("Please provide a custom sender name and email, or use the platform default sender.");
       return;
     }
     setLoading(true);
@@ -200,9 +228,9 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
         workspaceId,
         name,
         subject,
-        senderName,
-        senderEmail,
-        replyTo: replyTo || undefined,
+        senderName: useCustomSender ? senderName : undefined,
+        senderEmail: useCustomSender ? senderEmail : undefined,
+        replyTo: (useCustomSender ? replyTo : undefined) || undefined,
         htmlContent: finalHtml,
         textContent: finalText || undefined,
         contactIds: Array.from(selectedContacts),
@@ -256,23 +284,70 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Sender Name *</label>
-            <input type="text" value={senderName} onChange={(e) => setSenderName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Sender Email *</label>
-            <input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} placeholder="noreply@pandacrm.com.ng"
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
-          </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Sender Identity *</label>
+          <select
+            value={useCustomSender ? "__custom__" : selectedSenderId}
+            onChange={(e) => {
+              if (e.target.value === "__custom__") {
+                setUseCustomSender(true);
+                setSenderName("");
+                setSenderEmail("");
+                setReplyTo("");
+              } else {
+                setUseCustomSender(false);
+                applySender(e.target.value);
+              }
+            }}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500"
+          >
+            <option value="">Use platform default sender</option>
+            {senders.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} &lt;{s.email}&gt;{s.isDefault ? " (default)" : ""}
+              </option>
+            ))}
+            <option value="__custom__">Use a custom sender…</option>
+          </select>
+          {senders.length === 0 && (
+            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 space-y-1 mt-2">
+              <p>
+                No verified workspace sender yet. If your admin has set the platform default sender, it will be used automatically.
+              </p>
+              <p>
+                Otherwise add <span className="font-semibold">mail.kreatixtech.com</span> under Settings → Sending Domains,
+                verify DNS, then create <span className="font-semibold">hello@mail.kreatixtech.com</span> —
+                or choose &quot;Use a custom sender&quot; above.
+              </p>
+            </div>
+          )}
+          {useCustomSender && (
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Sender Name *</label>
+                <input type="text" value={senderName} onChange={(e) => setSenderName(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Sender Email *</label>
+                <input type="email" value={senderEmail} onChange={(e) => setSenderEmail(e.target.value)} placeholder="hello@mail.kreatixtech.com"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
+              </div>
+            </div>
+          )}
+          {!useCustomSender && senders.length > 0 && (
+            <p className="text-[11px] text-gray-500 mt-1.5">
+              Sending as <span className="font-semibold text-gray-700">{senderName} &lt;{senderEmail}&gt;</span>
+              {replyTo ? <> · replies to {replyTo}</> : null}
+            </p>
+          )}
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">Reply-To (optional)</label>
-          <input type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500" />
+          <input type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} disabled={!useCustomSender}
+            placeholder={useCustomSender ? "replies@yourdomain.com" : "Set on the sender identity"}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-pk-500 disabled:opacity-60" />
         </div>
 
         <div>

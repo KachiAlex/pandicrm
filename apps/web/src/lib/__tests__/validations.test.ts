@@ -428,16 +428,15 @@ describe("createCampaignSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects missing senderName", () => {
+  it("accepts missing senderName and senderEmail (filled by default sender)", () => {
     const result = createCampaignSchema.safeParse({
       workspaceId: "ws-1",
       name: "Campaign",
       subject: "Subject",
       htmlContent: "<p>Hi</p>",
-      senderEmail: "noreply@pandacrm.com.ng",
       contactIds: ["c1"],
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("accepts empty replyTo string", () => {

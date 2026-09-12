@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 import { sendTransactionalEmail, replaceTemplateVariables } from "@/lib/brevo";
+import { assertWorkspaceSenderAllowed } from "@/lib/sender-guard";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { email } = await req.json();
     if (!email || typeof email !== "string") {
       return NextResponse.json({ error: "A test email address is required" }, { status: 400 });
+    }
+
+    const senderCheck = await assertWorkspaceSenderAllowed(campaign.workspaceId, campaign.senderEmail);
+    if (!senderCheck.ok) {
+      return NextResponse.json(
+        { error: senderCheck.error, ...(senderCheck.hint ? { hint: senderCheck.hint } : {}) },
+        { status: 422 }
+      );
     }
 
     const variables: Record<string, string> = {

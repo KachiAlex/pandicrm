@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 import { sendTransactionalEmail, replaceTemplateVariables, addTracking } from "@/lib/brevo";
+import { assertWorkspaceSenderAllowed } from "@/lib/sender-guard";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -36,6 +37,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (campaign.status === "sent" || campaign.status === "sending") {
       return NextResponse.json({ error: "Campaign has already been sent or is sending" }, { status: 400 });
+    }
+
+    const senderCheck = await assertWorkspaceSenderAllowed(campaign.workspaceId, campaign.senderEmail);
+    if (!senderCheck.ok) {
+      return NextResponse.json(
+        { error: senderCheck.error, ...(senderCheck.hint ? { hint: senderCheck.hint } : {}) },
+        { status: 422 }
+      );
     }
 
     const pendingRecipients = campaign.recipients.filter((r) => r.status === "pending");

@@ -203,6 +203,37 @@ export const api = {
     list: (params: { workspaceId: string; entityType?: string; entityId?: string; page?: number; pageSize?: number }) =>
       fetchJSON<PaginatedResult<AuditLog>>(`/api/audit-logs${buildQueryString(params)}`),
   },
+  senderDomains: {
+    list: (workspaceId: string) =>
+      fetchJSON<SenderDomain[]>(`/api/sender-domains${buildQueryString({ workspaceId })}`),
+    create: (data: { workspaceId: string; domain: string; isDefault?: boolean }) =>
+      fetchJSON<SenderDomain & { dnsRecords: DnsRecord[]; dkimInstructions: string }>("/api/sender-domains", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    verify: (id: string) =>
+      fetchJSON<{ domain: SenderDomain; checks: DnsCheckResult; dnsRecords: DnsRecord[]; dkimInstructions: string }>(
+        `/api/sender-domains/${id}/verify`,
+        { method: "POST" }
+      ),
+    setDefault: (id: string) =>
+      fetchJSON<SenderDomain>(`/api/sender-domains/${id}`, { method: "PATCH", body: JSON.stringify({ isDefault: true }) }),
+    remove: (id: string) => fetchJSON<void>(`/api/sender-domains/${id}`, { method: "DELETE" }),
+  },
+  senderIdentities: {
+    list: (workspaceId: string) =>
+      fetchJSON<SenderIdentity[]>(`/api/sender-identities${buildQueryString({ workspaceId })}`),
+    create: (data: { workspaceId: string; name: string; email: string; replyTo?: string; isDefault?: boolean }) =>
+      fetchJSON<SenderIdentity & { domainVerified?: boolean; warning?: string }>("/api/sender-identities", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<SenderIdentity>) =>
+      fetchJSON<SenderIdentity>(`/api/sender-identities/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    setDefault: (id: string) =>
+      fetchJSON<SenderIdentity>(`/api/sender-identities/${id}`, { method: "PATCH", body: JSON.stringify({ isDefault: true }) }),
+    remove: (id: string) => fetchJSON<void>(`/api/sender-identities/${id}`, { method: "DELETE" }),
+  },
   followUps: {
     list: (workspaceId: string, filter?: string) =>
       fetchJSON<Contact[]>(`/api/follow-ups?workspaceId=${workspaceId}${filter ? `&filter=${filter}` : ""}`),
@@ -525,6 +556,55 @@ export interface AuditLog {
   entityId: string;
   metadata: Record<string, any> | null;
   createdAt: string;
+}
+
+export type SenderDomainStatus = "pending" | "verified" | "failed";
+
+export interface SenderDomain {
+  id: string;
+  workspaceId: string;
+  domain: string;
+  status: SenderDomainStatus;
+  spfOk: boolean;
+  dkimOk: boolean;
+  dmarcOk: boolean;
+  isDefault: boolean;
+  lastCheckedAt?: string | null;
+  lastError?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { identities: number };
+}
+
+export interface SenderIdentity {
+  id: string;
+  workspaceId: string;
+  domainId?: string | null;
+  domain?: SenderDomain | null;
+  name: string;
+  email: string;
+  replyTo?: string | null;
+  isDefault: boolean;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DnsRecord {
+  type: string;
+  host: string;
+  value: string;
+  purpose: string;
+}
+
+export interface DnsCheckResult {
+  spfOk: boolean;
+  spfDetail: string;
+  dmarcOk: boolean;
+  dmarcDetail: string;
+  dkimOk: boolean;
+  dkimDetail: string;
+  allOk: boolean;
 }
 
 export interface PaginationMeta {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError, notFound } from "@/lib/api-auth";
 import { updateCampaignSchema, validateBody } from "@/lib/validations";
+import { assertWorkspaceSenderAllowed } from "@/lib/sender-guard";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -56,6 +57,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const { name, subject, htmlContent, textContent, senderName, senderEmail, replyTo } = validation.data;
+
+    if (senderEmail) {
+      const senderCheck = await assertWorkspaceSenderAllowed(existing.workspaceId, senderEmail);
+      if (!senderCheck.ok) {
+        return NextResponse.json(
+          { error: senderCheck.error, ...(senderCheck.hint ? { hint: senderCheck.hint } : {}) },
+          { status: 422 }
+        );
+      }
+    }
 
     const campaign = await prisma.emailCampaign.update({
       where: { id },

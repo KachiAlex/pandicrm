@@ -209,8 +209,8 @@ export const createCampaignSchema = z.object({
   subject: z.string().min(1).max(500),
   htmlContent: z.string().min(1).max(500000),
   textContent: z.string().max(500000).optional(),
-  senderName: z.string().min(1).max(100),
-  senderEmail: z.string().email().max(255),
+  senderName: z.string().min(1).max(100).optional(),
+  senderEmail: z.string().email().max(255).optional(),
   replyTo: z.string().email().max(255).optional().or(z.literal("")),
   contactIds: z.array(z.string()).min(0).max(10000).optional(),
   categoryIds: z.array(z.string()).max(50).optional(),
@@ -295,6 +295,20 @@ export const updateCustomFieldSchema = z.object({
 
 export const scheduleCampaignSchema = z.object({
   scheduledAt: z.string().datetime(),
+});
+
+export const createSenderDomainSchema = z.object({
+  workspaceId: z.string().min(1),
+  domain: z.string().min(1).max(255),
+  isDefault: z.boolean().optional().default(false),
+});
+
+export const createSenderIdentitySchema = z.object({
+  workspaceId: z.string().min(1),
+  name: z.string().min(1).max(100),
+  email: z.string().email().max(255),
+  replyTo: z.string().email().max(255).optional().or(z.literal("")),
+  isDefault: z.boolean().optional().default(false),
 });
 
 export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
