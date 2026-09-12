@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const targetUrl = searchParams.get("url") || "";
 
   if (!recipientId || !targetUrl) {
-    return NextResponse.redirect("https://pandacrm.com.ng");
+    return NextResponse.redirect(process.env.NEXT_PUBLIC_APP_URL || "https://pandacrm.com.ng");
   }
 
   try {

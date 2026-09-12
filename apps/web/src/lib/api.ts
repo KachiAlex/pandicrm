@@ -13,20 +13,33 @@ async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+function buildQueryString(params: Record<string, string | number | boolean | undefined>): string {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  }
+  const query = searchParams.toString();
+  return query ? `?${query}` : "";
+}
+
 export const api = {
   accounts: {
-    list: (workspaceId: string) =>
-      fetchJSON<Account[]>(`/api/accounts?workspaceId=${workspaceId}`),
+    list: (workspaceId: string, params?: { search?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<Account>>(`/api/accounts${buildQueryString({ workspaceId, ...params })}`),
     get: (id: string) => fetchJSON<Account>(`/api/accounts/${id}`),
     create: (data: Partial<Account>) =>
       fetchJSON<Account>("/api/accounts", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<Account>) =>
       fetchJSON<Account>(`/api/accounts/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/accounts/${id}`, { method: "DELETE" }),
+    bulk: (data: { ids: string[]; delete?: boolean }) =>
+      fetchJSON<{ updated?: number; deleted?: number }>("/api/accounts/bulk", { method: "POST", body: JSON.stringify(data) }),
   },
   contacts: {
-    list: (workspaceId: string, categoryId?: string) =>
-      fetchJSON<Contact[]>(`/api/contacts?workspaceId=${workspaceId}${categoryId ? `&categoryId=${categoryId}` : ""}`),
+    list: (workspaceId: string, params?: { categoryId?: string; search?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<Contact>>(`/api/contacts${buildQueryString({ workspaceId, ...params })}`),
     get: (id: string) => fetchJSON<Contact>(`/api/contacts/${id}`),
     create: (data: Partial<Contact>) =>
       fetchJSON<Contact>("/api/contacts", { method: "POST", body: JSON.stringify(data) }),
@@ -55,28 +68,32 @@ export const api = {
     delete: (id: string) => fetchJSON<void>(`/api/contact-categories/${id}`, { method: "DELETE" }),
   },
   deals: {
-    list: (workspaceId: string) =>
-      fetchJSON<Deal[]>(`/api/deals?workspaceId=${workspaceId}`),
+    list: (workspaceId: string, params?: { stage?: string; search?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<Deal>>(`/api/deals${buildQueryString({ workspaceId, ...params })}`),
     get: (id: string) => fetchJSON<Deal>(`/api/deals/${id}`),
     create: (data: Partial<Deal>) =>
       fetchJSON<Deal>("/api/deals", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<Deal>) =>
       fetchJSON<Deal>(`/api/deals/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/deals/${id}`, { method: "DELETE" }),
+    bulk: (data: { ids: string[]; stage?: string; delete?: boolean }) =>
+      fetchJSON<{ updated?: number; deleted?: number }>("/api/deals/bulk", { method: "POST", body: JSON.stringify(data) }),
   },
   tasks: {
-    list: (workspaceId: string) =>
-      fetchJSON<Task[]>(`/api/tasks?workspaceId=${workspaceId}`),
+    list: (workspaceId: string, params?: { status?: string; priority?: string; assigneeId?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<Task>>(`/api/tasks${buildQueryString({ workspaceId, ...params })}`),
     get: (id: string) => fetchJSON<Task>(`/api/tasks/${id}`),
     create: (data: Partial<Task>) =>
       fetchJSON<Task>("/api/tasks", { method: "POST", body: JSON.stringify(data) }),
     update: (id: string, data: Partial<Task>) =>
       fetchJSON<Task>(`/api/tasks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/tasks/${id}`, { method: "DELETE" }),
+    bulk: (data: { ids: string[]; status?: string; priority?: string; assigneeId?: string | null; delete?: boolean }) =>
+      fetchJSON<{ updated?: number; deleted?: number }>("/api/tasks/bulk", { method: "POST", body: JSON.stringify(data) }),
   },
   notes: {
-    list: (workspaceId: string) =>
-      fetchJSON<Note[]>(`/api/notes?workspaceId=${workspaceId}`),
+    list: (workspaceId: string, params?: { type?: string; contactId?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<Note>>(`/api/notes${buildQueryString({ workspaceId, ...params })}`),
     get: (id: string) => fetchJSON<Note>(`/api/notes/${id}`),
     create: (data: Partial<Note>) =>
       fetchJSON<Note>("/api/notes", { method: "POST", body: JSON.stringify(data) }),
@@ -135,6 +152,12 @@ export const api = {
     test: (id: string, email: string) =>
       fetchJSON<{ success: boolean; messageId?: string; error?: string }>(`/api/campaigns/${id}/test`, { method: "POST", body: JSON.stringify({ email }) }),
     stats: (id: string) => fetchJSON<CampaignStats>(`/api/campaigns/${id}/stats`),
+    schedule: (id: string, scheduledAt: string) =>
+      fetchJSON<EmailCampaign>(`/api/campaigns/${id}/schedule`, { method: "POST", body: JSON.stringify({ scheduledAt }) }),
+    unschedule: (id: string) =>
+      fetchJSON<EmailCampaign>(`/api/campaigns/${id}/schedule`, { method: "DELETE" }),
+    export: (id: string) =>
+      fetch(`${BASE}/api/campaigns/${id}/export`),
   },
   emailTemplates: {
     list: (workspaceId: string) =>
@@ -155,6 +178,30 @@ export const api = {
       fetchJSON<Integration>(`/api/integrations/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     delete: (id: string) => fetchJSON<void>(`/api/integrations/${id}`, { method: "DELETE" }),
     test: (id: string) => fetchJSON<{ success: boolean; message: string; authUrl?: string }>(`/api/integrations/${id}/test`, { method: "POST" }),
+  },
+  search: {
+    global: (workspaceId: string, q: string, type?: string) =>
+      fetchJSON<SearchResult>(`/api/search${buildQueryString({ workspaceId, q, type })}`),
+  },
+  attachments: {
+    list: (params: { workspaceId: string; entityType?: string; entityId?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<FileAttachment>>(`/api/attachments${buildQueryString(params)}`),
+    create: (data: Partial<FileAttachment>) =>
+      fetchJSON<FileAttachment>("/api/attachments", { method: "POST", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/attachments/${id}`, { method: "DELETE" }),
+  },
+  customFields: {
+    list: (workspaceId: string, entityType?: string) =>
+      fetchJSON<CustomFieldDefinition[]>(`/api/custom-fields${buildQueryString({ workspaceId, entityType })}`),
+    create: (data: Partial<CustomFieldDefinition>) =>
+      fetchJSON<CustomFieldDefinition>("/api/custom-fields", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<CustomFieldDefinition>) =>
+      fetchJSON<CustomFieldDefinition>(`/api/custom-fields/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: string) => fetchJSON<void>(`/api/custom-fields/${id}`, { method: "DELETE" }),
+  },
+  auditLogs: {
+    list: (params: { workspaceId: string; entityType?: string; entityId?: string; page?: number; pageSize?: number }) =>
+      fetchJSON<PaginatedResult<AuditLog>>(`/api/audit-logs${buildQueryString(params)}`),
   },
   followUps: {
     list: (workspaceId: string, filter?: string) =>
@@ -441,4 +488,67 @@ export interface Integration {
   config: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface FileAttachment {
+  id: string;
+  workspaceId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  url: string;
+  entityType: string;
+  entityId: string;
+  uploadedById: string;
+  createdAt: string;
+}
+
+export interface CustomFieldDefinition {
+  id: string;
+  workspaceId: string;
+  entityType: string;
+  fieldName: string;
+  fieldType: string;
+  isRequired: boolean;
+  options: string[] | null;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+}
+
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
+
+export interface SearchResultItem {
+  id: string;
+  _type: string;
+  [key: string]: unknown;
+}
+
+export interface SearchResult {
+  data: SearchResultItem[];
+  query: string;
+  total: number;
 }

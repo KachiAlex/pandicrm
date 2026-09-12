@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
 import { createDealSchema, validateBody } from "@/lib/validations";
+import { getPaginationParams, createPaginatedResult } from "@/lib/pagination";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
+    const stage = searchParams.get("stage")?.trim();
+    const search = searchParams.get("search")?.trim();
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
@@ -19,16 +22,32 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const deals = await prisma.deal.findMany({
-      where: { workspaceId },
-      include: {
-        account: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { skip, take, page, pageSize } = getPaginationParams(searchParams);
 
-    return NextResponse.json(deals);
+    const where: any = { workspaceId };
+    if (stage) where.stage = stage;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const [deals, total] = await Promise.all([
+      prisma.deal.findMany({
+        where,
+        include: {
+          account: { select: { id: true, name: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.deal.count({ where }),
+    ]);
+
+    return NextResponse.json(createPaginatedResult(deals, total, { page, pageSize, skip, take }));
   } catch {
     return serverError();
   }

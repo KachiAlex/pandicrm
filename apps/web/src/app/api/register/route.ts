@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { checkRateLimit } from "@/lib/rate-limit-redis";
+import { checkRateLimit, WINDOW_MS, MAX_ATTEMPTS } from "@/lib/rate-limit-redis";
 import { registerSchema, validateBody } from "@/lib/validations";
 import { serverError } from "@/lib/api-auth";
 

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
 import { createTaskSchema, validateBody } from "@/lib/validations";
+import { getPaginationParams, createPaginatedResult } from "@/lib/pagination";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,9 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
+    const status = searchParams.get("status")?.trim();
+    const priority = searchParams.get("priority")?.trim();
+    const assigneeId = searchParams.get("assigneeId")?.trim();
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
@@ -19,15 +23,27 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const tasks = await prisma.task.findMany({
-      where: { workspaceId },
-      include: {
-        assignee: { select: { id: true, name: true, avatar: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { skip, take, page, pageSize } = getPaginationParams(searchParams);
 
-    return NextResponse.json(tasks);
+    const where: any = { workspaceId };
+    if (status) where.status = status;
+    if (priority) where.priority = priority;
+    if (assigneeId) where.assigneeId = assigneeId;
+
+    const [tasks, total] = await Promise.all([
+      prisma.task.findMany({
+        where,
+        include: {
+          assignee: { select: { id: true, name: true, avatar: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.task.count({ where }),
+    ]);
+
+    return NextResponse.json(createPaginatedResult(tasks, total, { page, pageSize, skip, take }));
   } catch {
     return serverError();
   }

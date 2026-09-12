@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
 import { notifyWorkspace } from "@/lib/notifications";
 import { createNoteSchema, validateBody } from "@/lib/validations";
+import { getPaginationParams, createPaginatedResult } from "@/lib/pagination";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
+    const type = searchParams.get("type")?.trim();
+    const contactId = searchParams.get("contactId")?.trim();
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
@@ -19,16 +22,27 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const notes = await prisma.note.findMany({
-      where: { workspaceId },
-      include: {
-        author: { select: { id: true, name: true, avatar: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { skip, take, page, pageSize } = getPaginationParams(searchParams);
 
-    return NextResponse.json(notes);
+    const where: any = { workspaceId };
+    if (type) where.type = type;
+    if (contactId) where.contactId = contactId;
+
+    const [notes, total] = await Promise.all([
+      prisma.note.findMany({
+        where,
+        include: {
+          author: { select: { id: true, name: true, avatar: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.note.count({ where }),
+    ]);
+
+    return NextResponse.json(createPaginatedResult(notes, total, { page, pageSize, skip, take }));
   } catch {
     return serverError();
   }

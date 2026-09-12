@@ -67,7 +67,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         senderName: campaign.senderName,
         senderEmail: campaign.senderEmail,
         workspaceName: campaign.workspace?.name || "",
-        unsubscribeUrl: `https://pandacrm.com.ng/unsubscribe?campaign=${campaign.id}&recipient=${recipient.id}`,
+        unsubscribeUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://pandacrm.com.ng"}/unsubscribe?campaign=${campaign.id}&recipient=${recipient.id}`,
       };
 
       const personalizedHtml = replaceTemplateVariables(campaign.htmlContent, variables);

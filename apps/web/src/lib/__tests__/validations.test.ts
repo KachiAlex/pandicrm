@@ -415,7 +415,7 @@ describe("createCampaignSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects empty contactIds", () => {
+  it("accepts empty contactIds", () => {
     const result = createCampaignSchema.safeParse({
       workspaceId: "ws-1",
       name: "Campaign",
@@ -425,7 +425,7 @@ describe("createCampaignSchema", () => {
       senderEmail: "noreply@pandacrm.com.ng",
       contactIds: [],
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects missing senderName", () => {

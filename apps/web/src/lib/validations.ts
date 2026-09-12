@@ -246,6 +246,57 @@ export const updateIntegrationSchema = z.object({
   config: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const bulkUpdateTasksSchema = z.object({
+  ids: z.array(z.string()).min(1).max(1000),
+  status: z.enum(["todo", "in_progress", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high"]).optional(),
+  assigneeId: z.string().nullable().optional(),
+  delete: z.boolean().optional(),
+});
+
+export const bulkUpdateDealsSchema = z.object({
+  ids: z.array(z.string()).min(1).max(1000),
+  stage: z.enum(["lead", "qualify", "propose", "negotiate", "won", "lost"]).optional(),
+  delete: z.boolean().optional(),
+});
+
+export const bulkUpdateAccountsSchema = z.object({
+  ids: z.array(z.string()).min(1).max(1000),
+  delete: z.boolean().optional(),
+});
+
+export const createFileAttachmentSchema = z.object({
+  workspaceId: z.string().min(1),
+  fileName: z.string().min(1).max(500),
+  fileSize: z.number().nonnegative().optional(),
+  mimeType: z.string().max(100).optional(),
+  url: z.string().url().max(2000),
+  entityType: z.string().min(1).max(50),
+  entityId: z.string().min(1),
+});
+
+export const createCustomFieldSchema = z.object({
+  workspaceId: z.string().min(1),
+  entityType: z.string().min(1).max(50),
+  fieldName: z.string().min(1).max(100),
+  fieldType: z.enum(["text", "number", "date", "boolean", "select", "multiselect"]),
+  isRequired: z.boolean().optional().default(false),
+  options: z.array(z.string()).optional(),
+  sortOrder: z.number().int().optional().default(0),
+});
+
+export const updateCustomFieldSchema = z.object({
+  fieldName: z.string().min(1).max(100).optional(),
+  fieldType: z.enum(["text", "number", "date", "boolean", "select", "multiselect"]).optional(),
+  isRequired: z.boolean().optional(),
+  options: z.array(z.string()).optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+export const scheduleCampaignSchema = z.object({
+  scheduledAt: z.string().datetime(),
+});
+
 export function validateBody<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(data);
   if (result.success) {

@@ -94,11 +94,12 @@ export function replaceTemplateVariables(html: string, variables: Record<string,
 }
 
 export function addTracking(html: string, campaignId: string, recipientId: string, unsubscribeUrl: string) {
-  const openUrl = `https://pandacrm.com.ng/api/campaigns/track/open?recipient=${recipientId}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://pandacrm.com.ng";
+  const openUrl = `${baseUrl}/api/campaigns/track/open?recipient=${recipientId}`;
   const trackedHtml = html.replace(/href\s*=\s*("|')([^"']+)\1/gi, (match, quote, url: string) => {
     if (url === unsubscribeUrl) return match;
     if (!url.startsWith("http")) return match;
-    const clickUrl = `https://pandacrm.com.ng/api/campaigns/track/click?recipient=${recipientId}&url=${encodeURIComponent(url)}`;
+    const clickUrl = `${baseUrl}/api/campaigns/track/click?recipient=${recipientId}&url=${encodeURIComponent(url)}`;
     return `href=${quote}${clickUrl}${quote}`;
   }) + `<img src="${openUrl}" alt="" width="1" height="1" style="display:block;" />`;
   return trackedHtml;

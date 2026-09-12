@@ -1,7 +1,7 @@
 import Redis from "ioredis";
 
-const WINDOW_MS = 60 * 1000;
-const MAX_ATTEMPTS = 5;
+export const WINDOW_MS = 60 * 1000;
+export const MAX_ATTEMPTS = 5;
 
 interface Attempt {
   count: number;

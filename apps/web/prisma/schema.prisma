@@ -218,6 +218,14 @@ enum TaskPriority {
   high
 }
 
+enum RecurrenceType {
+  none
+  daily
+  weekly
+  monthly
+  yearly
+}
+
 model Task {
   id          String    @id @default(cuid())
   workspaceId String    @map("workspace_id")
@@ -234,12 +242,16 @@ model Task {
   dueDate     DateTime? @map("due_date")
   completedAt DateTime? @map("completed_at")
   overdueNotifiedAt DateTime? @map("overdue_notified_at")
+  recurrence  RecurrenceType @default(none) @map("recurrence")
+  recurrenceEndDate DateTime? @map("recurrence_end_date")
+  parentTaskId String?  @map("parent_task_id")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@index([workspaceId])
   @@index([assigneeId])
   @@index([status])
+  @@index([dueDate])
   @@map("tasks")
 }
 
@@ -437,4 +449,59 @@ model Integration {
 
   @@index([workspaceId])
   @@map("integrations")
+}
+
+model FileAttachment {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fileName    String   @map("file_name")
+  fileSize    Int      @map("file_size")
+  mimeType    String   @map("mime_type")
+  url         String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  uploadedById String  @map("uploaded_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  contact     Contact? @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([entityType, entityId])
+  @@map("file_attachments")
+}
+
+model CustomFieldDefinition {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  entityType  String   @map("entity_type")
+  fieldName   String   @map("field_name")
+  fieldType   String   @map("field_type")
+  isRequired  Boolean  @default(false) @map("is_required")
+  options     Json?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, entityType, fieldName])
+  @@index([workspaceId])
+  @@map("custom_field_definitions")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String   @map("user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([workspaceId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

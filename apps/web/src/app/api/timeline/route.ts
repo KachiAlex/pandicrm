@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceAccess, unauthorized, serverError } from "@/lib/api-auth";
+import { getPaginationParams, createPaginatedResult } from "@/lib/pagination";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
     const contactId = searchParams.get("contactId");
     const accountId = searchParams.get("accountId");
     const dealId = searchParams.get("dealId");
+    const type = searchParams.get("type")?.trim();
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
@@ -20,24 +22,33 @@ export async function GET(req: NextRequest) {
     const userId = (session as any).user.id;
     if (!(await requireWorkspaceAccess(workspaceId, userId))) return unauthorized();
 
-    const events = await prisma.timelineEvent.findMany({
-      where: {
-        workspaceId,
-        ...(contactId ? { contactId } : {}),
-        ...(accountId ? { accountId } : {}),
-        ...(dealId ? { dealId } : {}),
-      },
-      include: {
-        author: { select: { id: true, name: true, avatar: true } },
-        account: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-        deal: { select: { id: true, name: true } },
-      },
-      orderBy: { occurredAt: "desc" },
-      take: 50,
-    });
+    const { skip, take, page, pageSize } = getPaginationParams(searchParams);
 
-    return NextResponse.json(events);
+    const where: any = {
+      workspaceId,
+      ...(contactId ? { contactId } : {}),
+      ...(accountId ? { accountId } : {}),
+      ...(dealId ? { dealId } : {}),
+      ...(type ? { type } : {}),
+    };
+
+    const [events, total] = await Promise.all([
+      prisma.timelineEvent.findMany({
+        where,
+        include: {
+          author: { select: { id: true, name: true, avatar: true } },
+          account: { select: { id: true, name: true } },
+          contact: { select: { id: true, firstName: true, lastName: true } },
+          deal: { select: { id: true, name: true } },
+        },
+        orderBy: { occurredAt: "desc" },
+        skip,
+        take,
+      }),
+      prisma.timelineEvent.count({ where }),
+    ]);
+
+    return NextResponse.json(createPaginatedResult(events, total, { page, pageSize, skip, take }));
   } catch {
     return serverError();
   }
