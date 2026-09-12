@@ -24,8 +24,8 @@ export default function TasksPanel({ workspaceId }: { workspaceId: string }) {
   useEffect(() => {
     if (!workspaceId) return;
     setLoading(true);
-    api.tasks.list(workspaceId).then((data) => {
-      setTasks(data);
+    api.tasks.list(workspaceId).then((result) => {
+      setTasks(result.data);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [workspaceId, refreshKey]);
