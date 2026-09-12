@@ -146,7 +146,7 @@ export default function FollowUpsPage() {
   useEffect(() => {
     if (!workspaceId) return;
     loadContacts();
-    api.contacts.list(workspaceId).then(setAllContacts).catch(() => {});
+    api.contacts.list(workspaceId).then((result) => setAllContacts(result.data)).catch(() => {});
     api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});
   }, [workspaceId, filter]);
 
