@@ -71,6 +71,9 @@ model Workspace {
   emailCampaigns  EmailCampaign[]
   contactCategories ContactCategory[]
   integrations      Integration[]
+  fileAttachments   FileAttachment[]
+  customFieldDefinitions CustomFieldDefinition[]
+  auditLogs         AuditLog[]
 
   @@map("workspaces")
 }
@@ -463,8 +466,6 @@ model FileAttachment {
   entityId    String   @map("entity_id")
   uploadedById String  @map("uploaded_by_id")
   createdAt   DateTime @default(now()) @map("created_at")
-
-  contact     Contact? @relation(fields: [entityId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
   @@index([entityType, entityId])
