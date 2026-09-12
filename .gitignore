@@ -17,3 +17,5 @@ dist
 *.tar.gz
 pandacrm-web.tar.gz
 pandicrm-web.tar.gz
+*.tsbuildinfo
+tsconfig.tsbuildinfo
