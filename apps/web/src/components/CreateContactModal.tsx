@@ -34,7 +34,7 @@ export default function CreateContactModal({ workspaceId, onClose, onCreated }: 
       api.contactCategories.list(workspaceId),
     ])
       .then(([a, c]) => {
-        setAccounts(a);
+        setAccounts(a.data);
         setCategories(c);
         setFetching(false);
       })

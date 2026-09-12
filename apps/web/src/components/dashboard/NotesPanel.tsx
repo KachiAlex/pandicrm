@@ -27,8 +27,8 @@ export default function NotesPanel({ workspaceId }: { workspaceId: string }) {
   useEffect(() => {
     if (!workspaceId) return;
     setLoading(true);
-    api.notes.list(workspaceId).then((data) => {
-      setNotes(data);
+    api.notes.list(workspaceId).then((result) => {
+      setNotes(result.data);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [workspaceId, refreshKey]);
@@ -138,9 +138,9 @@ function NoteDetailModal({ note, workspaceId, onClose, onMutated }: { note: Note
 
   useEffect(() => {
     Promise.all([
-      api.contacts.list(workspaceId).catch(() => []),
-      api.deals.list(workspaceId).catch(() => []),
-    ]).then(([c, d]) => { setContacts(c); setDeals(d); });
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
+    ]).then(([c, d]) => { setContacts(c.data); setDeals(d.data); });
   }, [workspaceId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -270,11 +270,11 @@ function CreateNoteModal({ workspaceId, onClose, onCreated }: { workspaceId: str
 
   useEffect(() => {
     Promise.all([
-      api.contacts.list(workspaceId).catch(() => []),
-      api.deals.list(workspaceId).catch(() => []),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
     ]).then(([c, d]) => {
-      setContacts(c);
-      setDeals(d);
+      setContacts(c.data);
+      setDeals(d.data);
       setFetching(false);
     });
   }, [workspaceId]);

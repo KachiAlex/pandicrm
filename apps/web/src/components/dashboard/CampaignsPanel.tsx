@@ -129,8 +129,8 @@ function CreateCampaign({ workspaceId, onCreated, onCancel }: { workspaceId: str
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.contacts.list(workspaceId).then((data) => {
-      setContacts(data.filter((c) => c.email));
+    api.contacts.list(workspaceId).then((result) => {
+      setContacts(result.data.filter((c) => c.email));
     }).catch(() => {});
     api.emailTemplates.list(workspaceId).then(setTemplates).catch(() => {});
     api.contactCategories.list(workspaceId).then(setCategories).catch(() => {});

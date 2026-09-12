@@ -27,10 +27,10 @@ export default function ListPanel({ workspaceId, type }: { workspaceId: string; 
     setLoading(true);
     const fetcher =
       type === "accounts" ? api.accounts.list(workspaceId) :
-      type === "contacts" ? api.contacts.list(workspaceId, selectedCategory || undefined) :
+      type === "contacts" ? api.contacts.list(workspaceId, { categoryId: selectedCategory || undefined }) :
       api.deals.list(workspaceId);
-    fetcher.then((data) => {
-      setItems(data);
+    fetcher.then((result) => {
+      setItems(result.data);
       setLoading(false);
     }).catch(() => setLoading(false));
 
@@ -685,7 +685,7 @@ function ContactDetailModal({ contact, workspaceId, onClose, onMutated }: { cont
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [processing, setProcessing] = useState(false);
 
-  useEffect(() => { api.accounts.list(workspaceId).then((a) => setAccounts(a)).catch(() => {}); }, [workspaceId]);
+  useEffect(() => { api.accounts.list(workspaceId).then((result) => setAccounts(result.data)).catch(() => {}); }, [workspaceId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -826,7 +826,7 @@ function DealDetailModal({ deal, workspaceId, onClose, onMutated }: { deal: Deal
   const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
-    Promise.all([api.accounts.list(workspaceId).catch(() => []), api.contacts.list(workspaceId).catch(() => [])]).then(([a, c]) => { setAccounts(a); setContacts(c); });
+    Promise.all([api.accounts.list(workspaceId).catch(() => ({ data: [] })), api.contacts.list(workspaceId).catch(() => ({ data: [] }))]).then(([a, c]) => { setAccounts(a.data); setContacts(c.data); });
   }, [workspaceId]);
 
   const handleUpdate = async (e: React.FormEvent) => {

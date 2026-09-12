@@ -16,17 +16,17 @@ export default function ReportsPanel({ workspaceId }: { workspaceId: string }) {
     if (!workspaceId) return;
     setLoading(true);
     Promise.all([
-      api.deals.list(workspaceId),
-      api.tasks.list(workspaceId),
-      api.accounts.list(workspaceId),
-      api.contacts.list(workspaceId),
-      api.notes.list(workspaceId),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
+      api.tasks.list(workspaceId).catch(() => ({ data: [] })),
+      api.accounts.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+      api.notes.list(workspaceId).catch(() => ({ data: [] })),
     ]).then(([dealsData, tasksData, accountsData, contactsData, notesData]) => {
-      setDeals(dealsData);
-      setTasks(tasksData);
-      setAccounts(accountsData);
-      setContacts(contactsData);
-      setNotes(notesData);
+      setDeals(dealsData.data);
+      setTasks(tasksData.data);
+      setAccounts(accountsData.data);
+      setContacts(contactsData.data);
+      setNotes(notesData.data);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [workspaceId]);

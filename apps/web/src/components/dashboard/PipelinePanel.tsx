@@ -55,12 +55,12 @@ export default function PipelinePanel({ workspaceId }: { workspaceId: string }) 
     if (!workspaceId) return;
     setLoading(true);
     Promise.all([
-      api.deals.list(workspaceId).catch(() => []),
-      api.contacts.list(workspaceId).catch(() => []),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
       api.contactCategories.list(workspaceId).catch(() => []),
     ]).then(([d, c, cat]) => {
-      setDeals(d);
-      setContacts(c);
+      setDeals(d.data);
+      setContacts(c.data);
       setCategories(cat);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -411,9 +411,9 @@ function DealDetailModal({ deal, workspaceId, onClose, onMutated }: { deal: Deal
 
   useEffect(() => {
     Promise.all([
-      api.accounts.list(workspaceId).catch(() => []),
-      api.contacts.list(workspaceId).catch(() => []),
-    ]).then(([a, c]) => { setAccounts(a); setContacts(c); });
+      api.accounts.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+    ]).then(([a, c]) => { setAccounts(a.data); setContacts(c.data); });
   }, [workspaceId]);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -567,11 +567,11 @@ function CreateDealModal({ workspaceId, onClose, onCreated }: { workspaceId: str
 
   useEffect(() => {
     Promise.all([
-      api.accounts.list(workspaceId).catch(() => []),
-      api.contacts.list(workspaceId).catch(() => []),
+      api.accounts.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
     ]).then(([a, c]) => {
-      setAccounts(a);
-      setContacts(c);
+      setAccounts(a.data);
+      setContacts(c.data);
       setFetching(false);
     });
   }, [workspaceId]);

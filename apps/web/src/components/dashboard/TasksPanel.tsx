@@ -146,13 +146,13 @@ function TaskDetailModal({ task, workspaceId, onClose, onMutated }: { task: Task
 
   useEffect(() => {
     Promise.all([
-      api.accounts.list(workspaceId).catch(() => []),
-      api.contacts.list(workspaceId).catch(() => []),
-      api.deals.list(workspaceId).catch(() => []),
+      api.accounts.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
     ]).then(([a, c, d]) => {
-      setAccounts(a);
-      setContacts(c);
-      setDeals(d);
+      setAccounts(a.data);
+      setContacts(c.data);
+      setDeals(d.data);
     });
   }, [workspaceId]);
 
@@ -310,13 +310,13 @@ function CreateTaskModal({ workspaceId, onClose, onCreated }: { workspaceId: str
 
   useEffect(() => {
     Promise.all([
-      api.accounts.list(workspaceId).catch(() => []),
-      api.contacts.list(workspaceId).catch(() => []),
-      api.deals.list(workspaceId).catch(() => []),
+      api.accounts.list(workspaceId).catch(() => ({ data: [] })),
+      api.contacts.list(workspaceId).catch(() => ({ data: [] })),
+      api.deals.list(workspaceId).catch(() => ({ data: [] })),
     ]).then(([a, c, d]) => {
-      setAccounts(a);
-      setContacts(c);
-      setDeals(d);
+      setAccounts(a.data);
+      setContacts(c.data);
+      setDeals(d.data);
       setFetching(false);
     });
   }, [workspaceId]);
