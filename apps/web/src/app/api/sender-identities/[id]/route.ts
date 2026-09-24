@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireWorkspaceRole, unauthorized, serverError, notFound } from "@/lib/api-auth";
-import { extractDomain } from "@/lib/sender-domains";
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -49,6 +48,3 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export function senderDomainOf(email: string): string | null {
-  return extractDomain(email);
-}
